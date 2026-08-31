@@ -8,4 +8,16 @@
     <string name="home_description">Nền tảng Android TV đã sẵn sàng để phát triển.</string>
     <string name="home_primary_action">Bắt đầu trải nghiệm</string>
     <string name="home_ready_message">StreamTV đã sẵn sàng</string>
+    <string name="search_title">Tìm kiếm nội dung</string>
+    <string name="search_description">Khám phá phim, chương trình và nội dung yêu thích của bạn.</string>
+    <string name="search_primary_action">Mở tìm kiếm</string>
+    <string name="search_ready_message">Tính năng tìm kiếm đã sẵn sàng</string>
+    <string name="setting_title">Cài đặt StreamTV</string>
+    <string name="setting_description">Điều chỉnh trải nghiệm xem phù hợp với thiết bị của bạn.</string>
+    <string name="setting_primary_action">Mở cài đặt</string>
+    <string name="setting_ready_message">Khu vực cài đặt đã sẵn sàng</string>
+    <string name="profile_title">Hồ sơ của bạn</string>
+    <string name="profile_description">Quản lý thông tin và cá nhân hóa trải nghiệm StreamTV.</string>
+    <string name="profile_primary_action">Quản lý hồ sơ</string>
+    <string name="profile_ready_message">Hồ sơ StreamTV đã sẵn sàng</string>
 </resources>

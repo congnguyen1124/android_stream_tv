@@ -24,10 +24,8 @@ fun StreamTvApp(
     val contentFocusRequester = remember { FocusRequester() }
     val topBarFocusRequester = remember { FocusRequester() }
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val selectedItemId = when (currentBackStackEntry?.destination?.route) {
-        HomeRoute -> StreamTvTopBarItems.Home.id
-        else -> null
-    }
+    val currentRoute = currentBackStackEntry?.destination?.route
+    val selectedItemId = StreamTvTopBarItems.itemFor(currentRoute)?.id
 
     Column(modifier = modifier.fillMaxSize()) {
         StreamTvTopBar(
@@ -35,12 +33,14 @@ fun StreamTvApp(
             selectedItemId = selectedItemId,
             contentFocusRequester = contentFocusRequester,
             onItemClick = { item ->
-                if (item.id == StreamTvTopBarItems.Home.id &&
-                    currentBackStackEntry?.destination?.route != HomeRoute
-                ) {
-                    navController.navigate(HomeRoute) {
+                val destinationRoute = StreamTvTopBarItems.routeFor(item)
+                if (destinationRoute != currentRoute) {
+                    navController.navigate(destinationRoute) {
                         launchSingleTop = true
-                        popUpTo(HomeRoute)
+                        restoreState = true
+                        popUpTo(HomeRoute) {
+                            saveState = true
+                        }
                     }
                 }
             },

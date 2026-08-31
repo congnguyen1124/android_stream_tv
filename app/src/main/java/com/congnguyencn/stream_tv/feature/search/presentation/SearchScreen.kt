@@ -1,4 +1,4 @@
-package com.congnguyencn.stream_tv.feature.home.presentation
+package com.congnguyencn.stream_tv.feature.search.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -8,23 +8,23 @@ import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvActionScreen
 
 @Composable
-internal fun HomeScreen(
-    uiState: HomeUiState,
+internal fun SearchScreen(
+    uiState: SearchUiState,
     contentFocusRequester: FocusRequester,
     topBarFocusRequester: FocusRequester,
     onPrimaryActionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     StreamTvActionScreen(
-        title = stringResource(R.string.home_title),
+        title = stringResource(R.string.search_title),
         description = stringResource(
-            if (uiState.isReady) {
-                R.string.home_ready_message
+            if (uiState.isSearchReady) {
+                R.string.search_ready_message
             } else {
-                R.string.home_description
+                R.string.search_description
             },
         ),
-        actionText = stringResource(R.string.home_primary_action),
+        actionText = stringResource(R.string.search_primary_action),
         contentFocusRequester = contentFocusRequester,
         topBarFocusRequester = topBarFocusRequester,
         onActionClick = onPrimaryActionClick,

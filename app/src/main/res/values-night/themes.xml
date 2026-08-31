@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.StreamTV" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:colorAccent">@color/stream_tv_primary</item>
+        <item name="android:navigationBarColor">@color/stream_tv_background</item>
+        <item name="android:statusBarColor">@color/stream_tv_background</item>
+        <item name="android:windowBackground">@color/stream_tv_background</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>

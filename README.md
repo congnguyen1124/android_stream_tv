@@ -1,84 +1,117 @@
 # StreamTV
 
-StreamTV là bộ khung Android TV dùng Jetpack Compose for TV, được tổ chức theo Clean Architecture trong **một app module**. Ứng dụng hiện có bốn màn hình Home, Search, Setting, Profile cùng TopBar và luồng focus bằng D-pad.
+StreamTV là ứng dụng Android TV dùng Jetpack Compose for TV, được tổ chức theo Clean Architecture trong **một app module**. Toàn bộ nội dung hiển thị trong ứng dụng dùng tiếng Anh.
 
-## Trạng thái hiện tại
+## Chức năng hiện tại
 
-- Home là start destination; Search, Setting và Profile là các top-level destination độc lập.
-- Mỗi màn hình có một nút hành động nằm giữa và tự nhận focus sau khi điều hướng.
-- Nhấn nút cập nhật `UiState` thông qua ViewModel riêng của feature.
-- TopBar điều hướng đầy đủ giữa Search, Home, Setting và Profile.
-- Nhóm item được neo bên phải. Search, Home và Setting chỉ hiện icon khi không có focus, sau đó mở rộng để hiện tên khi nhận focus; Profile luôn giữ dạng icon tròn.
-- Bộ VectorDrawable navigation được thiết kế riêng cho StreamTV: Search có sparkle, Home tích hợp biểu tượng play, Setting dùng thanh tinh chỉnh và Profile có điểm nhấn nhận diện.
-- Font Roboto được dùng lại từ UI của dự án tham chiếu.
-- Không có `FocusRequesterModifiers` hoặc helper focus-restorer cũ.
+- TopBar điều hướng giữa Search, Home, Setting và Profile bằng D-pad.
+- Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content ngang.
+- `Banner` hiển thị `Video` theo tỷ lệ 16:9, có thông tin nội dung, age restriction, indicator và tự chuyển trang khi không focus.
+- `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, đặt item active ở giữa, scale item và đổi nền theo thumbnail active.
+- Focus đầu tiên thuộc về Banner; nhấn Up quay lại TopBar. Trái/phải chuyển item ngay trong carousel.
+- Các model và dummy data cho `Videos`, `ListSeries`, `Channels`, `Shorts` đã có sẵn; UI của bốn view type này sẽ được bổ sung sau.
+- Ảnh online được tải bằng Coil 3; `videoUrl` và `logoUrl` đang để trống theo yêu cầu.
+- Dependency injection dùng Hilt; graph được kiểm tra và tạo code tại compile time bằng KSP.
 
-## Cấu trúc thư mục
+## Cấu trúc Home feature
 
 ```text
-app/src/main/java/com/congnguyencn/stream_tv/
-├── MainActivity.kt                         # Android entry point
-├── app/
-│   ├── StreamTvApp.kt                      # App shell và focus giữa TopBar/nội dung
-│   └── navigation/
-│       ├── StreamTvNavHost.kt
-│       └── StreamTvTopBarItems.kt
-├── core/designsystem/
-│   ├── component/
-│   │   ├── StreamTvAppBar.kt
-│   │   ├── StreamTvActionScreen.kt
-│   │   ├── StreamTvButton.kt
-│   │   ├── StreamTvSurface.kt
-│   │   ├── StreamTvTopBar.kt
-│   │   └── StreamTvTopBarItem.kt
-│   ├── theme/
-│   │   ├── Color.kt
-│   │   ├── Theme.kt
-│   │   └── Type.kt
-│   └── tokens/StreamTvDimensions.kt
-└── feature/
-    ├── home/presentation/
-    ├── search/presentation/
-    ├── setting/presentation/
-    └── profile/presentation/
-        ├── <Feature>Route.kt
-        ├── <Feature>Screen.kt
-        ├── <Feature>UiState.kt
-        ├── <Feature>ViewModel.kt
-        └── navigation/<Feature>Navigation.kt
+feature/home/
+├── data/
+│   ├── model/                  # DTO đa hình và viewType từ nguồn dữ liệu
+│   ├── source/                 # HomeDummyDataSource
+│   ├── mapper/                 # DTO -> domain
+│   └── repository/             # DummyHomeRepository adapter
+├── domain/
+│   ├── model/                  # Content, Video, Series, Channel, Short, HomeSection
+│   ├── repository/             # HomeRepository contract
+│   └── usecase/                # GetHomeSectionsUseCase
+└── presentation/
+    ├── component/              # Banner, VerticalBanner, section header
+    ├── mapper/                 # Domain -> UI model
+    ├── model/                  # UI item và UI viewType
+    ├── HomeRoute.kt
+    ├── HomeScreen.kt
+    ├── HomeUiState.kt
+    └── HomeViewModel.kt
 ```
 
-## Quy tắc Clean Architecture
+App composition root nằm tại `app/di/HomeModule.kt`. Presentation không tự khởi tạo data source hoặc repository.
 
-Dự án không tách Gradle module, nhưng vẫn giữ seam giữa các package:
+## Dependency injection với Hilt
 
-- `app`: ghép các feature, quản lý navigation và app-level focus.
-- `core/designsystem`: theme, token và composable base; không chứa nghiệp vụ của feature.
-- `feature/<name>/presentation`: route, screen, `UiState`, ViewModel và navigation entry của feature.
-- `feature/<name>/domain`: thêm khi feature bắt đầu có entity/use case nghiệp vụ thuần Kotlin.
-- `feature/<name>/data`: thêm khi có repository adapter, local source hoặc remote source.
+- `StreamTvApplication` dùng `@HiltAndroidApp` để tạo application-level container.
+- `MainActivity` dùng `@AndroidEntryPoint` để kết nối Android entry point với Hilt graph.
+- `HomeModule` được cài vào `SingletonComponent`; module cung cấp `HomeDummyDataSource`, `HomeRepository`, `GetHomeSectionsUseCase` và `HomeUiMapper`.
+- Toàn bộ `HomeViewModel`, `SearchViewModel`, `SettingViewModel`, `ProfileViewModel` dùng `@HiltViewModel` và constructor injection.
+- Mọi feature Route lấy ViewModel bằng `hiltViewModel()`; không còn factory hoặc dependency container thủ công trong production code.
 
-Không tạo sẵn repository/use case rỗng vì các màn hình hiện chưa có nguồn dữ liệu hay nghiệp vụ cần một seam riêng. Khi thêm dữ liệu, interface repository đặt ở `domain`, adapter đặt ở `data`, và ViewModel chỉ gọi use case.
+Domain giữ nguyên thuần Kotlin. Hilt wiring chỉ nằm tại app composition root và presentation entry point, nhờ đó có thể thay dummy repository bằng remote repository mà không sửa ViewModel hoặc UI.
+
+## Luồng dữ liệu
+
+```text
+HomeDummyDataSource
+    -> DummyHomeRepository
+    -> HomeDataMapper
+    -> GetHomeSectionsUseCase
+    -> HomeViewModel
+    -> HomeUiMapper
+    -> HomeUiState
+    -> HomeScreen
+```
+
+`Content` là sealed hierarchy gồm:
+
+- `Video`: một video đơn lẻ, thumbnail 16:9.
+- `Series`: content có thêm `episodes: List<Video>`.
+- `Channel`: content phát live.
+- `Short`: video dọc, thumbnail 2:3.
+
+Mọi content có `id`, `videoUrl`, `thumbnailUrl`, `vastUrl`, `title`, `description`, `ageRestriction`, `logoUrl`. `id` được thêm để cung cấp stable key cho Compose; hậu tố `Url` của `logoUrl` làm rõ kiểu dữ liệu.
+
+Quan hệ hợp lệ được kiểm tra tại constructor của `HomeSection` và `HomeSectionUiItem`:
+
+| `viewType` | Loại item bắt buộc |
+|---|---|
+| `Banner` | `Video` |
+| `VerticalBanner` | `Short` |
+| `Videos` | `Video` |
+| `ListSeries` | `Series` |
+| `Channels` | `Channel` |
+| `Shorts` | `Short` |
+
+Section sai kiểu bị từ chối ngay tại boundary thay vì bị lọc âm thầm trong Compose.
+
+## Ảnh dummy
+
+Dummy thumbnail dùng ảnh từ Pexels cho các chủ đề sport, animal, Chinese culture và Japanese culture. Các trang ảnh gốc:
+
+- [Basketball](https://www.pexels.com/photo/men-playing-basketball-9839903/)
+- [Football](https://www.pexels.com/photo/soccer-player-on-field-during-match-36958062/)
+- [Cricket](https://www.pexels.com/photo/a-man-holding-a-wooden-paddle-11023865/)
+- [Bengal tiger](https://www.pexels.com/photo/tiger-in-a-forest-25785873/)
+- [Tiger portrait](https://www.pexels.com/photo/photo-of-a-tiger-12167844/)
+- [Chinese festival](https://www.pexels.com/photo/vibrant-traditional-chinese-cultural-festival-30765119/)
+- [Chinese New Year](https://www.pexels.com/photo/young-woman-celebrating-lunar-new-year-outdoors-36603900/)
+- [Tokyo street](https://www.pexels.com/photo/people-walking-in-city-in-japan-12343886/)
+- [Japanese ceremony](https://www.pexels.com/photo/traditional-japanese-ceremony-with-participants-31370378/)
 
 ## Focus trên Android TV
 
-Focus được khai báo trực tiếp tại nơi sở hữu hành vi:
+StreamTV không dùng `FocusRequesterModifiers` của dự án tham chiếu. Hành vi focus được khai báo tại composable sở hữu nó:
 
-- `StreamTvActionScreen` gắn `FocusRequester` vào nút và gọi `requestFocus()` trong `LaunchedEffect` cho mọi feature.
-- Nút khai báo `up = topBarFocusRequester`.
-- Item trên TopBar khai báo `down = contentFocusRequester`.
-- Container TopBar dùng `focusProperties.onEnter` để trả focus về destination đang chọn.
+- `HomeBannerSection` gắn `contentFocusRequester` và khai báo `up = topBarFocusRequester`.
+- Banner và VerticalBanner tự xử lý D-pad trái/phải bằng `onPreviewKeyEvent`.
+- Auto-scroll dừng khi carousel nhận focus.
+- Item TopBar khai báo hướng Down về content focus requester.
 
-Cách này giúp luồng focus đọc được ngay tại screen/composable và không phụ thuộc vào wrapper modifier dùng chung.
+## Thêm UI cho view type còn lại
 
-## Thêm feature mới
-
-1. Tạo `feature/<feature-name>/presentation`.
-2. Chỉ thêm `domain` và `data` khi có nghiệp vụ hoặc nguồn dữ liệu thật.
-3. Khai báo route trong file `navigation/<Feature>Navigation.kt`.
-4. Đăng ký route trong `StreamTvNavHost.kt`.
-5. Thêm `StreamTvTopBarItem` và xử lý điều hướng trong `StreamTvApp.kt`.
-6. Dùng component, màu, typography và dimensions từ `core/designsystem`.
+1. Tạo composable trong `feature/home/presentation/component`.
+2. Thêm nhánh tương ứng trong `when (section.viewType)` của `HomeScreen.kt`.
+3. Lấy typed item bằng `requireItemsOfType()`; mapper và model đã bảo vệ đúng loại item.
+4. Đặt logic focus tại composable mới, không tạo modifier focus dùng chung toàn app.
 
 ## Build và test
 
@@ -88,6 +121,7 @@ Yêu cầu JDK 17 trở lên và Android SDK 37.
 ./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:assembleDebugAndroidTest
+./gradlew :app:lintDebug
 ```
 
 APK debug được tạo tại `app/build/outputs/apk/debug/app-debug.apk`.

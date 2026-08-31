@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="stream_tv_background">#FF000000</color>
+    <color name="stream_tv_primary">#FF99CCF9</color>
+</resources>

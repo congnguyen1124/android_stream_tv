@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">StreamTV</string>
+    <string name="top_bar_search">Search</string>
+    <string name="top_bar_home">Home</string>
+    <string name="top_bar_setting">Setting</string>
+    <string name="top_bar_profile">Profile</string>
+    <string name="home_title">Chào mừng đến với StreamTV</string>
+    <string name="home_description">Nền tảng Android TV đã sẵn sàng để phát triển.</string>
+    <string name="home_primary_action">Bắt đầu trải nghiệm</string>
+    <string name="home_ready_message">StreamTV đã sẵn sàng</string>
+</resources>

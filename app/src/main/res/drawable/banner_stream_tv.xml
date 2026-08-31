@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#000000" />
+        </shape>
+    </item>
+    <item
+        android:width="136dp"
+        android:height="96dp"
+        android:drawable="@drawable/ic_stream_tv_banner_mark"
+        android:gravity="center" />
+</layer-list>

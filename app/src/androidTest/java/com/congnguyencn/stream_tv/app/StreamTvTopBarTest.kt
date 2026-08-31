@@ -36,4 +36,27 @@ class StreamTvTopBarTest {
         composeRule.onNodeWithText("Setting").assertDoesNotExist()
         composeRule.onNodeWithText("Profile").assertDoesNotExist()
     }
+
+    @Test
+    fun searchItemNavigatesAndMovesFocusToSearchContent() {
+        composeRule.setContent {
+            StreamTvTheme {
+                StreamTvSurface {
+                    StreamTvApp()
+                }
+            }
+        }
+
+        composeRule
+            .onNodeWithText("Bắt đầu trải nghiệm")
+            .performKeyInput {
+                pressKey(Key.DirectionUp)
+                pressKey(Key.DirectionLeft)
+                pressKey(Key.DirectionCenter)
+            }
+
+        composeRule
+            .onNodeWithText("Mở tìm kiếm")
+            .assertIsDisplayed()
+    }
 }

@@ -1,8 +1,9 @@
 package com.congnguyencn.stream_tv.feature.home.presentation
 
-import androidx.compose.runtime.Immutable
+import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionUiItem
 
-@Immutable
 data class HomeUiState(
-    val isReady: Boolean = false,
+    val isLoading: Boolean = true,
+    val sections: List<HomeSectionUiItem> = emptyList(),
+    val errorMessage: String? = null,
 )

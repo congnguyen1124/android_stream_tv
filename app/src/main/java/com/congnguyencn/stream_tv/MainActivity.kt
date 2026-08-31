@@ -8,7 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import com.congnguyencn.stream_tv.app.StreamTvApp
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvSurface
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()

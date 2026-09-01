@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,11 +23,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -42,6 +43,8 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -52,6 +55,8 @@ import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerMetadataUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerPendingFocusTarget
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSection
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSideSection
@@ -66,8 +71,10 @@ private object VerticalPlayerScreenDefaults {
   val PlayerHorizontalOffset = 24.dp
   val SideExpansion = 24.dp
   val MinimumSideWidth = 300.dp
-  val StageShape = RoundedCornerShape(12.dp)
+  val TitleShape = RoundedCornerShape(12.dp)
+  val PlayerVerticalPadding = 4.dp
   val SidePadding = 24.dp
+  val SideEndPadding = 12.dp
   val ActionButtonSize = 40.dp
   val ActionSpacing = 16.dp
   val TitleToActionsSpacing = 28.dp
@@ -135,9 +142,11 @@ internal fun VerticalPlayerScreen(
       .background(StreamTvColors.NeutralBlack)
       .testTag("vertical-player-screen"),
   ) {
-    val portraitPlayerWidth = maxHeight * VerticalPlayerScreenDefaults.PortraitAspectRatio
+    val portraitPlayerWidth = (
+      maxHeight - VerticalPlayerScreenDefaults.PlayerVerticalPadding * 2
+      ) * VerticalPlayerScreenDefaults.PortraitAspectRatio
     val sideWidth = (
-      (maxWidth - portraitPlayerWidth) / 2 + VerticalPlayerScreenDefaults.SideExpansion
+      (maxWidth - portraitPlayerWidth - 48.dp) / 2 + VerticalPlayerScreenDefaults.SideExpansion
       ).coerceAtLeast(VerticalPlayerScreenDefaults.MinimumSideWidth)
     val isPlayerFocusEnabled = sectionNavigationState.isAtBaseLevel ||
       sectionNavigationState.isReturningToBase
@@ -148,22 +157,14 @@ internal fun VerticalPlayerScreen(
       modifier = Modifier
         .align(Alignment.Center)
         .offset(x = -VerticalPlayerScreenDefaults.PlayerHorizontalOffset)
+        .padding(vertical = VerticalPlayerScreenDefaults.PlayerVerticalPadding)
         .fillMaxHeight()
         .aspectRatio(VerticalPlayerScreenDefaults.PortraitAspectRatio)
-        .clip(VerticalPlayerScreenDefaults.StageShape)
         .testTag("vertical-player-stage"),
     ) {
-      StreamTvPlayerSurface(
-        playerManager = playerManager,
-        modifier = Modifier.fillMaxSize(),
-        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
-      )
-
-      if (uiState.error == null) {
-        VerticalPlayerStageChrome(uiState = uiState)
-      }
-
-      Box(
+      VerticalPlayerFocusableSurface(
+        onClick = onTogglePlayPause,
+        interactionSource = playerInteractionSource,
         modifier = Modifier
           .fillMaxSize()
           .focusRequester(playerFocusRequester)
@@ -172,12 +173,7 @@ internal fun VerticalPlayerScreen(
             if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
 
             when (event.key) {
-              Key.DirectionCenter,
-              Key.Enter,
-              Key.NumPadEnter,
-              Key.Spacebar,
-              Key.MediaPlayPause,
-              -> {
+              Key.MediaPlayPause -> {
                 onTogglePlayPause()
                 true
               }
@@ -190,9 +186,18 @@ internal fun VerticalPlayerScreen(
               else -> false
             }
           }
-          .testTag("vertical-player-input-target")
-          .focusable(interactionSource = playerInteractionSource),
-      )
+          .testTag("vertical-player-input-target"),
+      ) {
+        StreamTvPlayerSurface(
+          playerManager = playerManager,
+          modifier = Modifier.fillMaxSize(),
+          resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
+        )
+
+        if (uiState.error == null) {
+          VerticalPlayerStageChrome(uiState = uiState)
+        }
+      }
     }
 
     PlayerPendingFocusTarget(
@@ -215,7 +220,10 @@ internal fun VerticalPlayerScreen(
             .align(Alignment.CenterEnd)
             .width(sideWidth)
             .fillMaxHeight()
-            .padding(VerticalPlayerScreenDefaults.SidePadding),
+            .padding(
+              top = VerticalPlayerScreenDefaults.SidePadding,
+              end = VerticalPlayerScreenDefaults.SideEndPadding,
+            ),
         )
       }
 
@@ -229,11 +237,15 @@ internal fun VerticalPlayerScreen(
         onAudioSelected = onAudioSelected,
         onCommentLikeToggle = onCommentLikeToggle,
         onRootDismissed = { playerFocusRequester.requestFocus() },
+        containerColor = StreamTvColors.Transparent,
         modifier = Modifier
           .align(Alignment.CenterEnd)
           .width(sideWidth)
           .fillMaxHeight()
-          .padding(VerticalPlayerScreenDefaults.SidePadding),
+          .padding(
+            top = VerticalPlayerScreenDefaults.SidePadding,
+            end = VerticalPlayerScreenDefaults.SideEndPadding,
+          ),
       )
     } else {
       PlayerErrorPanel(
@@ -314,13 +326,17 @@ private fun VerticalPlayerInteractionSection(
   val commentFocusRequester = remember { FocusRequester() }
   val saveFocusRequester = remember { FocusRequester() }
   val settingFocusRequester = remember { FocusRequester() }
+  var isSectionFocused by remember { mutableStateOf(false) }
 
   Column(
-    modifier = modifier.focusGroup(),
+    modifier = modifier
+      .onFocusChanged { isSectionFocused = it.hasFocus }
+      .focusGroup(),
     verticalArrangement = Arrangement.Bottom,
   ) {
     VerticalPlayerTitleSurface(
       uiState = uiState,
+      isSectionFocused = isSectionFocused,
       onClick = onTitleClick,
       modifier = Modifier
         .fillMaxWidth()
@@ -396,17 +412,19 @@ private fun VerticalPlayerInteractionSection(
 }
 
 @Composable
-private fun VerticalPlayerTitleSurface(uiState: PlayerUiState, onClick: () -> Unit, modifier: Modifier = Modifier) {
-  val interactionSource = remember { MutableInteractionSource() }
-  val isFocused = remember { androidx.compose.runtime.mutableStateOf(false) }
+private fun VerticalPlayerTitleSurface(
+  uiState: PlayerUiState,
+  isSectionFocused: Boolean,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
   Surface(
     onClick = onClick,
-    modifier = modifier.onFocusChanged { state -> isFocused.value = state.hasFocus },
-    interactionSource = interactionSource,
-    shape = ClickableSurfaceDefaults.shape(shape = VerticalPlayerScreenDefaults.StageShape),
+    modifier = modifier,
+    shape = ClickableSurfaceDefaults.shape(shape = VerticalPlayerScreenDefaults.TitleShape),
     scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     colors = ClickableSurfaceDefaults.colors(
-      containerColor = if (isFocused.value) {
+      containerColor = if (isSectionFocused) {
         StreamTvColors.TransparentWhite10
       } else {
         StreamTvColors.Transparent
@@ -472,4 +490,31 @@ private fun VerticalPlayerActionButton(
       }
       .testTag(testTag),
   )
+}
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF081D2B)
+@Composable
+private fun VerticalPlayerInteractionSectionPreview() {
+  StreamTvTheme {
+    VerticalPlayerInteractionSection(
+      uiState = PlayerUiState.Initial.copy(
+        title = "Into the Wild: Snow Leopards",
+        isLiked = true,
+        details = PlayerDetailsUiState.Empty.copy(
+          metadata = PlayerMetadataUiState.Empty.copy(collectionTitle = "Wildlife Stories"),
+        ),
+      ),
+      firstActionFocusRequester = remember { FocusRequester() },
+      onMoveToPlayer = {},
+      onTitleClick = {},
+      onLikeClick = {},
+      onSaveClick = {},
+      onCommentClick = {},
+      onSettingsClick = {},
+      modifier = Modifier
+        .width(420.dp)
+        .fillMaxHeight()
+        .padding(24.dp),
+    )
+  }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -35,8 +36,8 @@ import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingCategory
 
 private object PlayerSideSectionDefaults {
-  val Shape = RoundedCornerShape(16.dp)
-  val ContentPadding = 20.dp
+  val Shape = RoundedCornerShape(14.dp)
+  val ContentPadding = 24.dp
 }
 
 /**
@@ -58,6 +59,7 @@ internal fun PlayerSideSection(
   onCommentLikeToggle: (Long) -> Unit,
   onRootDismissed: () -> Unit,
   modifier: Modifier = Modifier,
+  containerColor: Color = StreamTvColors.TransparentBlack80,
 ) {
   var selectedCommentId by remember(uiState.title) { mutableStateOf<Long?>(null) }
   var selectedReplyId by remember(uiState.title) { mutableStateOf<Long?>(null) }
@@ -118,7 +120,7 @@ internal fun PlayerSideSection(
       .fillMaxSize()
       .testTag("player-side-section"),
     shape = PlayerSideSectionDefaults.Shape,
-    colors = SurfaceDefaults.colors(containerColor = StreamTvColors.Neutral100),
+    colors = SurfaceDefaults.colors(containerColor = containerColor),
   ) {
     Box(modifier = Modifier.fillMaxSize()) {
       navigationState.sectionLayers.forEach { section ->
@@ -235,6 +237,7 @@ private fun PlayerSectionContent(
         isFocusEnabled = isFocusEnabled,
         focusRequester = focusRequester,
         onReplySelected = { replyId -> onReplySelected(section.commentId, replyId) },
+        onParentCommentLikeClick = onCommentLikeToggle,
         onBack = onBack,
         dismissOnLeft = dismissOnLeft,
         modifier = modifier,

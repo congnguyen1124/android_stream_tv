@@ -52,7 +52,7 @@ class PlayerSideSectionTest {
         navigationState.isPanelSettled
     }
     composeRule
-      .onNodeWithTag("player-comment-101")
+      .onNodeWithTag("player-parent-comment-like")
       .assertIsDisplayed()
       .assertIsFocused()
       .performKeyInput { pressKey(Key.DirectionLeft) }

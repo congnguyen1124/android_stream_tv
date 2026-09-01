@@ -43,12 +43,14 @@ import com.congnguyencn.stream_tv.feature.player.presentation.component.section.
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.rememberPlayerSectionNavigationState
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.ui.StreamTvPlayerSurface
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 
 private object PlayerScreenDefaults {
   const val ControllerAutoHideMillis = 5_000L
-  val SideSectionWidth = 360.dp
-  val SideSectionPadding = 24.dp
+  val SideSectionWidth = 315.dp
+  val SideSectionHorizontalPadding = 30.dp
+  val SideSectionVerticalPadding = 30.dp
 }
 
 /** Landscape playback with controller and retained section focus behavior from the reference app. */
@@ -126,7 +128,7 @@ internal fun PlayerScreen(
       uiState.isPlaying &&
       uiState.error == null
     ) {
-      delay(PlayerScreenDefaults.ControllerAutoHideMillis)
+      delay(PlayerScreenDefaults.ControllerAutoHideMillis.milliseconds)
       isControllerVisible = false
     }
   }
@@ -247,7 +249,11 @@ internal fun PlayerScreen(
         onRootDismissed = { showController() },
         modifier = Modifier
           .align(Alignment.CenterEnd)
-          .padding(PlayerScreenDefaults.SideSectionPadding)
+          .padding(
+            top = PlayerScreenDefaults.SideSectionVerticalPadding,
+            end = PlayerScreenDefaults.SideSectionHorizontalPadding,
+            bottom = PlayerScreenDefaults.SideSectionVerticalPadding,
+          )
           .width(PlayerScreenDefaults.SideSectionWidth)
           .fillMaxHeight(),
       )

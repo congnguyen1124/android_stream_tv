@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
@@ -102,15 +104,17 @@ internal fun PlayerRepliesSection(
   isFocusEnabled: Boolean,
   focusRequester: FocusRequester,
   onReplySelected: (Long) -> Unit,
+  onParentCommentLikeClick: (Long) -> Unit,
   onBack: () -> Unit,
   dismissOnLeft: Boolean,
   modifier: Modifier = Modifier,
 ) {
-  val focusReplyId = replies.find { reply -> reply.id == selectedReplyId }?.id
-    ?: replies.firstOrNull()?.id
+  val restoredReplyId = replies.find { reply -> reply.id == selectedReplyId }?.id
+  val focusReplyId = restoredReplyId ?: replies.firstOrNull()?.id.takeIf { parentComment == null }
+  val shouldFocusParentLike = parentComment != null && restoredReplyId == null
 
-  LaunchedEffect(isFocusEnabled, focusReplyId, replies) {
-    if (isFocusEnabled && focusReplyId != null) {
+  LaunchedEffect(isFocusEnabled, focusReplyId, shouldFocusParentLike, replies) {
+    if (isFocusEnabled && (focusReplyId != null || shouldFocusParentLike)) {
       awaitPlayerSectionFrame()
       focusRequester.requestFocus()
     }
@@ -132,14 +136,23 @@ internal fun PlayerRepliesSection(
     ) {
       parentComment?.let { comment ->
         item(key = "parent-${comment.id}", contentType = "ParentComment") {
-          PlayerCommentCard(
+          PlayerCommentScrollableItem(
             comment = comment,
-            isFocusEnabled = false,
-            showBackground = false,
-            showReplyMetric = false,
-            onClick = {},
+            isFocusEnabled = isFocusEnabled,
           )
-          Spacer(modifier = Modifier.height(4.dp))
+        }
+        item(key = "parent-like-${comment.id}", contentType = "ParentCommentLike") {
+          PlayerMetricButton(
+            iconResId = if (comment.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+            label = comment.likeCount.toString(),
+            onClick = { onParentCommentLikeClick(comment.id) },
+            modifier = Modifier
+              .padding(start = 48.dp)
+              .then(if (shouldFocusParentLike) Modifier.focusRequester(focusRequester) else Modifier)
+              .focusProperties { canFocus = isFocusEnabled }
+              .testTag("player-parent-comment-like"),
+          )
+          Spacer(modifier = Modifier.height(12.dp))
         }
       }
 
@@ -191,29 +204,29 @@ internal fun PlayerReplyDetailSection(
     }
   }
 
-  Column(
+  LazyColumn(
     modifier = modifier
       .fillMaxSize()
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft),
   ) {
-    PlayerCommentCard(
-      comment = reply,
-      isFocusEnabled = false,
-      showBackground = false,
-      showReplyMetric = false,
-      onClick = {},
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-    PlayerMetricButton(
-      iconResId = if (reply.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
-      label = reply.likeCount.toString(),
-      onClick = { onLikeClick(reply.id) },
-      modifier = Modifier
-        .padding(start = 48.dp)
-        .focusRequester(focusRequester)
-        .focusProperties { canFocus = isFocusEnabled }
-        .testTag("player-reply-like"),
-    )
+    item(key = "reply-detail-${reply.id}", contentType = "ReplyDetail") {
+      PlayerCommentScrollableItem(
+        comment = reply,
+        isFocusEnabled = isFocusEnabled,
+      )
+    }
+    item(key = "reply-detail-like-${reply.id}", contentType = "ReplyDetailLike") {
+      PlayerMetricButton(
+        iconResId = if (reply.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+        label = reply.likeCount.toString(),
+        onClick = { onLikeClick(reply.id) },
+        modifier = Modifier
+          .padding(start = 48.dp)
+          .focusRequester(focusRequester)
+          .focusProperties { canFocus = isFocusEnabled }
+          .testTag("player-reply-like"),
+      )
+    }
   }
 }
 
@@ -329,7 +342,7 @@ private fun PlayerCommentCard(
 }
 
 @Composable
-private fun PlayerCommentAvatar(comment: PlayerCommentUiItem) {
+internal fun PlayerCommentAvatar(comment: PlayerCommentUiItem) {
   Box(
     modifier = Modifier
       .size(32.dp)
@@ -393,3 +406,72 @@ private fun PlayerMetricButton(iconResId: Int, label: String, onClick: () -> Uni
     }
   }
 }
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerRepliesSectionPreview() {
+  val parent = previewPlayerComment(id = 1L, parentId = null)
+  StreamTvTheme {
+    PlayerRepliesSection(
+      parentComment = parent,
+      replies = listOf(
+        previewPlayerComment(id = 2L, parentId = parent.id),
+        previewPlayerComment(id = 3L, parentId = parent.id, author = "Jamie Chen"),
+      ),
+      selectedReplyId = null,
+      isFocusEnabled = true,
+      focusRequester = FocusRequester.Default,
+      onReplySelected = {},
+      onParentCommentLikeClick = {},
+      onBack = {},
+      dismissOnLeft = true,
+      modifier = Modifier
+        .width(420.dp)
+        .padding(24.dp),
+    )
+  }
+}
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerReplyDetailSectionPreview() {
+  StreamTvTheme {
+    PlayerReplyDetailSection(
+      reply = previewPlayerComment(
+        id = 3L,
+        parentId = 1L,
+        author = "Jamie Chen",
+        content = "The photography is exceptional, but the quiet narration is what makes this " +
+          "episode memorable. It gives every scene enough room to breathe and lets the landscape " +
+          "tell its own story. I especially appreciated the final sequence and its patient pacing.",
+      ),
+      isFocusEnabled = true,
+      focusRequester = FocusRequester.Default,
+      onLikeClick = {},
+      onBack = {},
+      dismissOnLeft = true,
+      modifier = Modifier
+        .width(420.dp)
+        .padding(24.dp),
+    )
+  }
+}
+
+private fun previewPlayerComment(
+  id: Long,
+  parentId: Long?,
+  author: String = "StreamTV",
+  content: String = "A thoughtful story with beautiful detail and a genuinely moving conclusion.",
+) = PlayerCommentUiItem(
+  id = id,
+  parentId = parentId,
+  authorName = author,
+  authorAvatarUrl = null,
+  isAdmin = author == "StreamTV",
+  isPinned = parentId == null,
+  postedAtLabel = "2 hours ago",
+  content = content,
+  replyCount = if (parentId == null) 2 else 0,
+  likeCount = 24,
+  isLiked = false,
+)

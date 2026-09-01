@@ -26,6 +26,7 @@ import com.congnguyencn.stream_tv.app.navigation.StreamTvNavHost
 import com.congnguyencn.stream_tv.app.navigation.StreamTvTopBarItems
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvTopBar
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomeRoute
+import com.congnguyencn.stream_tv.feature.player.presentation.navigation.isPlayerRoute
 
 @Composable
 fun StreamTvApp(modifier: Modifier = Modifier, navController: NavHostController = rememberNavController()) {
@@ -35,6 +36,7 @@ fun StreamTvApp(modifier: Modifier = Modifier, navController: NavHostController 
   val currentBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = currentBackStackEntry?.destination?.route
   val selectedItemId = StreamTvTopBarItems.itemFor(currentRoute)?.id
+  val isPlayerVisible = isPlayerRoute(currentRoute)
 
   Box(modifier = modifier.fillMaxSize()) {
     StreamTvNavHost(
@@ -45,7 +47,7 @@ fun StreamTvApp(modifier: Modifier = Modifier, navController: NavHostController 
     )
 
     AnimatedVisibility(
-      visible = isTopBarFocused,
+      visible = isTopBarFocused && !isPlayerVisible,
       modifier = Modifier
         .fillMaxSize()
         .zIndex(ScreenOverlayZIndex),
@@ -59,6 +61,8 @@ fun StreamTvApp(modifier: Modifier = Modifier, navController: NavHostController 
           .testTag("stream-tv-screen-overlay"),
       )
     }
+
+    if (isPlayerVisible) return@Box
 
     StreamTvTopBar(
       items = StreamTvTopBarItems.Default,

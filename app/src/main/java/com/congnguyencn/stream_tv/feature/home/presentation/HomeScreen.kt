@@ -33,6 +33,7 @@ internal fun HomeScreen(
   uiState: HomeUiState,
   contentFocusRequester: FocusRequester,
   topBarFocusRequester: FocusRequester,
+  onItemClick: (HomeContentUiItem) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   LaunchedEffect(uiState.sections) {
@@ -73,10 +74,12 @@ internal fun HomeScreen(
             items = section.items.requireItemsOfType<VideoUiItem>(),
             contentFocusRequester = contentFocusRequester,
             topBarFocusRequester = topBarFocusRequester,
+            onItemClick = onItemClick,
           )
 
           HomeSectionViewTypeUi.VerticalBanner -> HomeVerticalBannerSection(
             items = section.items.requireItemsOfType<ShortUiItem>(),
+            onItemClick = onItemClick,
           )
 
           HomeSectionViewTypeUi.Videos -> HomeContentRowSection(
@@ -84,6 +87,7 @@ internal fun HomeScreen(
             title = section.title,
             items = section.items.requireItemsOfType<VideoUiItem>(),
             style = HomeContentRowStyle.Video,
+            onItemClick = onItemClick,
           )
 
           HomeSectionViewTypeUi.ListSeries -> HomeContentRowSection(
@@ -91,6 +95,7 @@ internal fun HomeScreen(
             title = section.title,
             items = section.items.requireItemsOfType<SeriesUiItem>(),
             style = HomeContentRowStyle.Series,
+            onItemClick = onItemClick,
           )
 
           HomeSectionViewTypeUi.Channels -> HomeContentRowSection(
@@ -98,6 +103,7 @@ internal fun HomeScreen(
             title = section.title,
             items = section.items.requireItemsOfType<ChannelUiItem>(),
             style = HomeContentRowStyle.Channel,
+            onItemClick = onItemClick,
           )
 
           HomeSectionViewTypeUi.Shorts -> HomeContentRowSection(
@@ -105,6 +111,7 @@ internal fun HomeScreen(
             title = section.title,
             items = section.items.requireItemsOfType<ShortUiItem>(),
             style = HomeContentRowStyle.Short,
+            onItemClick = onItemClick,
           )
         }
       }

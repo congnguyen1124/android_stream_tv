@@ -2,9 +2,6 @@ package com.congnguyencn.stream_tv.feature.player.presentation.component
 
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
@@ -27,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -46,13 +45,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
-import com.congnguyencn.stream_tv.feature.player.presentation.component.setting.PlayerSettingsPanel
-import com.congnguyencn.stream_tv.feature.player.presentation.component.setting.rememberPlayerSettingsNavigationState
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerPendingFocusTarget
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSection
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSideSection
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.rememberPlayerSectionNavigationState
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.ui.StreamTvPlayerSurface
 
@@ -65,15 +68,23 @@ private object VerticalPlayerScreenDefaults {
   val MinimumSideWidth = 300.dp
   val StageShape = RoundedCornerShape(12.dp)
   val SidePadding = 24.dp
+  val ActionButtonSize = 40.dp
+  val ActionSpacing = 16.dp
+  val TitleToActionsSpacing = 28.dp
+  val ActionsBottomSpacing = 56.dp
 }
 
-/** Portrait playback with a permanently framed video and a companion section on its right. */
+/** Portrait playback using the reference player's focus parking and retained side-section stack. */
 @OptIn(UnstableApi::class)
 @Composable
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 internal fun VerticalPlayerScreen(
   uiState: PlayerUiState,
   playerManager: StreamTvPlayerManager,
   onTogglePlayPause: () -> Unit,
+  onToggleLike: () -> Unit,
+  onToggleSaved: () -> Unit,
+  onCommentLikeToggle: (Long) -> Unit,
   onQualitySelected: (String) -> Unit,
   onSubtitleSelected: (String) -> Unit,
   onAudioSelected: (String) -> Unit,
@@ -81,23 +92,42 @@ internal fun VerticalPlayerScreen(
   onExitPlayer: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val playerFocusRequester = androidx.compose.runtime.remember { FocusRequester() }
-  val settingFocusRequester = androidx.compose.runtime.remember { FocusRequester() }
-  val playerInteractionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
-  val settingsNavigationState = rememberPlayerSettingsNavigationState()
+  val playerFocusRequester = remember { FocusRequester() }
+  val interactionFocusRequester = remember { FocusRequester() }
+  val pendingFocusRequester = remember { FocusRequester() }
+  val playerInteractionSource = remember { MutableInteractionSource() }
+  val sectionNavigationState = rememberPlayerSectionNavigationState()
 
-  LaunchedEffect(settingsNavigationState.isVisible) {
-    if (!settingsNavigationState.isVisible) {
-      withFrameMillis { }
-      playerFocusRequester.requestFocus()
+  val openSection: (PlayerSection) -> Unit = { section ->
+    if (sectionNavigationState.isAtBaseLevel) {
+      pendingFocusRequester.requestFocus()
+      sectionNavigationState.openRoot(section)
+    }
+  }
+
+  LaunchedEffect(
+    sectionNavigationState.hasSectionInPlay,
+    sectionNavigationState.shouldParkFocus,
+    sectionNavigationState.isReturningToBase,
+    uiState.error,
+  ) {
+    if (uiState.error != null) return@LaunchedEffect
+    withFrameMillis { }
+    when {
+      sectionNavigationState.shouldParkFocus -> pendingFocusRequester.requestFocus()
+
+      sectionNavigationState.isReturningToBase || sectionNavigationState.isAtBaseLevel ->
+        playerFocusRequester.requestFocus()
+
+      else -> Unit
     }
   }
 
   LaunchedEffect(uiState.error) {
-    if (uiState.error != null) settingsNavigationState.dismiss()
+    if (uiState.error != null) sectionNavigationState.reset()
   }
 
-  BackHandler(enabled = !settingsNavigationState.isVisible, onBack = onExitPlayer)
+  BackHandler(enabled = !sectionNavigationState.hasSectionInPlay, onBack = onExitPlayer)
 
   BoxWithConstraints(
     modifier = modifier
@@ -109,6 +139,8 @@ internal fun VerticalPlayerScreen(
     val sideWidth = (
       (maxWidth - portraitPlayerWidth) / 2 + VerticalPlayerScreenDefaults.SideExpansion
       ).coerceAtLeast(VerticalPlayerScreenDefaults.MinimumSideWidth)
+    val isPlayerFocusEnabled = sectionNavigationState.isAtBaseLevel ||
+      sectionNavigationState.isReturningToBase
 
     VerticalPlayerAmbientBackground(modifier = Modifier.fillMaxSize())
 
@@ -135,7 +167,7 @@ internal fun VerticalPlayerScreen(
         modifier = Modifier
           .fillMaxSize()
           .focusRequester(playerFocusRequester)
-          .focusProperties { canFocus = !settingsNavigationState.isVisible }
+          .focusProperties { canFocus = isPlayerFocusEnabled }
           .onPreviewKeyEvent { event ->
             if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
 
@@ -151,7 +183,7 @@ internal fun VerticalPlayerScreen(
               }
 
               Key.DirectionRight -> {
-                if (uiState.settings.isAvailable) settingFocusRequester.requestFocus()
+                if (sectionNavigationState.isAtBaseLevel) interactionFocusRequester.requestFocus()
                 true
               }
 
@@ -162,33 +194,40 @@ internal fun VerticalPlayerScreen(
       )
     }
 
+    PlayerPendingFocusTarget(
+      focusRequester = pendingFocusRequester,
+      modifier = Modifier.align(Alignment.CenterStart),
+    )
+
     if (uiState.error == null) {
-      AnimatedVisibility(
-        visible = !settingsNavigationState.isVisible,
-        modifier = Modifier
-          .align(Alignment.CenterEnd)
-          .width(sideWidth)
-          .fillMaxHeight()
-          .padding(VerticalPlayerScreenDefaults.SidePadding),
-        enter = fadeIn(),
-        exit = fadeOut(),
-      ) {
+      if (sectionNavigationState.isAtBaseLevel) {
         VerticalPlayerInteractionSection(
           uiState = uiState,
-          settingFocusRequester = settingFocusRequester,
+          firstActionFocusRequester = interactionFocusRequester,
           onMoveToPlayer = { playerFocusRequester.requestFocus() },
-          onSettingsClick = { settingsNavigationState.open(uiState.settings) },
-          modifier = Modifier.fillMaxSize(),
+          onTitleClick = { openSection(PlayerSection.Metadata) },
+          onLikeClick = onToggleLike,
+          onSaveClick = onToggleSaved,
+          onCommentClick = { openSection(PlayerSection.Comments) },
+          onSettingsClick = { openSection(PlayerSection.Settings) },
+          modifier = Modifier
+            .align(Alignment.CenterEnd)
+            .width(sideWidth)
+            .fillMaxHeight()
+            .padding(VerticalPlayerScreenDefaults.SidePadding),
         )
       }
 
-      PlayerSettingsPanel(
-        settings = uiState.settings,
-        navigationState = settingsNavigationState,
+      PlayerSideSection(
+        uiState = uiState,
+        navigationState = sectionNavigationState,
+        pendingFocusRequester = pendingFocusRequester,
+        dismissOnLeft = true,
         onQualitySelected = onQualitySelected,
         onSubtitleSelected = onSubtitleSelected,
         onAudioSelected = onAudioSelected,
-        onDismissed = { settingFocusRequester.requestFocus() },
+        onCommentLikeToggle = onCommentLikeToggle,
+        onRootDismissed = { playerFocusRequester.requestFocus() },
         modifier = Modifier
           .align(Alignment.CenterEnd)
           .width(sideWidth)
@@ -258,68 +297,177 @@ private fun VerticalPlayerStageChrome(uiState: PlayerUiState) {
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun VerticalPlayerInteractionSection(
   uiState: PlayerUiState,
-  settingFocusRequester: FocusRequester,
+  firstActionFocusRequester: FocusRequester,
   onMoveToPlayer: () -> Unit,
+  onTitleClick: () -> Unit,
+  onLikeClick: () -> Unit,
+  onSaveClick: () -> Unit,
+  onCommentClick: () -> Unit,
   onSettingsClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  val titleFocusRequester = remember { FocusRequester() }
+  val commentFocusRequester = remember { FocusRequester() }
+  val saveFocusRequester = remember { FocusRequester() }
+  val settingFocusRequester = remember { FocusRequester() }
+
   Column(
     modifier = modifier.focusGroup(),
     verticalArrangement = Arrangement.Bottom,
   ) {
+    VerticalPlayerTitleSurface(
+      uiState = uiState,
+      onClick = onTitleClick,
+      modifier = Modifier
+        .fillMaxWidth()
+        .focusRequester(titleFocusRequester)
+        .focusProperties { down = firstActionFocusRequester }
+        .onPreviewKeyEvent { event ->
+          if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionLeft) {
+            onMoveToPlayer()
+            true
+          } else {
+            false
+          }
+        },
+    )
+
+    Spacer(modifier = Modifier.height(VerticalPlayerScreenDefaults.TitleToActionsSpacing))
+
+    Row(
+      modifier = Modifier.padding(horizontal = 4.dp),
+      horizontalArrangement = Arrangement.spacedBy(VerticalPlayerScreenDefaults.ActionSpacing),
+    ) {
+      VerticalPlayerActionButton(
+        iconResId = if (uiState.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+        contentDescription = stringResource(R.string.player_like),
+        focusRequester = firstActionFocusRequester,
+        left = null,
+        right = commentFocusRequester,
+        up = titleFocusRequester,
+        onMoveToPlayer = onMoveToPlayer,
+        onClick = onLikeClick,
+        testTag = "vertical-player-like",
+      )
+      VerticalPlayerActionButton(
+        iconResId = R.drawable.ic_player_comment,
+        contentDescription = stringResource(R.string.player_comments),
+        focusRequester = commentFocusRequester,
+        left = firstActionFocusRequester,
+        right = saveFocusRequester,
+        up = titleFocusRequester,
+        onMoveToPlayer = null,
+        onClick = onCommentClick,
+        testTag = "vertical-player-comments",
+      )
+      VerticalPlayerActionButton(
+        iconResId = if (uiState.isSaved) R.drawable.ic_player_saved else R.drawable.ic_player_save,
+        contentDescription = stringResource(R.string.player_save),
+        focusRequester = saveFocusRequester,
+        left = commentFocusRequester,
+        right = settingFocusRequester.takeIf { uiState.settings.isAvailable },
+        up = titleFocusRequester,
+        onMoveToPlayer = null,
+        onClick = onSaveClick,
+        testTag = "vertical-player-save",
+      )
+      if (uiState.settings.isAvailable) {
+        VerticalPlayerActionButton(
+          iconResId = R.drawable.ic_setting,
+          contentDescription = stringResource(R.string.player_settings),
+          focusRequester = settingFocusRequester,
+          left = saveFocusRequester,
+          right = null,
+          up = titleFocusRequester,
+          onMoveToPlayer = null,
+          onClick = onSettingsClick,
+          testTag = "vertical-player-settings-button",
+        )
+      }
+    }
+
+    Spacer(modifier = Modifier.height(VerticalPlayerScreenDefaults.ActionsBottomSpacing))
+  }
+}
+
+@Composable
+private fun VerticalPlayerTitleSurface(uiState: PlayerUiState, onClick: () -> Unit, modifier: Modifier = Modifier) {
+  val interactionSource = remember { MutableInteractionSource() }
+  val isFocused = remember { androidx.compose.runtime.mutableStateOf(false) }
+  Surface(
+    onClick = onClick,
+    modifier = modifier.onFocusChanged { state -> isFocused.value = state.hasFocus },
+    interactionSource = interactionSource,
+    shape = ClickableSurfaceDefaults.shape(shape = VerticalPlayerScreenDefaults.StageShape),
+    scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+    colors = ClickableSurfaceDefaults.colors(
+      containerColor = if (isFocused.value) {
+        StreamTvColors.TransparentWhite10
+      } else {
+        StreamTvColors.Transparent
+      },
+      focusedContainerColor = StreamTvColors.NeutralWhite,
+      contentColor = StreamTvColors.Neutral20,
+      focusedContentColor = StreamTvColors.NeutralBlack,
+    ),
+  ) {
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .background(
-          color = StreamTvColors.TransparentWhite10,
-          shape = VerticalPlayerScreenDefaults.StageShape,
-        )
         .padding(16.dp),
-      verticalArrangement = Arrangement.spacedBy(6.dp),
+      verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
       Text(
+        text = uiState.details.metadata.collectionTitle,
+        style = StreamTvTheme.typography.labelMedium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      Text(
         text = uiState.title,
-        color = StreamTvColors.NeutralWhite,
         style = StreamTvTheme.typography.headlineLarge,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
       )
-      if (uiState.isSeekable) {
-        PlayerTimeLabel(position = uiState.position, duration = uiState.duration)
-      } else {
-        PlayerLiveBadge()
-      }
     }
-
-    Spacer(modifier = Modifier.height(28.dp))
-
-    if (uiState.settings.isAvailable) {
-      Row(modifier = Modifier.fillMaxWidth()) {
-        PlayerRoundIconButton(
-          iconResId = R.drawable.ic_setting,
-          contentDescription = stringResource(R.string.player_settings),
-          onClick = onSettingsClick,
-          modifier = Modifier
-            .size(44.dp)
-            .focusRequester(settingFocusRequester)
-            .onPreviewKeyEvent { event ->
-              if (
-                event.type == KeyEventType.KeyDown &&
-                (event.key == Key.DirectionLeft || event.key == Key.Back || event.key == Key.Escape)
-              ) {
-                onMoveToPlayer()
-                true
-              } else {
-                false
-              }
-            }
-            .testTag("vertical-player-settings-button"),
-        )
-      }
-    }
-
-    Spacer(modifier = Modifier.height(32.dp))
   }
+}
+
+@Composable
+private fun VerticalPlayerActionButton(
+  iconResId: Int,
+  contentDescription: String,
+  focusRequester: FocusRequester,
+  left: FocusRequester?,
+  right: FocusRequester?,
+  up: FocusRequester,
+  onMoveToPlayer: (() -> Unit)?,
+  onClick: () -> Unit,
+  testTag: String,
+) {
+  PlayerRoundIconButton(
+    iconResId = iconResId,
+    contentDescription = contentDescription,
+    onClick = onClick,
+    modifier = Modifier
+      .size(VerticalPlayerScreenDefaults.ActionButtonSize)
+      .focusRequester(focusRequester)
+      .focusProperties {
+        left?.let { requester -> this.left = requester }
+        right?.let { requester -> this.right = requester }
+        this.up = up
+      }
+      .onPreviewKeyEvent { event ->
+        if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionLeft && onMoveToPlayer != null) {
+          onMoveToPlayer()
+          true
+        } else {
+          false
+        }
+      }
+      .testTag(testTag),
+  )
 }

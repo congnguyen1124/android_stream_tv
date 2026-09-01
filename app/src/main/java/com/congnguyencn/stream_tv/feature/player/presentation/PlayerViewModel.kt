@@ -4,6 +4,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.congnguyencn.stream_tv.core.player.StreamTvPlayerFactory
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.PlayerArgs
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.loadAndPlay

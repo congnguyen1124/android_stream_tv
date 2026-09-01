@@ -1,7 +1,7 @@
 package com.congnguyencn.stream_tv.app.di
 
 import android.content.Context
-import com.congnguyencn.stream_tv.feature.player.presentation.StreamTvPlayerFactory
+import com.congnguyencn.stream_tv.core.player.StreamTvPlayerFactory
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.config.StreamTvPlayerConfig
 import dagger.Module

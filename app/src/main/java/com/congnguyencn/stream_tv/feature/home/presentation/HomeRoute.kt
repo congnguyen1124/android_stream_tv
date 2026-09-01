@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeBannerTrailer
 import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeContent
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeContentUiItem
 
@@ -24,5 +25,13 @@ internal fun HomeScreen(
     topBarFocusRequester = topBarFocusRequester,
     onItemClick = onItemClick,
     onTopBarOverlayVisibilityChange = onTopBarOverlayVisibilityChange,
+    // Only the route builds a player, so a banner rendered anywhere else — a preview, a Compose test
+    // — is thumbnail-only without having to say so.
+    bannerTrailer = { item, isBannerFocused ->
+      HomeBannerTrailer(
+        item = item,
+        isBannerFocused = isBannerFocused,
+      )
+    },
   )
 }

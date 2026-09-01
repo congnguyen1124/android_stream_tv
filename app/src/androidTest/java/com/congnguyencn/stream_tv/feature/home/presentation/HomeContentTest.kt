@@ -96,6 +96,7 @@ class HomeContentTest {
   private fun video(id: String, title: String) = VideoUiItem(
     id = id,
     videoUrl = "",
+    trailerUrl = "",
     thumbnailUrl = "https://example.com/$id.jpg",
     vastUrl = "",
     title = title,

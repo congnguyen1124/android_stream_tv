@@ -4,6 +4,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingCategory
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.PlayerArgs
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.loadAndPlay
@@ -12,6 +13,9 @@ import com.congnguyencn.streamplayer.play
 import com.congnguyencn.streamplayer.prepare
 import com.congnguyencn.streamplayer.seekBack
 import com.congnguyencn.streamplayer.seekForward
+import com.congnguyencn.streamplayer.selectAudioTrack
+import com.congnguyencn.streamplayer.selectTextTrack
+import com.congnguyencn.streamplayer.selectVideoTrack
 import com.congnguyencn.streamplayer.togglePlayPause
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -74,6 +78,14 @@ internal class PlayerViewModel @Inject constructor(
 
   fun seekBack() {
     playerManager.seekBack()
+  }
+
+  fun selectTrack(category: PlayerSettingCategory, id: String) {
+    when (category) {
+      PlayerSettingCategory.Quality -> playerManager.selectVideoTrack(id)
+      PlayerSettingCategory.Subtitles -> playerManager.selectTextTrack(id)
+      PlayerSettingCategory.Audio -> playerManager.selectAudioTrack(id)
+    }
   }
 
   /** Pauses without tearing down, for when the screen stops but the destination is still on the stack. */

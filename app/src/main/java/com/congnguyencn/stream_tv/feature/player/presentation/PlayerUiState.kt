@@ -3,6 +3,8 @@ package com.congnguyencn.stream_tv.feature.player.presentation
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.congnguyencn.stream_tv.R
+import com.congnguyencn.stream_tv.feature.player.presentation.mapper.buildPlayerSettingsUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingsUiState
 import com.congnguyencn.streamplayer.model.StreamTvPlaybackError
 import com.congnguyencn.streamplayer.model.StreamTvPlaybackState
 import com.congnguyencn.streamplayer.model.StreamTvPlayerState
@@ -23,6 +25,7 @@ internal data class PlayerUiState(
   val position: Duration,
   val duration: Duration,
   val bufferedPosition: Duration,
+  val settings: PlayerSettingsUiState,
   val error: PlayerErrorUiItem?,
 ) {
   /**
@@ -58,6 +61,7 @@ internal data class PlayerUiState(
         position = Duration.ZERO,
         duration = Duration.ZERO,
         bufferedPosition = Duration.ZERO,
+        settings = PlayerSettingsUiState.Empty,
         error = null,
       )
   }
@@ -79,6 +83,11 @@ internal fun StreamTvPlayerState.toPlayerUiState(title: String): PlayerUiState =
   position = position,
   duration = duration,
   bufferedPosition = bufferedPosition,
+  settings = buildPlayerSettingsUiState(
+    audioTracks = audioTracks,
+    textTracks = textTracks,
+    videoTracks = videoTracks,
+  ),
   error = playbackError?.toPlayerErrorUiItem(),
 )
 

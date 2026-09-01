@@ -21,6 +21,14 @@
     <string name="player_pause">Pause</string>
     <string name="player_retry">Try again</string>
     <string name="player_live_badge">LIVE</string>
+    <string name="player_settings">Settings</string>
+    <string name="player_setting_quality">Quality</string>
+    <string name="player_setting_subtitles">Subtitles</string>
+    <string name="player_setting_audio">Audio</string>
+    <string name="player_setting_auto">Auto</string>
+    <string name="player_setting_off">Off</string>
+    <string name="player_setting_original">Original</string>
+    <string name="player_setting_selected">Selected</string>
     <string name="player_error_no_network">No connection. Check your network and try again.</string>
     <string name="player_error_not_found">This stream is no longer available.</string>
     <string name="player_error_not_entitled">You do not have access to this stream.</string>

@@ -1,70 +1,131 @@
 package com.congnguyencn.stream_tv.feature.player.presentation.component
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.component.setting.PlayerSettingsPanel
+import com.congnguyencn.stream_tv.feature.player.presentation.component.setting.rememberPlayerSettingsNavigationState
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.ui.StreamTvPlayerSurface
+import kotlinx.coroutines.delay
 
 private object PlayerScreenDefaults {
-  val BottomBarHeight: Dp = 200.dp
-  val BottomBarPadding: Dp = 48.dp
-  val TitleSpacing: Dp = 12.dp
+  const val ControllerAutoHideMillis = 5_000L
+  val SettingsPanelWidth = 360.dp
+  val SettingsPanelPadding = 24.dp
 }
 
 /**
- * Landscape playback for videos, series episodes and live channels.
+ * Landscape playback with the same controller and setting-section behaviour as the original app.
  *
- * Letterboxes the video so a 16:9 film keeps its framing on a 16:9 panel. The overlay is deliberately
- * sparse — a lean-back viewer holds a remote, not a pointer, so the D-pad handles everything and the
- * chrome only reports state.
- *
- * @param onTogglePlayPause D-pad centre.
- * @param onSeekForward D-pad right. Ignored on a live stream, which has nowhere to seek to.
- * @param onSeekBack D-pad left.
+ * The controller is a full-screen Box overlay only. Related content and episode rows deliberately
+ * stay outside this player, so there is no LazyColumn and no second content-navigation mode.
  */
 @OptIn(UnstableApi::class)
 @Composable
+@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 internal fun PlayerScreen(
   uiState: PlayerUiState,
   playerManager: StreamTvPlayerManager,
   onTogglePlayPause: () -> Unit,
   onSeekForward: () -> Unit,
   onSeekBack: () -> Unit,
+  onQualitySelected: (String) -> Unit,
+  onSubtitleSelected: (String) -> Unit,
+  onAudioSelected: (String) -> Unit,
   onRetry: () -> Unit,
+  onExitPlayer: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val focusRequester = remember { FocusRequester() }
-  val interactionSource = remember { MutableInteractionSource() }
+  val playerFocusRequester = remember { FocusRequester() }
+  val progressFocusRequester = remember { FocusRequester() }
+  val settingFocusRequester = remember { FocusRequester() }
+  val playerInteractionSource = remember { MutableInteractionSource() }
+  val settingsNavigationState = rememberPlayerSettingsNavigationState()
+  var isControllerVisible by remember { mutableStateOf(true) }
 
-  // The remote has no other target on this screen, so playback must own focus the moment it opens or
-  // the first D-pad press goes nowhere.
-  LaunchedEffect(focusRequester) {
-    focusRequester.requestFocus()
+  val focusController = {
+    if (uiState.isSeekable) {
+      progressFocusRequester.requestFocus()
+    } else if (uiState.settings.isAvailable) {
+      settingFocusRequester.requestFocus()
+    } else {
+      playerFocusRequester.requestFocus()
+    }
+  }
+
+  LaunchedEffect(
+    isControllerVisible,
+    settingsNavigationState.isVisible,
+    uiState.isSeekable,
+    uiState.settings.isAvailable,
+  ) {
+    if (settingsNavigationState.isVisible) return@LaunchedEffect
+
+    withFrameMillis { }
+    if (isControllerVisible) focusController() else playerFocusRequester.requestFocus()
+  }
+
+  LaunchedEffect(
+    isControllerVisible,
+    settingsNavigationState.isVisible,
+    uiState.isPlaying,
+    uiState.error,
+  ) {
+    if (
+      isControllerVisible &&
+      !settingsNavigationState.isVisible &&
+      uiState.isPlaying &&
+      uiState.error == null
+    ) {
+      delay(PlayerScreenDefaults.ControllerAutoHideMillis)
+      isControllerVisible = false
+    }
+  }
+
+  LaunchedEffect(uiState.error) {
+    if (uiState.error != null) settingsNavigationState.dismiss()
+  }
+
+  BackHandler(enabled = !settingsNavigationState.isVisible) {
+    if (isControllerVisible && uiState.error == null) {
+      isControllerVisible = false
+    } else {
+      onExitPlayer()
+    }
   }
 
   Box(
@@ -79,81 +140,105 @@ internal fun PlayerScreen(
       resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT,
     )
 
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .focusRequester(focusRequester)
-        .onPreviewKeyEvent { event ->
-          handlePlaybackKeyEvent(
-            event = event,
-            isSeekable = uiState.isSeekable,
-            onTogglePlayPause = onTogglePlayPause,
-            onSeekForward = onSeekForward,
-            onSeekBack = onSeekBack,
-          )
+    PlayerInputTarget(
+      isFocusEnabled = !isControllerVisible && !settingsNavigationState.isVisible,
+      focusRequester = playerFocusRequester,
+      interactionSource = playerInteractionSource,
+      onKeyDown = { key ->
+        when (key) {
+          Key.MediaPlayPause -> {
+            onTogglePlayPause()
+            isControllerVisible = true
+            true
+          }
+
+          Key.DirectionCenter,
+          Key.Enter,
+          Key.NumPadEnter,
+          Key.Spacebar,
+          Key.DirectionLeft,
+          Key.DirectionRight,
+          Key.DirectionUp,
+          Key.DirectionDown,
+          -> {
+            isControllerVisible = true
+            true
+          }
+
+          else -> false
         }
-        .focusable(interactionSource = interactionSource),
+      },
     )
 
-    when (val error = uiState.error) {
-      null -> PlayerScreenChrome(
-        uiState = uiState,
+    if (uiState.error == null) {
+      AnimatedVisibility(
+        visible = isControllerVisible && !settingsNavigationState.isVisible,
         modifier = Modifier.fillMaxSize(),
-      )
+        enter = fadeIn(),
+        exit = fadeOut(),
+      ) {
+        PlayerController(
+          uiState = uiState,
+          progressFocusRequester = progressFocusRequester,
+          settingFocusRequester = settingFocusRequester,
+          onTogglePlayPause = onTogglePlayPause,
+          onSeekForward = onSeekForward,
+          onSeekBack = onSeekBack,
+          onSettingsClick = { settingsNavigationState.open(uiState.settings) },
+        )
+      }
 
-      else -> PlayerErrorPanel(
-        error = error,
-        onRetry = onRetry.takeIf { error.isRetryable },
+      if (uiState.isBuffering) {
+        PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
+      } else if (!uiState.isPlaying && !isControllerVisible) {
+        PlayerPlaybackBadge(
+          isPlaying = false,
+          modifier = Modifier.align(Alignment.Center),
+        )
+      }
+
+      PlayerSettingsPanel(
+        settings = uiState.settings,
+        navigationState = settingsNavigationState,
+        onQualitySelected = onQualitySelected,
+        onSubtitleSelected = onSubtitleSelected,
+        onAudioSelected = onAudioSelected,
+        onDismissed = {
+          isControllerVisible = true
+          settingFocusRequester.requestFocus()
+        },
+        modifier = Modifier
+          .align(Alignment.CenterEnd)
+          .padding(PlayerScreenDefaults.SettingsPanelPadding)
+          .width(PlayerScreenDefaults.SettingsPanelWidth)
+          .fillMaxHeight(),
+      )
+    } else {
+      PlayerErrorPanel(
+        error = uiState.error,
+        onRetry = onRetry.takeIf { uiState.error.isRetryable },
         modifier = Modifier.fillMaxSize(),
       )
     }
   }
 }
 
-/** Buffering spinner, paused badge, and the bottom bar with title, seek bar and elapsed time. */
 @Composable
-private fun PlayerScreenChrome(uiState: PlayerUiState, modifier: Modifier = Modifier) {
-  Box(modifier = modifier) {
-    if (uiState.isBuffering) {
-      PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
-    } else if (!uiState.isPlaying) {
-      PlayerPlaybackBadge(
-        isPlaying = false,
-        modifier = Modifier.align(Alignment.Center),
-      )
-    }
-
-    Column(
-      modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .fillMaxWidth()
-        .height(PlayerScreenDefaults.BottomBarHeight)
-        .background(
-          Brush.verticalGradient(
-            colors = listOf(StreamTvColors.Transparent, StreamTvColors.TransparentBlack80),
-          ),
-        )
-        .padding(PlayerScreenDefaults.BottomBarPadding),
-      verticalArrangement = Arrangement.Bottom,
-    ) {
-      PlayerTitleRow(
-        title = uiState.title,
-        isLive = !uiState.isSeekable,
-        modifier = Modifier.fillMaxWidth(),
-      )
-      Column(verticalArrangement = Arrangement.spacedBy(PlayerScreenDefaults.TitleSpacing)) {
-        if (uiState.isSeekable) {
-          PlayerProgressBar(
-            progressFraction = uiState.progressFraction,
-            bufferedFraction = uiState.bufferedFraction,
-            modifier = Modifier.fillMaxWidth(),
-          )
-        }
-        PlayerTimeLabel(
-          position = uiState.position,
-          duration = uiState.duration,
-        )
+private fun PlayerInputTarget(
+  isFocusEnabled: Boolean,
+  focusRequester: FocusRequester,
+  interactionSource: MutableInteractionSource,
+  onKeyDown: (Key) -> Boolean,
+  modifier: Modifier = Modifier,
+) {
+  Box(
+    modifier = modifier
+      .fillMaxSize()
+      .focusRequester(focusRequester)
+      .focusProperties { canFocus = isFocusEnabled }
+      .onPreviewKeyEvent { event ->
+        event.type == KeyEventType.KeyDown && onKeyDown(event.key)
       }
-    }
-  }
+      .focusable(interactionSource = interactionSource),
+  )
 }

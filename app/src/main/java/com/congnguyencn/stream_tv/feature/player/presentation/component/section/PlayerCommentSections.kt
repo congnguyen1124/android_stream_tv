@@ -143,7 +143,7 @@ internal fun PlayerRepliesSection(
         }
         item(key = "parent-like-${comment.id}", contentType = "ParentCommentLike") {
           PlayerMetricButton(
-            iconResId = if (comment.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+            iconResId = if (comment.isLiked) R.drawable.ic_heart else R.drawable.ic_heart_outline,
             label = comment.likeCount.toString(),
             onClick = { onParentCommentLikeClick(comment.id) },
             modifier = Modifier
@@ -217,7 +217,7 @@ internal fun PlayerReplyDetailSection(
     }
     item(key = "reply-detail-like-${reply.id}", contentType = "ReplyDetailLike") {
       PlayerMetricButton(
-        iconResId = if (reply.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+        iconResId = if (reply.isLiked) R.drawable.ic_heart else R.drawable.ic_heart_outline,
         label = reply.likeCount.toString(),
         onClick = { onLikeClick(reply.id) },
         modifier = Modifier
@@ -326,7 +326,7 @@ private fun PlayerCommentCard(
         Spacer(modifier = Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
           PlayerCommentMetric(
-            iconResId = if (comment.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+            iconResId = if (comment.isLiked) R.drawable.ic_heart else R.drawable.ic_heart_outline,
             value = comment.likeCount.toString(),
           )
           if (showReplyMetric) {

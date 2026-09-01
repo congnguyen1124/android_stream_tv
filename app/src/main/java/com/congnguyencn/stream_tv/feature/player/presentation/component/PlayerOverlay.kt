@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -22,15 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Icon
 import androidx.tv.material3.Text
 import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvButton
@@ -42,53 +38,16 @@ import kotlin.time.Duration
 /**
  * Pieces both player screens share.
  *
- * The two screens differ in how they frame the video, not in what they say about it — so the badge,
- * the progress bar and the error panel live here rather than being written twice with a chance to
- * drift apart. The buffering spinner is a sibling file because it owns an animation asset of its own.
+ * The two screens differ in how they frame the video, not in what they say about it — so the progress
+ * bar, the time label and the error panel live here rather than being written twice with a chance to
+ * drift apart. The buffering spinner and the playback badge are sibling files: each owns animation
+ * of its own that would swamp this one.
  */
 internal object PlayerOverlayDefaults {
-  val PlaybackBadgeSize: Dp = 96.dp
-  val PlaybackBadgeIconSize: Dp = 40.dp
   val ProgressBarHeight: Dp = 4.dp
   val ProgressBarShape = RoundedCornerShape(2.dp)
   val ErrorPanelPadding: Dp = 48.dp
   val ErrorMessageSpacing: Dp = 20.dp
-}
-
-/**
- * The centred play/pause glyph.
- *
- * Shown only while paused. A permanent badge over playing video is the one overlay viewers
- * consistently ask to be rid of.
- */
-@Composable
-internal fun PlayerPlaybackBadge(isPlaying: Boolean, modifier: Modifier = Modifier) {
-  val icon: ImageVector = if (isPlaying) {
-    ImageVector.vectorResource(R.drawable.ic_pause)
-  } else {
-    ImageVector.vectorResource(R.drawable.ic_play)
-  }
-  val contentDescription = if (isPlaying) {
-    stringResource(R.string.player_pause)
-  } else {
-    stringResource(R.string.player_play)
-  }
-
-  Box(
-    modifier = modifier
-      .size(PlayerOverlayDefaults.PlaybackBadgeSize)
-      .clip(RoundedCornerShape(percent = 50))
-      .background(StreamTvColors.TransparentBlack60)
-      .testTag("player-playback-badge"),
-    contentAlignment = Alignment.Center,
-  ) {
-    Icon(
-      imageVector = icon,
-      contentDescription = contentDescription,
-      modifier = Modifier.size(PlayerOverlayDefaults.PlaybackBadgeIconSize),
-      tint = StreamTvColors.NeutralWhite,
-    )
-  }
 }
 
 /**

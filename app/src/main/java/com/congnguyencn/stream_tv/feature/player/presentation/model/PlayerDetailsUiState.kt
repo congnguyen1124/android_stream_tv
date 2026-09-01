@@ -7,6 +7,7 @@ internal data class PlayerDetailsUiState(
   val metadata: PlayerMetadataUiState,
   val comments: List<PlayerCommentUiItem>,
   val repliesByCommentId: Map<Long, List<PlayerCommentUiItem>>,
+  val seekPreview: PlayerSeekPreviewUiState,
 ) {
   val totalCommentCount: Long
     get() = comments.size.toLong() + repliesByCommentId.values.sumOf(List<PlayerCommentUiItem>::size)
@@ -39,6 +40,7 @@ internal data class PlayerDetailsUiState(
       metadata = PlayerMetadataUiState.Empty,
       comments = emptyList(),
       repliesByCommentId = emptyMap(),
+      seekPreview = PlayerSeekPreviewUiState.Empty,
     )
   }
 }

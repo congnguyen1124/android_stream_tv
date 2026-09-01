@@ -228,13 +228,18 @@ internal fun PlayerScreen(
         )
       }
 
+      // Composed unconditionally so it survives a buffering spell: leaving the composition would
+      // reset the pulse's memory of the last playback state and swallow the next toggle.
+      PlayerPlaybackIndicator(
+        isPlaying = uiState.isPlaying,
+        isIdleBadgeVisible = !uiState.isPlaying &&
+          !uiState.isBuffering &&
+          !isControllerVisible &&
+          !sectionNavigationState.hasSectionInPlay,
+        modifier = Modifier.align(Alignment.Center),
+      )
       if (uiState.isBuffering) {
         PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
-      } else if (!uiState.isPlaying && !isControllerVisible && !sectionNavigationState.hasSectionInPlay) {
-        PlayerPlaybackBadge(
-          isPlaying = false,
-          modifier = Modifier.align(Alignment.Center),
-        )
       }
 
       PlayerSideSection(

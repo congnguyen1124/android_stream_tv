@@ -4,6 +4,7 @@ internal data class PlayerDetailsData(
   val metadata: PlayerMetadataData,
   val comments: List<PlayerCommentData>,
   val repliesByCommentId: Map<Long, List<PlayerCommentData>>,
+  val seekPreviewFrameUrls: List<String>,
 )
 
 internal data class PlayerMetadataData(

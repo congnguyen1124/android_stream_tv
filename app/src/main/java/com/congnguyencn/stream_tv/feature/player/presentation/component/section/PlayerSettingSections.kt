@@ -199,7 +199,7 @@ private fun PlayerSettingRootItem(
         )
       }
       Icon(
-        imageVector = ImageVector.vectorResource(R.drawable.ic_player_chevron_right),
+        imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right),
         contentDescription = null,
         modifier = Modifier.size(PlayerSettingSectionDefaults.TrailingIconSize),
         tint = LocalContentColor.current,
@@ -275,7 +275,7 @@ private fun PlayerSettingCategory.titleResId(): Int = when (this) {
 }
 
 private fun PlayerSettingCategory.iconResId(): Int = when (this) {
-  PlayerSettingCategory.Quality -> R.drawable.ic_player_quality
-  PlayerSettingCategory.Subtitles -> R.drawable.ic_player_subtitles
-  PlayerSettingCategory.Audio -> R.drawable.ic_player_audio
+  PlayerSettingCategory.Quality -> R.drawable.ic_hd
+  PlayerSettingCategory.Subtitles -> R.drawable.ic_subtitles
+  PlayerSettingCategory.Audio -> R.drawable.ic_audio
 }

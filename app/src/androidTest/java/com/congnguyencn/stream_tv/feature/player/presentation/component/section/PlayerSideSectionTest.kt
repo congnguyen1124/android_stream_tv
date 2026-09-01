@@ -21,6 +21,7 @@ import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerCommentUiItem
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerMetadataUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSeekPreviewUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingCategory
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingOptionUiItem
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingUiItem
@@ -189,6 +190,7 @@ class PlayerSideSectionTest {
       ),
       comments = listOf(parentComment),
       repliesByCommentId = mapOf(1L to listOf(reply)),
+      seekPreview = PlayerSeekPreviewUiState.Empty,
     )
     val uiState = PlayerUiState.Initial.copy(
       title = "Tokyo: Tradition in motion",

@@ -6,6 +6,7 @@ import com.congnguyencn.stream_tv.feature.player.domain.model.PlayerMetadata
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerCommentUiItem
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerMetadataUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSeekPreviewUiState
 
 internal fun PlayerDetails.toUiState(): PlayerDetailsUiState = PlayerDetailsUiState(
   metadata = metadata.toUiState(),
@@ -13,6 +14,7 @@ internal fun PlayerDetails.toUiState(): PlayerDetailsUiState = PlayerDetailsUiSt
   repliesByCommentId = repliesByCommentId.mapValues { (_, replies) ->
     replies.map(PlayerComment::toUiItem)
   },
+  seekPreview = PlayerSeekPreviewUiState(frameUrls = seekPreview.frameUrls),
 )
 
 private fun PlayerMetadata.toUiState(): PlayerMetadataUiState = PlayerMetadataUiState(

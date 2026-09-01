@@ -29,7 +29,7 @@ internal object MainTopBarItems {
 
   val Setting = StreamTvTopBarItem(
     id = "setting",
-    iconResId = R.drawable.ic_setting,
+    iconResId = R.drawable.ic_settings,
     titleResId = R.string.top_bar_setting,
   )
 

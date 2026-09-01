@@ -276,13 +276,13 @@ private fun VerticalPlayerAmbientBackground(modifier: Modifier = Modifier) {
 @Composable
 private fun VerticalPlayerStageChrome(uiState: PlayerUiState) {
   Box(modifier = Modifier.fillMaxSize()) {
+    PlayerPlaybackIndicator(
+      isPlaying = uiState.isPlaying,
+      isIdleBadgeVisible = !uiState.isPlaying && !uiState.isBuffering,
+      modifier = Modifier.align(Alignment.Center),
+    )
     if (uiState.isBuffering) {
       PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
-    } else if (!uiState.isPlaying) {
-      PlayerPlaybackBadge(
-        isPlaying = false,
-        modifier = Modifier.align(Alignment.Center),
-      )
     }
 
     if (uiState.isSeekable) {
@@ -360,7 +360,7 @@ private fun VerticalPlayerInteractionSection(
       horizontalArrangement = Arrangement.spacedBy(VerticalPlayerScreenDefaults.ActionSpacing),
     ) {
       VerticalPlayerActionButton(
-        iconResId = if (uiState.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
+        iconResId = if (uiState.isLiked) R.drawable.ic_heart else R.drawable.ic_heart_outline,
         contentDescription = stringResource(R.string.player_like),
         focusRequester = firstActionFocusRequester,
         left = null,
@@ -382,7 +382,7 @@ private fun VerticalPlayerInteractionSection(
         testTag = "vertical-player-comments",
       )
       VerticalPlayerActionButton(
-        iconResId = if (uiState.isSaved) R.drawable.ic_player_saved else R.drawable.ic_player_save,
+        iconResId = if (uiState.isSaved) R.drawable.ic_bookmark else R.drawable.ic_bookmark_outline,
         contentDescription = stringResource(R.string.player_save),
         focusRequester = saveFocusRequester,
         left = commentFocusRequester,
@@ -394,7 +394,7 @@ private fun VerticalPlayerInteractionSection(
       )
       if (uiState.settings.isAvailable) {
         VerticalPlayerActionButton(
-          iconResId = R.drawable.ic_setting,
+          iconResId = R.drawable.ic_settings,
           contentDescription = stringResource(R.string.player_settings),
           focusRequester = settingFocusRequester,
           left = saveFocusRequester,

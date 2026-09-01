@@ -10,6 +10,7 @@ internal class PlayerDummyDataSource {
     metadata = request.toMetadata(),
     comments = comments,
     repliesByCommentId = repliesByCommentId,
+    seekPreviewFrameUrls = seekPreviewFrameUrls,
   )
 
   private fun PlayerDetailsRequest.toMetadata(): PlayerMetadataData {
@@ -74,6 +75,27 @@ internal class PlayerDummyDataSource {
 
   private companion object {
     const val MayaChen = "Maya Chen"
+
+    /**
+     * Stand-in frame strip until a real thumbnail track exists.
+     *
+     * Requested at 320px because these are drawn into a card barely wider than that — pulling full
+     * size stills would move megabytes to render a postage stamp while the viewer is scrubbing.
+     */
+    val seekPreviewFrameUrls = listOf(
+      "11023865/pexels-photo-11023865.jpeg",
+      "12167844/pexels-photo-12167844.jpeg",
+      "12343886/pexels-photo-12343886.jpeg",
+      "3651820/pexels-photo-3651820.jpeg",
+      "2531709/pexels-photo-2531709.jpeg",
+      "3800539/pexels-photo-3800539.jpeg",
+      "2404959/pexels-photo-2404959.jpeg",
+      "1181298/pexels-photo-1181298.jpeg",
+      "1571442/pexels-photo-1571442.jpeg",
+      "1105666/pexels-photo-1105666.jpeg",
+      "3771069/pexels-photo-3771069.jpeg",
+      "2422915/pexels-photo-2422915.jpeg",
+    ).map { photo -> "https://images.pexels.com/photos/$photo?auto=compress&cs=tinysrgb&w=320" }
 
     val comments = listOf(
       PlayerCommentData(

@@ -1,5 +1,6 @@
 package com.congnguyencn.stream_tv.feature.player.presentation.component
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,6 +23,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
@@ -45,6 +47,7 @@ private object PlayerScreenDefaults {
  * @param onSeekForward D-pad right. Ignored on a live stream, which has nowhere to seek to.
  * @param onSeekBack D-pad left.
  */
+@OptIn(UnstableApi::class)
 @Composable
 internal fun PlayerScreen(
   uiState: PlayerUiState,

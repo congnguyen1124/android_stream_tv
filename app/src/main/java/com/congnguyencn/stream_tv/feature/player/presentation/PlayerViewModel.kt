@@ -15,12 +15,10 @@ import com.congnguyencn.streamplayer.seekForward
 import com.congnguyencn.streamplayer.togglePlayPause
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 /**
  * Drives both [com.congnguyencn.stream_tv.feature.player.presentation.component.PlayerScreen] and
@@ -50,20 +48,16 @@ internal class PlayerViewModel @Inject constructor(
    */
   val playerManager: StreamTvPlayerManager = playerFactory.create()
 
-  private val mutableUiState = MutableStateFlow(PlayerUiState.Initial)
-  val uiState: StateFlow<PlayerUiState> = mutableUiState.asStateFlow()
+  val uiState: StateFlow<PlayerUiState> = playerManager.playerState
+    .map { state -> state.toPlayerUiState(title = args.title) }
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.Eagerly,
+      initialValue = PlayerUiState.Initial.copy(title = args.title),
+    )
 
   init {
-    observePlayerState()
     startPlayback()
-  }
-
-  private inline fun emitState(reduce: (PlayerUiState) -> PlayerUiState) = mutableUiState.update(reduce)
-
-  private fun observePlayerState() {
-    playerManager.playerState
-      .onEach { state -> emitState { state.toPlayerUiState(title = args.title) } }
-      .launchIn(viewModelScope)
   }
 
   private fun startPlayback() {

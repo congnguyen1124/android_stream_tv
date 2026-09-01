@@ -13,6 +13,7 @@ detekt = "1.23.8"
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 kotlin = "2.4.10"
+kotlinxCoroutines = "1.11.0"
 ktlint = "1.8.0"
 ksp = "2.3.11"
 lifecycle = "2.11.0"
@@ -47,6 +48,7 @@ compose-rules-detekt = { module = "io.nlopez.compose.rules:detekt", version.ref 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

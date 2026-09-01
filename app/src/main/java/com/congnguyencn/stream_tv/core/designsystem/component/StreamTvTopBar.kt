@@ -7,15 +7,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -32,8 +35,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Density
@@ -42,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
+import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.SelectableSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -51,11 +57,22 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.core.designsystem.tokens.StreamTvDimensions
 import kotlin.math.max
 
+private object StreamTvTopBarDefaults {
+  /** The logo occupies slot 0; every destination is arranged as one right-aligned group after it. */
+  const val FirstNavigationItemIndex = 1
+  const val ItemExpansionDurationMillis = 180
+  const val OverlayFadeDurationMillis = 220
+  const val OverlayTopAlpha = 0.62f
+  const val OverlayMidStop = 0.5f
+  const val OverlayMidAlpha = 0.24f
+}
+
 @Composable
 fun StreamTvTopBar(
   items: List<StreamTvTopBarItem>,
   selectedItemId: String?,
   contentFocusRequester: FocusRequester,
+  isOverlayVisible: Boolean,
   onItemClick: (StreamTvTopBarItem) -> Unit,
   modifier: Modifier = Modifier,
   onFocusStateChanged: (hasFocus: Boolean) -> Unit = {},
@@ -84,6 +101,8 @@ fun StreamTvTopBar(
       .onFocusChanged { focusState -> onFocusStateChanged(focusState.hasFocus) }
       .focusGroup(),
   ) {
+    TopBarOverlay(visible = isOverlayVisible)
+
     LazyRow(
       modifier = Modifier
         .fillMaxWidth()
@@ -138,6 +157,46 @@ fun StreamTvTopBar(
   }
 }
 
+/**
+ * Scrim painted behind the bar's items, fading downwards into the content.
+ *
+ * Screens raise it when whatever sits under the bar would otherwise swallow the icons — a bright
+ * poster, a scrolled row — and drop it again when the content behind already carries its own
+ * gradient. It is deliberately weak: enough separation to read the items, not a band across the top.
+ */
+@Composable
+private fun BoxScope.TopBarOverlay(visible: Boolean) {
+  val surfaceColor = MaterialTheme.colorScheme.surface
+  val overlayBrush = remember(surfaceColor) {
+    Brush.verticalGradient(
+      colorStops = arrayOf(
+        0f to surfaceColor.copy(alpha = StreamTvTopBarDefaults.OverlayTopAlpha),
+        StreamTvTopBarDefaults.OverlayMidStop to surfaceColor.copy(
+          alpha = StreamTvTopBarDefaults.OverlayMidAlpha,
+        ),
+        1f to StreamTvColors.Transparent,
+      ),
+    )
+  }
+
+  AnimatedVisibility(
+    visible = visible,
+    modifier = Modifier.align(Alignment.TopCenter),
+    enter = fadeIn(animationSpec = tween(StreamTvTopBarDefaults.OverlayFadeDurationMillis)),
+    exit = fadeOut(animationSpec = tween(StreamTvTopBarDefaults.OverlayFadeDurationMillis)),
+  ) {
+    Box(
+      modifier = Modifier
+        .fillMaxWidth()
+        // requiredHeight, not height: the bar is 80.dp tall, so a coerced height would cut the
+        // gradient off at the bar's own edge instead of letting it fade out over the content.
+        .requiredHeight(StreamTvDimensions.TopBarOverlayHeight)
+        .background(overlayBrush)
+        .testTag("stream-tv-top-bar-overlay"),
+    )
+  }
+}
+
 @Composable
 private fun rememberRightAlignedTopBarArrangement(): Arrangement.Horizontal {
   val spacingPx = with(LocalDensity.current) {
@@ -160,16 +219,17 @@ private fun rightAlignedTopBarArrangement(spacingPx: Int): Arrangement.Horizonta
     val positions = IntArray(sizes.size)
     positions[0] = 0
 
-    if (sizes.lastIndex >= FirstNavigationItemIndex) {
+    val firstNavigationItemIndex = StreamTvTopBarDefaults.FirstNavigationItemIndex
+    if (sizes.lastIndex >= firstNavigationItemIndex) {
       val navigationItemCount = sizes.lastIndex
-      val groupWidth = (FirstNavigationItemIndex..sizes.lastIndex).sumOf { sizes[it] } +
+      val groupWidth = (firstNavigationItemIndex..sizes.lastIndex).sumOf { sizes[it] } +
         spacingPx * (navigationItemCount - 1)
       var current = max(
         totalSize - groupWidth,
         sizes[0] + spacingPx,
       )
 
-      for (index in FirstNavigationItemIndex..sizes.lastIndex) {
+      for (index in firstNavigationItemIndex..sizes.lastIndex) {
         positions[index] = current
         current += sizes[index] + spacingPx
       }
@@ -184,9 +244,6 @@ private fun rightAlignedTopBarArrangement(spacingPx: Int): Arrangement.Horizonta
     }
   }
 }
-
-private const val FirstNavigationItemIndex = 1
-private const val ItemExpansionDurationMillis = 180
 
 @Composable
 private fun DestinationItem(
@@ -233,13 +290,13 @@ private fun DestinationItem(
       AnimatedVisibility(
         visible = isFocused,
         enter = expandHorizontally(
-          animationSpec = tween(ItemExpansionDurationMillis),
+          animationSpec = tween(StreamTvTopBarDefaults.ItemExpansionDurationMillis),
           expandFrom = Alignment.Start,
-        ) + fadeIn(animationSpec = tween(ItemExpansionDurationMillis)),
+        ) + fadeIn(animationSpec = tween(StreamTvTopBarDefaults.ItemExpansionDurationMillis)),
         exit = shrinkHorizontally(
-          animationSpec = tween(ItemExpansionDurationMillis),
+          animationSpec = tween(StreamTvTopBarDefaults.ItemExpansionDurationMillis),
           shrinkTowards = Alignment.Start,
-        ) + fadeOut(animationSpec = tween(ItemExpansionDurationMillis)),
+        ) + fadeOut(animationSpec = tween(StreamTvTopBarDefaults.ItemExpansionDurationMillis)),
       ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
           Spacer(modifier = Modifier.width(8.dp))

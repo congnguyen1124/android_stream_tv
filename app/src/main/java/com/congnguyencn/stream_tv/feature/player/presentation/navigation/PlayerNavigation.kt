@@ -83,13 +83,3 @@ private fun playerArguments() = listOf(
  */
 private fun buildPlayerRoute(base: String, videoUrl: String, title: String): String =
   "$base?$ArgVideoUrl=${Uri.encode(videoUrl)}&$ArgTitle=${Uri.encode(title)}"
-
-/**
- * Whether [route] is one of the full-screen player destinations.
- *
- * The app's top bar is drawn above the nav host for every destination, which is right for the
- * browsing screens and wrong over video — so the shell asks this instead of matching route strings
- * itself.
- */
-fun isPlayerRoute(route: String?): Boolean =
-  route != null && (route.startsWith(PlayerRouteBase) || route.startsWith(VerticalPlayerRouteBase))

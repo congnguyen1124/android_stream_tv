@@ -1,4 +1,4 @@
-package com.congnguyencn.stream_tv.app.navigation
+package com.congnguyencn.stream_tv.feature.main.presentation.navigation
 
 import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvTopBarItem
@@ -8,7 +8,13 @@ import com.congnguyencn.stream_tv.feature.profile.presentation.navigation.Profil
 import com.congnguyencn.stream_tv.feature.search.presentation.navigation.SearchRoute
 import com.congnguyencn.stream_tv.feature.setting.presentation.navigation.SettingRoute
 
-internal object StreamTvTopBarItems {
+/**
+ * The top bar's items and the main graph destinations they stand for.
+ *
+ * Lives with [MainNavHost] rather than the design system because the mapping is about this app's
+ * navigation, not about how a top bar looks.
+ */
+internal object MainTopBarItems {
   val Search = StreamTvTopBarItem(
     id = "search",
     iconResId = R.drawable.ic_search,

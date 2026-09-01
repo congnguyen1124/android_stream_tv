@@ -2,63 +2,35 @@ package com.congnguyencn.stream_tv.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomePlayerTarget
-import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomeRoute
-import com.congnguyencn.stream_tv.feature.home.presentation.navigation.homeScreen
-import com.congnguyencn.stream_tv.feature.home.presentation.navigation.playerTarget
+import com.congnguyencn.stream_tv.feature.main.presentation.navigation.MainRoute
+import com.congnguyencn.stream_tv.feature.main.presentation.navigation.mainScreen
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.navigateToPlayer
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.navigateToVerticalPlayer
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.playerScreen
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.verticalPlayerScreen
-import com.congnguyencn.stream_tv.feature.profile.presentation.navigation.profileScreen
-import com.congnguyencn.stream_tv.feature.search.presentation.navigation.searchScreen
-import com.congnguyencn.stream_tv.feature.setting.presentation.navigation.settingScreen
 
+/**
+ * The app's outer graph: the browsing shell and, alongside it, the full-screen players.
+ *
+ * Keeping the players out here is what lets them fill the window — the top bar belongs to the shell,
+ * so playback never has to ask for it to be hidden.
+ */
 @Composable
-internal fun StreamTvNavHost(
-  navController: NavHostController,
-  contentFocusRequester: FocusRequester,
-  topBarFocusRequester: FocusRequester,
-  modifier: Modifier = Modifier,
-) {
+internal fun StreamTvNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
   NavHost(
     navController = navController,
-    startDestination = HomeRoute,
+    startDestination = MainRoute,
     modifier = modifier,
   ) {
-    homeScreen(
-      contentFocusRequester = contentFocusRequester,
-      topBarFocusRequester = topBarFocusRequester,
-      onItemClick = { item ->
-        // Portrait content has to be framed portrait, so the content type — not the section it was
-        // tapped in — chooses the destination.
-        when (item.playerTarget()) {
-          HomePlayerTarget.Horizontal -> navController.navigateToPlayer(
-            videoUrl = item.videoUrl,
-            title = item.title,
-          )
-
-          HomePlayerTarget.Vertical -> navController.navigateToVerticalPlayer(
-            videoUrl = item.videoUrl,
-            title = item.title,
-          )
-        }
+    mainScreen(
+      onOpenPlayer = { videoUrl, title ->
+        navController.navigateToPlayer(videoUrl = videoUrl, title = title)
       },
-    )
-    searchScreen(
-      contentFocusRequester = contentFocusRequester,
-      topBarFocusRequester = topBarFocusRequester,
-    )
-    settingScreen(
-      contentFocusRequester = contentFocusRequester,
-      topBarFocusRequester = topBarFocusRequester,
-    )
-    profileScreen(
-      contentFocusRequester = contentFocusRequester,
-      topBarFocusRequester = topBarFocusRequester,
+      onOpenVerticalPlayer = { videoUrl, title ->
+        navController.navigateToVerticalPlayer(videoUrl = videoUrl, title = title)
+      },
     )
     playerScreen(onBack = { navController.popBackStack() })
     verticalPlayerScreen(onBack = { navController.popBackStack() })

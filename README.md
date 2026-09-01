@@ -5,6 +5,7 @@ StreamTV là ứng dụng Android TV dùng Jetpack Compose for TV, được tổ
 ## Chức năng hiện tại
 
 - TopBar điều hướng giữa Search, Home, Setting và Profile bằng D-pad. Khi navigation nhận focus, app phủ một lớp `surface` bán trong suốt lên toàn bộ screen và giữ TopBar nổi phía trên.
+- TopBar còn có overlay riêng: gradient dọc từ `surface` xuống trong suốt, vẽ phía sau các item. Overlay do màn đang hiện bật/tắt — Home bật khi focus rời section đầu tiên, vì Banner full-bleed đã có scrim riêng.
 - Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content ngang.
 - `Banner` full-width cao 600dp nằm phía sau TopBar overlay, dùng hero scrim nhiều lớp, CTA, edge pages, indicator và lifecycle-aware auto-scroll khi không focus.
 - `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop trên virtual pager dài khi có ít nhất 5 item, preload 5 page quanh viewport, scale item và đổi nền theo palette trích từ thumbnail active.
@@ -27,16 +28,44 @@ feature/home/
 │   ├── model/                  # Content, Video, Series, Channel, Short, HomeSection
 │   └── repository/             # Suspend HomeRepository contract
 └── presentation/
-    ├── component/              # Banner, VerticalBanner, ContentRow section, card
+    ├── component/              # HomeContent, Banner, VerticalBanner, ContentRow section, card
     ├── mapper/                 # Domain -> UI model
     ├── model/                  # UI item và UI viewType
-    ├── HomeRoute.kt
-    ├── HomeScreen.kt
+    ├── HomeRoute.kt            # HomeScreen: bind ViewModel
     ├── HomeUiState.kt
     └── HomeViewModel.kt
 ```
 
 App composition root nằm tại `app/di/HomeModule.kt`. Presentation không tự khởi tạo data source hoặc repository.
+
+## Navigation
+
+Navigation chia làm hai graph. `MainScreen` là shell duyệt nội dung: sở hữu `StreamTvTopBar` và một
+`MainNavHost` lồng bên trong. Hai màn player là anh em của `MainScreen` ở graph ngoài, nên chiếm trọn
+màn hình mà không ai phải ẩn TopBar.
+
+```
+StreamTvNavHost (ngoài)
+├── MainRoute ─────────► MainScreen
+│                        ├── StreamTvTopBar
+│                        └── MainNavHost (trong)
+│                            ├── HomeRoute
+│                            ├── SearchRoute
+│                            ├── SettingRoute
+│                            └── ProfileRoute
+├── PlayerRoute
+└── VerticalPlayerRoute
+```
+
+- Một destination có TopBar khi và chỉ khi nó được đăng ký trong `MainNavHost`. Không còn predicate
+  `isPlayerRoute` so khớp prefix route để quyết định ẩn bar.
+- Back không cần code thêm: NavHost trong xử lý trước, hết stack thì rơi xuống NavHost ngoài.
+- `MainNavHost` không thấy controller ngoài, nên mở player đi qua `onOpenPlayer` /
+  `onOpenVerticalPlayer`. Chọn player nào vẫn do `HomeContentUiItem.playerTarget()` quyết định.
+- Mỗi feature duyệt nội dung chỉ còn **một** composable `XxxScreen`, đặt trong `XxxRoute.kt`. Home
+  giữ phần UI stateless tách riêng là `HomeContent` vì nó lớn và là thứ Compose test chạy vào.
+
+Chi tiết quyết định, phương án thay thế và hệ quả: `docs/adr/2026-09-01-nested-main-navigation.md`.
 
 ## Dependency injection với Hilt
 
@@ -58,6 +87,7 @@ HomeDummyDataSource
     -> HomeUiMapper
     -> HomeUiState
     -> HomeScreen
+    -> HomeContent
 ```
 
 `HomeViewModel` gọi suspend repository trực tiếp trong `viewModelScope`, hủy request cũ khi reload và không nuốt `CancellationException`. `PlayerViewModel` chuyển `playerState` thành immutable UI state bằng `map` và `stateIn(SharingStarted.Eagerly)`.
@@ -108,6 +138,7 @@ StreamTV không dùng `FocusRequesterModifiers` của dự án tham chiếu. Hà
 - Banner và VerticalBanner tự xử lý D-pad trái/phải bằng `onPreviewKeyEvent`.
 - Auto-scroll dừng khi carousel nhận focus.
 - Item TopBar khai báo hướng Down về content focus requester.
+- `HomeContent` theo dõi section nào đang giữ focus qua `onFocusChanged` và bật overlay TopBar khi index lớn hơn 0. `MainScreen` tự hạ overlay mỗi lần đổi destination.
 
 ### ContentRow
 

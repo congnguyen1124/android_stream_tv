@@ -31,6 +31,7 @@ class HomeScreenTest {
             ),
             contentFocusRequester = contentFocusRequester,
             topBarFocusRequester = topBarFocusRequester,
+            onItemClick = {},
           )
         }
       }

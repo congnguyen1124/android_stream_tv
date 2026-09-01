@@ -5,13 +5,14 @@ import com.congnguyencn.stream_tv.feature.home.data.source.HomeDummyDataSource
 import com.congnguyencn.stream_tv.feature.home.domain.model.Content
 import com.congnguyencn.stream_tv.feature.home.domain.model.HomeSectionViewType
 import com.congnguyencn.stream_tv.feature.home.domain.model.Series
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DummyHomeRepositoryTest {
   @Test
-  fun `dummy source maps every supported view type with valid content`() {
+  fun `dummy source maps every supported view type with valid content`() = runTest {
     val sections = DummyHomeRepository(HomeDummyDataSource()).getHomeSections()
 
     assertEquals(HomeSectionViewType.entries.toSet(), sections.map { it.viewType }.toSet())
@@ -19,7 +20,7 @@ class DummyHomeRepositoryTest {
   }
 
   @Test
-  fun `every dummy item carries a playable hls stream`() {
+  fun `every dummy item carries a playable hls stream`() = runTest {
     val content = dummyContent()
 
     // The player is only reachable from Home, so a single item without a stream is a dead end the
@@ -30,7 +31,7 @@ class DummyHomeRepositoryTest {
   }
 
   @Test
-  fun `live channels use live streams so the seek bar stays suppressed`() {
+  fun `live channels use live streams so the seek bar stays suppressed`() = runTest {
     val channels = DummyHomeRepository(HomeDummyDataSource())
       .getHomeSections()
       .first { it.viewType == HomeSectionViewType.Channels }
@@ -42,12 +43,12 @@ class DummyHomeRepositoryTest {
   }
 
   @Test
-  fun `dummy logo urls remain empty`() {
+  fun `dummy logo urls remain empty`() = runTest {
     assertTrue(dummyContent().all { it.logoUrl.isEmpty() })
   }
 
   @Test
-  fun `dummy home contains both looping and finite content rows`() {
+  fun `dummy home contains both looping and finite content rows`() = runTest {
     val sectionsByType = DummyHomeRepository(HomeDummyDataSource())
       .getHomeSections()
       .associateBy { it.viewType }
@@ -58,7 +59,7 @@ class DummyHomeRepositoryTest {
     assertTrue(sectionsByType.getValue(HomeSectionViewType.ListSeries).items.size <= 5)
   }
 
-  private fun dummyContent(): List<Content> = DummyHomeRepository(HomeDummyDataSource())
+  private suspend fun dummyContent(): List<Content> = DummyHomeRepository(HomeDummyDataSource())
     .getHomeSections()
     .flatMap { it.items }
     .flatMap { item -> listOf(item) + item.episodesOrEmpty() }

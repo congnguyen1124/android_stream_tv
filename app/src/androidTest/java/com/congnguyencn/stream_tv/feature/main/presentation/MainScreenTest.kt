@@ -1,4 +1,4 @@
-package com.congnguyencn.stream_tv.app
+package com.congnguyencn.stream_tv.feature.main.presentation
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertIsDisplayed
@@ -12,7 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-class StreamTvTopBarTest {
+class MainScreenTest {
   @get:Rule
   val composeRule = createAndroidComposeRule<MainActivity>()
 
@@ -46,6 +46,18 @@ class StreamTvTopBarTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
+  }
+
+  @Test
+  fun topBarOverlayFollowsTheFocusedHomeSection() {
+    composeRule.onNodeWithTag("stream-tv-top-bar-overlay").assertDoesNotExist()
+
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput { pressKey(Key.DirectionDown) }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag("stream-tv-top-bar-overlay").assertIsDisplayed()
   }
 
   @Test

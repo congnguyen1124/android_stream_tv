@@ -7,11 +7,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +32,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -39,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
+import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.SelectableSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -73,54 +78,70 @@ fun StreamTvTopBar(
     }
     val horizontalArrangement = rememberRightAlignedTopBarArrangement()
 
-    LazyRow(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .focusProperties {
-                onEnter = {
-                    val targetItem = visibleItems.firstOrNull { it.id == selectedItemId }
-                        ?: navigationItems.firstOrNull()
-                        ?: profileItem
-                    targetItem?.let { itemFocusRequesters[it.id]?.requestFocus() }
-                }
-            },
-        contentPadding = PaddingValues(
-            start = StreamTvDimensions.ScreenHorizontalPadding,
-            end = StreamTvDimensions.ScreenHorizontalPadding,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = horizontalArrangement,
+            .height(StreamTvDimensions.TopBarGradientHeight)
+            .background(
+                Brush.verticalGradient(
+                    colorStops = arrayOf(
+                        0f to MaterialTheme.colorScheme.surface,
+                        0.5f to MaterialTheme.colorScheme.surface,
+                        0.72f to MaterialTheme.colorScheme.surface.copy(alpha = 0.74f),
+                        1f to StreamTvColors.Transparent,
+                    ),
+                ),
+            ),
     ) {
-        item(key = "stream-tv-logo", contentType = { "AppBar" }) {
-            StreamTvAppBar(
-                colors = SurfaceDefaults.colors(containerColor = StreamTvColors.Transparent),
-            )
-        }
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
+                .focusProperties {
+                    onEnter = {
+                        val targetItem = visibleItems.firstOrNull { it.id == selectedItemId }
+                            ?: navigationItems.firstOrNull()
+                            ?: profileItem
+                        targetItem?.let { itemFocusRequesters[it.id]?.requestFocus() }
+                    }
+                },
+            contentPadding = PaddingValues(
+                start = StreamTvDimensions.ScreenHorizontalPadding,
+                end = StreamTvDimensions.ScreenHorizontalPadding,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = horizontalArrangement,
+        ) {
+            item(key = "stream-tv-logo", contentType = { "AppBar" }) {
+                StreamTvAppBar(
+                    colors = SurfaceDefaults.colors(containerColor = StreamTvColors.Transparent),
+                )
+            }
 
-        items(
-            items = navigationItems,
-            key = StreamTvTopBarItem::id,
-            contentType = { "Destination" },
-        ) { item ->
-            DestinationItem(
-                item = item,
-                selected = item.id == selectedItemId,
-                contentFocusRequester = contentFocusRequester,
-                focusRequester = itemFocusRequesters.getValue(item.id),
-                onClick = { onItemClick(item) },
-            )
-        }
-
-        profileItem?.let { item ->
-            item(key = item.id, contentType = { "Profile" }) {
-                ProfileItem(
+            items(
+                items = navigationItems,
+                key = StreamTvTopBarItem::id,
+                contentType = { "Destination" },
+            ) { item ->
+                DestinationItem(
                     item = item,
                     selected = item.id == selectedItemId,
                     contentFocusRequester = contentFocusRequester,
                     focusRequester = itemFocusRequesters.getValue(item.id),
                     onClick = { onItemClick(item) },
                 )
+            }
+
+            profileItem?.let { item ->
+                item(key = item.id, contentType = { "Profile" }) {
+                    ProfileItem(
+                        item = item,
+                        selected = item.id == selectedItemId,
+                        contentFocusRequester = contentFocusRequester,
+                        focusRequester = itemFocusRequesters.getValue(item.id),
+                        onClick = { onItemClick(item) },
+                    )
+                }
             }
         }
     }

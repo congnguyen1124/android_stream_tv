@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import com.congnguyencn.stream_tv.MainActivity
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -42,5 +43,20 @@ class StreamTvTopBarTest {
         composeRule
             .onNodeWithText("Open search")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun homeBannerStartsBehindTopBar() {
+        val bannerBounds = composeRule
+            .onNodeWithTag("home-banner-container")
+            .fetchSemanticsNode()
+            .boundsInRoot
+        val topBarBounds = composeRule
+            .onNodeWithTag("stream-tv-top-bar")
+            .fetchSemanticsNode()
+            .boundsInRoot
+
+        assertTrue(bannerBounds.top <= topBarBounds.top)
+        assertTrue(bannerBounds.bottom > topBarBounds.bottom)
     }
 }

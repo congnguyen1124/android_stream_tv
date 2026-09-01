@@ -16,4 +16,5 @@
     <string name="profile_description">Manage your account and personalize StreamTV.</string>
     <string name="profile_primary_action">Manage profile</string>
     <string name="profile_ready_message">Your StreamTV profile is ready</string>
+    <string name="play">Watch now</string>
 </resources>

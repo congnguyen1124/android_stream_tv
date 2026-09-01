@@ -4,12 +4,12 @@ StreamTV là ứng dụng Android TV dùng Jetpack Compose for TV, được tổ
 
 ## Chức năng hiện tại
 
-- TopBar điều hướng giữa Search, Home, Setting và Profile bằng D-pad.
+- TopBar điều hướng giữa Search, Home, Setting và Profile bằng D-pad, nổi trên content với gradient từ `surface` xuống trong suốt.
 - Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content ngang.
-- `Banner` hiển thị `Video` theo tỷ lệ 16:9, có thông tin nội dung, age restriction, indicator và tự chuyển trang khi không focus.
-- `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, đặt item active ở giữa, scale item và đổi nền theo thumbnail active.
+- `Banner` full-width cao 600dp nằm phía sau TopBar overlay, dùng hero scrim nhiều lớp, CTA, edge pages, indicator và lifecycle-aware auto-scroll khi không focus.
+- `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop khi có ít nhất 5 item, scale item và đổi nền theo palette trích từ thumbnail active.
 - Focus đầu tiên thuộc về Banner; nhấn Up quay lại TopBar. Trái/phải chuyển item ngay trong carousel.
-- Các model và dummy data cho `Videos`, `ListSeries`, `Channels`, `Shorts` đã có sẵn; UI của bốn view type này sẽ được bổ sung sau.
+- `Videos`, `ListSeries`, `Channels` và `Shorts` dùng `ContentRow`: horizontal lazy layout với selector cố định tại leading content edge; thumbnail, badge và metadata được tách thành hierarchy rõ ràng.
 - Ảnh online được tải bằng Coil 3; `videoUrl` và `logoUrl` đang để trống theo yêu cầu.
 - Dependency injection dùng Hilt; graph được kiểm tra và tạo code tại compile time bằng KSP.
 
@@ -27,7 +27,7 @@ feature/home/
 │   ├── repository/             # HomeRepository contract
 │   └── usecase/                # GetHomeSectionsUseCase
 └── presentation/
-    ├── component/              # Banner, VerticalBanner, section header
+    ├── component/              # Banner, VerticalBanner, ContentRow section, card
     ├── mapper/                 # Domain -> UI model
     ├── model/                  # UI item và UI viewType
     ├── HomeRoute.kt
@@ -106,12 +106,38 @@ StreamTV không dùng `FocusRequesterModifiers` của dự án tham chiếu. Hà
 - Auto-scroll dừng khi carousel nhận focus.
 - Item TopBar khai báo hướng Down về content focus requester.
 
-## Thêm UI cho view type còn lại
+### ContentRow
 
-1. Tạo composable trong `feature/home/presentation/component`.
-2. Thêm nhánh tương ứng trong `when (section.viewType)` của `HomeScreen.kt`.
-3. Lấy typed item bằng `requireItemsOfType()`; mapper và model đã bảo vệ đúng loại item.
-4. Đặt logic focus tại composable mới, không tạo modifier focus dùng chung toàn app.
+Base component nằm tại `core/designsystem/component/contentrow` và cung cấp DSL gần với `LazyRow`:
+
+```kotlin
+val state = rememberContentRowState()
+
+ContentRow(state = state) {
+    items(
+        items = videos,
+        key = VideoUiItem::id,
+    ) { video ->
+        VideoCard(video)
+    }
+}
+```
+
+- `ContentRow` được xây trên `LazyLayout`; chỉ item trong vùng nhìn thấy và vùng đệm sát viewport được compose/measure.
+- Toàn bộ row chỉ có một focus target là `SelectedItem` trong suốt có border, cố định tại leading content edge. Card bên dưới không được gắn `focusable`.
+- Border selector rộng hơn content 2dp ở mỗi cạnh, tạo khoảng thở mà không thay đổi kích thước card.
+- D-pad Left/Right dịch chuyển danh sách bên dưới selector; Center/Enter gọi callback của real selected index.
+- Khi di chuyển sang phải, item trước trượt ra ngoài leading edge nhưng vẫn để lại một phần nhỏ ở mép màn hình trong lúc row đang ở các index tiếp theo.
+- Ở item `0`, không có item giả phía trái và D-pad Left trả quyền xử lý về `FocusRequester.Default`.
+- Một edge slot tạm thời sau item cuối cho phép D-pad Right animate sang item `0`, sau đó state rebase atomically và loại bỏ lịch sử vòng cũ.
+- `ContentRowState.scrollToItem(index)` nhận mọi số nguyên và chuẩn hóa về real index tương ứng.
+
+## Thêm một ContentRow section
+
+1. Map view type về một `HomeContentRowStyle` trong `HomeScreen.kt`.
+2. Truyền typed items qua `requireItemsOfType()`; mapper và model đã bảo vệ đúng loại item.
+3. Render card trong DSL của `ContentRow`, cung cấp stable `key` và `contentType`.
+4. Không gắn `focusable` vào card; focus, loop và D-pad đã được encapsulate trong base component.
 
 ## Build và test
 

@@ -5,7 +5,6 @@ import com.congnguyencn.stream_tv.core.player.StreamTvPlayerFactory
 import com.congnguyencn.stream_tv.feature.player.data.repository.DummyPlayerDetailsRepository
 import com.congnguyencn.stream_tv.feature.player.data.source.PlayerDummyDataSource
 import com.congnguyencn.stream_tv.feature.player.domain.repository.PlayerDetailsRepository
-import com.congnguyencn.stream_tv.feature.player.presentation.StreamTvPlayerFactory
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.config.StreamTvPlayerConfig
 import dagger.Module

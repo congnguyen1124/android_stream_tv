@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
@@ -95,6 +96,14 @@ internal fun HomeContent(
 
   LaunchedEffect(isTopBarOverlayVisible) {
     onTopBarOverlayVisibilityChange(isTopBarOverlayVisible)
+  }
+
+  // The scrim belongs to the shell, which outlives this screen, so Home has to lower it on the way
+  // out. The shell cannot do it off the current route instead: returning from a player composes
+  // Home a frame before the route settles, and a route-keyed reset then lands after Home has
+  // already reported the section it restored focus to — leaving the scrim down over scrolled rows.
+  DisposableEffect(Unit) {
+    onDispose { onTopBarOverlayVisibilityChange(false) }
   }
 
   when {

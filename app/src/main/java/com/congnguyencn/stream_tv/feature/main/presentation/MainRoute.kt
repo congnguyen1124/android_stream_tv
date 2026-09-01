@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,12 +54,6 @@ internal fun MainScreen(
   val currentBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = currentBackStackEntry?.destination?.route
   val selectedItemId = MainTopBarItems.itemFor(currentRoute)?.id
-
-  // The overlay is raised by whichever destination is showing, so leaving one has to lower it again
-  // — the destination that asked for it is already gone by the time the next one composes.
-  LaunchedEffect(currentRoute) {
-    isTopBarOverlayVisible = false
-  }
 
   Box(modifier = modifier.fillMaxSize()) {
     MainNavHost(

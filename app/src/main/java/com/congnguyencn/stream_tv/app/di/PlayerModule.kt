@@ -1,6 +1,9 @@
 package com.congnguyencn.stream_tv.app.di
 
 import android.content.Context
+import com.congnguyencn.stream_tv.feature.player.data.repository.DummyPlayerDetailsRepository
+import com.congnguyencn.stream_tv.feature.player.data.source.PlayerDummyDataSource
+import com.congnguyencn.stream_tv.feature.player.domain.repository.PlayerDetailsRepository
 import com.congnguyencn.stream_tv.feature.player.presentation.StreamTvPlayerFactory
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.config.StreamTvPlayerConfig
@@ -14,6 +17,15 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object PlayerModule {
+  @Provides
+  @Singleton
+  fun providePlayerDummyDataSource(): PlayerDummyDataSource = PlayerDummyDataSource()
+
+  @Provides
+  @Singleton
+  fun providePlayerDetailsRepository(dataSource: PlayerDummyDataSource): PlayerDetailsRepository =
+    DummyPlayerDetailsRepository(dataSource)
+
   /**
    * Supplies players configured for this app's single surface.
    *

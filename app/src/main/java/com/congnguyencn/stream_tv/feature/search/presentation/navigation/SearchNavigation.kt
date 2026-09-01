@@ -7,14 +7,11 @@ import com.congnguyencn.stream_tv.feature.search.presentation.SearchRoute as Sea
 
 const val SearchRoute = "search"
 
-fun NavGraphBuilder.searchScreen(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-) {
-    composable(route = SearchRoute) {
-        SearchRouteContent(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-    }
+fun NavGraphBuilder.searchScreen(contentFocusRequester: FocusRequester, topBarFocusRequester: FocusRequester) {
+  composable(route = SearchRoute) {
+    SearchRouteContent(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+  }
 }

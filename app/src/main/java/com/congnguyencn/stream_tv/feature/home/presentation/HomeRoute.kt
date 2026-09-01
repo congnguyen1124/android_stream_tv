@@ -8,15 +8,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun HomeRoute(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    viewModel: HomeViewModel = hiltViewModel(),
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  viewModel: HomeViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    HomeScreen(
-        uiState = uiState,
-        contentFocusRequester = contentFocusRequester,
-        topBarFocusRequester = topBarFocusRequester,
-    )
+  HomeScreen(
+    uiState = uiState,
+    contentFocusRequester = contentFocusRequester,
+    topBarFocusRequester = topBarFocusRequester,
+  )
 }

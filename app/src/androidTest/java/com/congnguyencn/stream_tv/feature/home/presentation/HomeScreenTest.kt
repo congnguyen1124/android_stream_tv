@@ -13,49 +13,49 @@ import org.junit.Rule
 import org.junit.Test
 
 class HomeScreenTest {
-    @get:Rule
-    val composeRule = createComposeRule()
+  @get:Rule
+  val composeRule = createComposeRule()
 
-    @Test
-    fun bannerCarouselReceivesInitialFocus() {
-        val contentFocusRequester = FocusRequester()
-        val topBarFocusRequester = FocusRequester()
+  @Test
+  fun bannerCarouselReceivesInitialFocus() {
+    val contentFocusRequester = FocusRequester()
+    val topBarFocusRequester = FocusRequester()
 
-        composeRule.setContent {
-            StreamTvTheme {
-                StreamTvSurface {
-                    HomeScreen(
-                        uiState = HomeUiState(
-                            isLoading = false,
-                            sections = listOf(testBannerSection()),
-                        ),
-                        contentFocusRequester = contentFocusRequester,
-                        topBarFocusRequester = topBarFocusRequester,
-                    )
-                }
-            }
+    composeRule.setContent {
+      StreamTvTheme {
+        StreamTvSurface {
+          HomeScreen(
+            uiState = HomeUiState(
+              isLoading = false,
+              sections = listOf(testBannerSection()),
+            ),
+            contentFocusRequester = contentFocusRequester,
+            topBarFocusRequester = topBarFocusRequester,
+          )
         }
-
-        composeRule
-            .onNodeWithTag("home-banner-carousel")
-            .assertIsFocused()
+      }
     }
 
-    private fun testBannerSection() = HomeSectionUiItem(
-        id = "featured",
-        title = "Featured today",
-        viewType = HomeSectionViewTypeUi.Banner,
-        items = listOf(
-            VideoUiItem(
-                id = "video-1",
-                videoUrl = "",
-                thumbnailUrl = "https://example.com/video.jpg",
-                vastUrl = "",
-                title = "Pulse of the court",
-                description = "Description",
-                ageRestriction = "P",
-                logoUrl = "",
-            ),
-        ),
-    )
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .assertIsFocused()
+  }
+
+  private fun testBannerSection() = HomeSectionUiItem(
+    id = "featured",
+    title = "Featured today",
+    viewType = HomeSectionViewTypeUi.Banner,
+    items = listOf(
+      VideoUiItem(
+        id = "video-1",
+        videoUrl = "",
+        thumbnailUrl = "https://example.com/video.jpg",
+        vastUrl = "",
+        title = "Pulse of the court",
+        description = "Description",
+        ageRestriction = "P",
+        logoUrl = "",
+      ),
+    ),
+  )
 }

@@ -8,16 +8,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun SearchRoute(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    viewModel: SearchViewModel = hiltViewModel(),
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  viewModel: SearchViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    SearchScreen(
-        uiState = uiState,
-        contentFocusRequester = contentFocusRequester,
-        topBarFocusRequester = topBarFocusRequester,
-        onPrimaryActionClick = viewModel::openSearch,
-    )
+  SearchScreen(
+    uiState = uiState,
+    contentFocusRequester = contentFocusRequester,
+    topBarFocusRequester = topBarFocusRequester,
+    onPrimaryActionClick = viewModel::openSearch,
+  )
 }

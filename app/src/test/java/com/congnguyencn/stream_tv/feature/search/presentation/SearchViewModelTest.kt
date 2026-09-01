@@ -5,14 +5,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SearchViewModelTest {
-    @Test
-    fun `openSearch marks search as ready`() {
-        val viewModel = SearchViewModel()
+  @Test
+  fun `openSearch marks search as ready`() {
+    val viewModel = SearchViewModel()
 
-        assertFalse(viewModel.uiState.value.isSearchReady)
+    assertFalse(viewModel.uiState.value.isSearchReady)
 
-        viewModel.openSearch()
+    viewModel.openSearch()
 
-        assertTrue(viewModel.uiState.value.isSearchReady)
-    }
+    assertTrue(viewModel.uiState.value.isSearchReady)
+  }
 }

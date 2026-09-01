@@ -7,14 +7,11 @@ import com.congnguyencn.stream_tv.feature.home.presentation.HomeRoute as HomeRou
 
 const val HomeRoute = "home"
 
-fun NavGraphBuilder.homeScreen(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-) {
-    composable(route = HomeRoute) {
-        HomeRouteContent(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-    }
+fun NavGraphBuilder.homeScreen(contentFocusRequester: FocusRequester, topBarFocusRequester: FocusRequester) {
+  composable(route = HomeRoute) {
+    HomeRouteContent(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+  }
 }

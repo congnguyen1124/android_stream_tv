@@ -28,66 +28,65 @@ import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvTopBar
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomeRoute
 
 @Composable
-fun StreamTvApp(
-    modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
-) {
-    val contentFocusRequester = remember { FocusRequester() }
-    val topBarFocusRequester = remember { FocusRequester() }
-    var isTopBarFocused by remember { mutableStateOf(false) }
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
-    val selectedItemId = StreamTvTopBarItems.itemFor(currentRoute)?.id
+fun StreamTvApp(modifier: Modifier = Modifier, navController: NavHostController = rememberNavController()) {
+  val contentFocusRequester = remember { FocusRequester() }
+  val topBarFocusRequester = remember { FocusRequester() }
+  var isTopBarFocused by remember { mutableStateOf(false) }
+  val currentBackStackEntry by navController.currentBackStackEntryAsState()
+  val currentRoute = currentBackStackEntry?.destination?.route
+  val selectedItemId = StreamTvTopBarItems.itemFor(currentRoute)?.id
 
-    Box(modifier = modifier.fillMaxSize()) {
-        StreamTvNavHost(
-            navController = navController,
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-            modifier = Modifier.fillMaxSize(),
-        )
+  Box(modifier = modifier.fillMaxSize()) {
+    StreamTvNavHost(
+      navController = navController,
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+      modifier = Modifier.fillMaxSize(),
+    )
 
-        AnimatedVisibility(
-            visible = isTopBarFocused,
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(5f),
-            enter = fadeIn(animationSpec = tween(ScreenOverlayAnimationDurationMillis)),
-            exit = fadeOut(animationSpec = tween(ScreenOverlayAnimationDurationMillis)),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = ScreenOverlayAlpha))
-                    .testTag("stream-tv-screen-overlay"),
-            )
-        }
-
-        StreamTvTopBar(
-            items = StreamTvTopBarItems.Default,
-            selectedItemId = selectedItemId,
-            contentFocusRequester = contentFocusRequester,
-            onFocusStateChanged = { hasFocus -> isTopBarFocused = hasFocus },
-            onItemClick = { item ->
-                val destinationRoute = StreamTvTopBarItems.routeFor(item)
-                if (destinationRoute != currentRoute) {
-                    navController.navigate(destinationRoute) {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(HomeRoute) {
-                            saveState = true
-                        }
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .zIndex(10f)
-                .testTag("stream-tv-top-bar")
-                .focusRequester(topBarFocusRequester),
-        )
+    AnimatedVisibility(
+      visible = isTopBarFocused,
+      modifier = Modifier
+        .fillMaxSize()
+        .zIndex(ScreenOverlayZIndex),
+      enter = fadeIn(animationSpec = tween(ScreenOverlayAnimationDurationMillis)),
+      exit = fadeOut(animationSpec = tween(ScreenOverlayAnimationDurationMillis)),
+    ) {
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .background(MaterialTheme.colorScheme.surface.copy(alpha = ScreenOverlayAlpha))
+          .testTag("stream-tv-screen-overlay"),
+      )
     }
+
+    StreamTvTopBar(
+      items = StreamTvTopBarItems.Default,
+      selectedItemId = selectedItemId,
+      contentFocusRequester = contentFocusRequester,
+      onFocusStateChanged = { hasFocus -> isTopBarFocused = hasFocus },
+      onItemClick = { item ->
+        val destinationRoute = StreamTvTopBarItems.routeFor(item)
+        if (destinationRoute != currentRoute) {
+          navController.navigate(destinationRoute) {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo(HomeRoute) {
+              saveState = true
+            }
+          }
+        }
+      },
+      modifier = Modifier
+        .fillMaxWidth()
+        .zIndex(TopBarZIndex)
+        .testTag("stream-tv-top-bar")
+        .focusRequester(topBarFocusRequester),
+    )
+  }
 }
 
 private const val ScreenOverlayAlpha = 0.42f
 private const val ScreenOverlayAnimationDurationMillis = 160
+private const val ScreenOverlayZIndex = 5f
+private const val TopBarZIndex = 10f

@@ -75,6 +75,8 @@ Chi tiết quyết định, phương án thay thế và hệ quả: `docs/adr/20
 - `StreamTvApplication` dùng `@HiltAndroidApp` để tạo application-level container.
 - `MainActivity` dùng `@AndroidEntryPoint` để kết nối Android entry point với Hilt graph.
 - `HomeModule` được cài vào `SingletonComponent`; module cung cấp `HomeDummyDataSource`, `HomeRepository` và `HomeUiMapper`.
+- `PlayerModule` cung cấp `StreamTvPlayerFactory`, `PlayerDummyDataSource` và
+  `PlayerDetailsRepository`; UI không khởi tạo data source hoặc ExoPlayer trực tiếp.
 - Toàn bộ `HomeViewModel`, `SearchViewModel`, `SettingViewModel`, `ProfileViewModel` dùng `@HiltViewModel` và constructor injection.
 - Mọi feature Route lấy ViewModel bằng `hiltViewModel()`; không còn factory hoặc dependency container thủ công trong production code.
 
@@ -93,7 +95,7 @@ HomeDummyDataSource
     -> HomeContent
 ```
 
-`HomeViewModel` gọi suspend repository trực tiếp trong `viewModelScope`, hủy request cũ khi reload và không nuốt `CancellationException`. `PlayerViewModel` chuyển `playerState` thành immutable UI state bằng `map` và `stateIn(SharingStarted.Eagerly)`.
+`HomeViewModel` gọi suspend repository trực tiếp trong `viewModelScope`, hủy request cũ khi reload và không nuốt `CancellationException`. `PlayerViewModel` gọi `PlayerDetailsRepository` trực tiếp (không có use case trung gian), rồi `combine` playback state với content/action state thành immutable `PlayerUiState` bằng `stateIn(SharingStarted.Eagerly)`.
 
 `Content` là sealed hierarchy gồm:
 
@@ -170,6 +172,35 @@ ContentRow(state = state) {
 - Khi có hơn 5 item, provider nối thêm một cycle đầy đủ của collection. Vì vậy ở gần cuối row vẫn luôn thấy các item `0, 1, 2...` phía sau; sau animation qua cuối, state rebase về cycle đầu mà không tạo khoảng trống hoặc nhảy hình.
 - Collection có tối đa 5 item giữ finite: D-pad Right tại item cuối không reset về item `0`.
 - `ContentRowState.scrollToItem(index)` wrap index đối với row loop và clamp index đối với row finite.
+
+## Player
+
+Player là destination full-screen ở graph ngoài và có hai cách trình bày dùng chung một
+`PlayerViewModel`:
+
+- `PlayerScreen` phát nội dung ngang bằng surface 16:9. Controller là overlay trong `Box`, tự ẩn sau
+  5 giây khi video đang chạy và chỉ có title, Like, Save, Comment, Settings cùng duration/progress; không có
+  related/episodes và không dùng `LazyColumn` cho content.
+- `VerticalPlayerScreen` giữ stage 9:16 ở giữa lệch trái, nền ambient tối và interaction section ở
+  bên phải. D-pad Right đi từ player sang action đầu tiên; D-pad Left quay về player.
+- Cả hai orientation dùng chung retained section tree trong `component/section`: Metadata,
+  Comments → Replies → Reply detail và Settings → Quality/Subtitles/Audio. Parent vẫn được compose
+  phía dưới child để giữ list state và item đã chọn.
+- Khi section bắt đầu enter hoặc child bắt đầu exit, focus được chuyển vào một pending target luôn
+  tồn tại. Sau animation, section mới nhận focus; điều này ngăn Compose tự nhảy focus về player hoặc
+  một control khác trong lúc node đang biến mất.
+- Player ngang nhớ chính xác control đã mở root section: Back từ Metadata về Title, từ Comments về
+  Comment và từ Settings về Settings. Back khi controller đang hiện chỉ ẩn controller; Back tiếp theo
+  mới thoát player.
+- Player dọc dùng Left hoặc Back để pop từng level. Child trở về đúng row đã mở nó; root trở về portrait
+  player, sau đó Right mới đưa focus sang interaction section.
+- Track snapshot từ `stream_player` được map một lần tại `presentation/mapper`. Chọn option dispatch
+  trực tiếp `selectVideoTrack`, `selectTextTrack` hoặc `selectAudioTrack` qua `PlayerViewModel`.
+- Settings không hiển thị category rỗng; Subtitles có option Off và Quality có Auto khi manifest có
+  nhiều rendition.
+- Metadata và comment dummy lấy từ `PlayerDummyDataSource`, qua
+  `DummyPlayerDetailsRepository -> domain model -> PlayerDetailsUiMapper -> PlayerUiState`; toàn bộ copy
+  hiển thị là tiếng Anh.
 
 ## Thêm một ContentRow section
 

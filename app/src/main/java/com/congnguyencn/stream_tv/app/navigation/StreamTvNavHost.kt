@@ -25,11 +25,21 @@ internal fun StreamTvNavHost(navController: NavHostController, modifier: Modifie
     modifier = modifier,
   ) {
     mainScreen(
-      onOpenPlayer = { videoUrl, title ->
-        navController.navigateToPlayer(videoUrl = videoUrl, title = title)
+      onOpenPlayer = { videoUrl, title, description, ageRestriction ->
+        navController.navigateToPlayer(
+          videoUrl = videoUrl,
+          title = title,
+          description = description,
+          ageRestriction = ageRestriction,
+        )
       },
-      onOpenVerticalPlayer = { videoUrl, title ->
-        navController.navigateToVerticalPlayer(videoUrl = videoUrl, title = title)
+      onOpenVerticalPlayer = { videoUrl, title, description, ageRestriction ->
+        navController.navigateToVerticalPlayer(
+          videoUrl = videoUrl,
+          title = title,
+          description = description,
+          ageRestriction = ageRestriction,
+        )
       },
     )
     playerScreen(onBack = { navController.popBackStack() })

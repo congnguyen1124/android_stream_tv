@@ -3,8 +3,8 @@ package com.congnguyencn.stream_tv.feature.player.presentation.component
 import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,33 +37,33 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
-import com.congnguyencn.stream_tv.feature.player.presentation.component.setting.PlayerSettingsPanel
-import com.congnguyencn.stream_tv.feature.player.presentation.component.setting.rememberPlayerSettingsNavigationState
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerPendingFocusTarget
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSection
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSideSection
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.rememberPlayerSectionNavigationState
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.ui.StreamTvPlayerSurface
 import kotlinx.coroutines.delay
 
 private object PlayerScreenDefaults {
   const val ControllerAutoHideMillis = 5_000L
-  val SettingsPanelWidth = 360.dp
-  val SettingsPanelPadding = 24.dp
+  val SideSectionWidth = 360.dp
+  val SideSectionPadding = 24.dp
 }
 
-/**
- * Landscape playback with the same controller and setting-section behaviour as the original app.
- *
- * The controller is a full-screen Box overlay only. Related content and episode rows deliberately
- * stay outside this player, so there is no LazyColumn and no second content-navigation mode.
- */
+/** Landscape playback with controller and retained section focus behavior from the reference app. */
 @OptIn(UnstableApi::class)
 @Composable
-@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 internal fun PlayerScreen(
   uiState: PlayerUiState,
   playerManager: StreamTvPlayerManager,
   onTogglePlayPause: () -> Unit,
   onSeekForward: () -> Unit,
   onSeekBack: () -> Unit,
+  onToggleLike: () -> Unit,
+  onToggleSaved: () -> Unit,
+  onCommentLikeToggle: (Long) -> Unit,
   onQualitySelected: (String) -> Unit,
   onSubtitleSelected: (String) -> Unit,
   onAudioSelected: (String) -> Unit,
@@ -71,43 +72,57 @@ internal fun PlayerScreen(
   modifier: Modifier = Modifier,
 ) {
   val playerFocusRequester = remember { FocusRequester() }
-  val progressFocusRequester = remember { FocusRequester() }
-  val settingFocusRequester = remember { FocusRequester() }
+  val pendingFocusRequester = remember { FocusRequester() }
   val playerInteractionSource = remember { MutableInteractionSource() }
-  val settingsNavigationState = rememberPlayerSettingsNavigationState()
-  var isControllerVisible by remember { mutableStateOf(true) }
+  val sectionNavigationState = rememberPlayerSectionNavigationState()
+  val controllerFocusRequesters = remember {
+    PlayerControllerFocusTarget.entries.associateWith { FocusRequester() }
+  }
+  var controllerFocusTarget by remember {
+    mutableStateOf(PlayerControllerFocusTarget.Progress)
+  }
+  var isControllerVisible by remember { mutableStateOf(false) }
+  var controllerInteractionKey by remember { mutableIntStateOf(0) }
 
-  val focusController = {
-    if (uiState.isSeekable) {
-      progressFocusRequester.requestFocus()
-    } else if (uiState.settings.isAvailable) {
-      settingFocusRequester.requestFocus()
-    } else {
-      playerFocusRequester.requestFocus()
+  val showController = {
+    controllerInteractionKey++
+    isControllerVisible = true
+  }
+  val openSection: (PlayerSection, PlayerControllerFocusTarget) -> Unit = { section, restoreTarget ->
+    if (sectionNavigationState.isAtBaseLevel) {
+      controllerFocusTarget = restoreTarget
+      pendingFocusRequester.requestFocus()
+      isControllerVisible = false
+      sectionNavigationState.openRoot(section)
     }
   }
 
   LaunchedEffect(
     isControllerVisible,
-    settingsNavigationState.isVisible,
-    uiState.isSeekable,
-    uiState.settings.isAvailable,
+    sectionNavigationState.hasSectionInPlay,
+    sectionNavigationState.shouldParkFocus,
+    uiState.error,
   ) {
-    if (settingsNavigationState.isVisible) return@LaunchedEffect
-
+    if (uiState.error != null) return@LaunchedEffect
     withFrameMillis { }
-    if (isControllerVisible) focusController() else playerFocusRequester.requestFocus()
+    when {
+      sectionNavigationState.shouldParkFocus -> pendingFocusRequester.requestFocus()
+      sectionNavigationState.hasSectionInPlay -> Unit
+      isControllerVisible -> Unit
+      else -> playerFocusRequester.requestFocus()
+    }
   }
 
   LaunchedEffect(
     isControllerVisible,
-    settingsNavigationState.isVisible,
+    sectionNavigationState.hasSectionInPlay,
     uiState.isPlaying,
     uiState.error,
+    controllerInteractionKey,
   ) {
     if (
       isControllerVisible &&
-      !settingsNavigationState.isVisible &&
+      !sectionNavigationState.hasSectionInPlay &&
       uiState.isPlaying &&
       uiState.error == null
     ) {
@@ -117,10 +132,13 @@ internal fun PlayerScreen(
   }
 
   LaunchedEffect(uiState.error) {
-    if (uiState.error != null) settingsNavigationState.dismiss()
+    if (uiState.error != null) {
+      sectionNavigationState.reset()
+      isControllerVisible = false
+    }
   }
 
-  BackHandler(enabled = !settingsNavigationState.isVisible) {
+  BackHandler(enabled = !sectionNavigationState.hasSectionInPlay) {
     if (isControllerVisible && uiState.error == null) {
       isControllerVisible = false
     } else {
@@ -141,14 +159,14 @@ internal fun PlayerScreen(
     )
 
     PlayerInputTarget(
-      isFocusEnabled = !isControllerVisible && !settingsNavigationState.isVisible,
+      isFocusEnabled = !isControllerVisible && !sectionNavigationState.hasSectionInPlay,
       focusRequester = playerFocusRequester,
       interactionSource = playerInteractionSource,
       onKeyDown = { key ->
         when (key) {
           Key.MediaPlayPause -> {
             onTogglePlayPause()
-            isControllerVisible = true
+            showController()
             true
           }
 
@@ -161,7 +179,7 @@ internal fun PlayerScreen(
           Key.DirectionUp,
           Key.DirectionDown,
           -> {
-            isControllerVisible = true
+            showController()
             true
           }
 
@@ -170,47 +188,67 @@ internal fun PlayerScreen(
       },
     )
 
+    PlayerPendingFocusTarget(
+      focusRequester = pendingFocusRequester,
+      modifier = Modifier.align(Alignment.CenterStart),
+    )
+
     if (uiState.error == null) {
       AnimatedVisibility(
-        visible = isControllerVisible && !settingsNavigationState.isVisible,
+        visible = isControllerVisible && !sectionNavigationState.hasSectionInPlay,
         modifier = Modifier.fillMaxSize(),
-        enter = fadeIn(),
-        exit = fadeOut(),
+        enter = expandVertically { fullHeight -> fullHeight },
+        exit = shrinkVertically { fullHeight -> fullHeight },
       ) {
         PlayerController(
           uiState = uiState,
-          progressFocusRequester = progressFocusRequester,
-          settingFocusRequester = settingFocusRequester,
+          focusTarget = controllerFocusTarget,
+          focusRequesters = controllerFocusRequesters,
+          onFocusTargetChanged = { target ->
+            controllerFocusTarget = target
+            controllerInteractionKey++
+          },
+          onInteraction = { controllerInteractionKey++ },
           onTogglePlayPause = onTogglePlayPause,
           onSeekForward = onSeekForward,
           onSeekBack = onSeekBack,
-          onSettingsClick = { settingsNavigationState.open(uiState.settings) },
+          onTitleClick = {
+            openSection(PlayerSection.Metadata, PlayerControllerFocusTarget.Title)
+          },
+          onLikeClick = onToggleLike,
+          onSaveClick = onToggleSaved,
+          onCommentClick = {
+            openSection(PlayerSection.Comments, PlayerControllerFocusTarget.CommentButton)
+          },
+          onSettingsClick = {
+            openSection(PlayerSection.Settings, PlayerControllerFocusTarget.SettingButton)
+          },
         )
       }
 
       if (uiState.isBuffering) {
         PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
-      } else if (!uiState.isPlaying && !isControllerVisible) {
+      } else if (!uiState.isPlaying && !isControllerVisible && !sectionNavigationState.hasSectionInPlay) {
         PlayerPlaybackBadge(
           isPlaying = false,
           modifier = Modifier.align(Alignment.Center),
         )
       }
 
-      PlayerSettingsPanel(
-        settings = uiState.settings,
-        navigationState = settingsNavigationState,
+      PlayerSideSection(
+        uiState = uiState,
+        navigationState = sectionNavigationState,
+        pendingFocusRequester = pendingFocusRequester,
+        dismissOnLeft = false,
         onQualitySelected = onQualitySelected,
         onSubtitleSelected = onSubtitleSelected,
         onAudioSelected = onAudioSelected,
-        onDismissed = {
-          isControllerVisible = true
-          settingFocusRequester.requestFocus()
-        },
+        onCommentLikeToggle = onCommentLikeToggle,
+        onRootDismissed = { showController() },
         modifier = Modifier
           .align(Alignment.CenterEnd)
-          .padding(PlayerScreenDefaults.SettingsPanelPadding)
-          .width(PlayerScreenDefaults.SettingsPanelWidth)
+          .padding(PlayerScreenDefaults.SideSectionPadding)
+          .width(PlayerScreenDefaults.SideSectionWidth)
           .fillMaxHeight(),
       )
     } else {
@@ -239,6 +277,7 @@ private fun PlayerInputTarget(
       .onPreviewKeyEvent { event ->
         event.type == KeyEventType.KeyDown && onKeyDown(event.key)
       }
+      .testTag("player-input-target")
       .focusable(interactionSource = interactionSource),
   )
 }

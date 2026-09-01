@@ -16,7 +16,7 @@ class PlayerNavigationTest {
   val composeRule = createAndroidComposeRule<MainActivity>()
 
   @Test
-  fun backHidesControllerBeforeReturningToHome() {
+  fun dpadShowsControllerThenBackHidesItBeforeReturningToHome() {
     composeRule.mainClock.autoAdvance = false
     composeRule
       .onNodeWithTag("home-banner-carousel")
@@ -25,6 +25,11 @@ class PlayerNavigationTest {
     composeRule.waitForIdle()
 
     composeRule.onNodeWithTag("player-screen").assertIsDisplayed()
+    composeRule.onNodeWithTag("player-controller").assertDoesNotExist()
+
+    composeRule.onNodeWithTag("player-input-target").performKeyInput { pressKey(Key.DirectionCenter) }
+    composeRule.mainClock.advanceTimeBy(500)
+    composeRule.waitForIdle()
     composeRule.onNodeWithTag("player-controller").assertIsDisplayed()
 
     Espresso.pressBack()

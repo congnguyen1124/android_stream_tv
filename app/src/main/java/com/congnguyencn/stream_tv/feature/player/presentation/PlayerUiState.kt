@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.feature.player.presentation.mapper.buildPlayerSettingsUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingsUiState
 import com.congnguyencn.streamplayer.model.StreamTvPlaybackError
 import com.congnguyencn.streamplayer.model.StreamTvPlaybackState
@@ -25,6 +26,9 @@ internal data class PlayerUiState(
   val position: Duration,
   val duration: Duration,
   val bufferedPosition: Duration,
+  val isLiked: Boolean,
+  val isSaved: Boolean,
+  val details: PlayerDetailsUiState,
   val settings: PlayerSettingsUiState,
   val error: PlayerErrorUiItem?,
 ) {
@@ -61,6 +65,9 @@ internal data class PlayerUiState(
         position = Duration.ZERO,
         duration = Duration.ZERO,
         bufferedPosition = Duration.ZERO,
+        isLiked = false,
+        isSaved = false,
+        details = PlayerDetailsUiState.Empty,
         settings = PlayerSettingsUiState.Empty,
         error = null,
       )
@@ -76,13 +83,21 @@ internal data class PlayerUiState(
 @Immutable
 internal data class PlayerErrorUiItem(@param:StringRes val messageResId: Int, val isRetryable: Boolean)
 
-internal fun StreamTvPlayerState.toPlayerUiState(title: String): PlayerUiState = PlayerUiState(
+internal fun StreamTvPlayerState.toPlayerUiState(
+  title: String,
+  details: PlayerDetailsUiState,
+  isLiked: Boolean,
+  isSaved: Boolean,
+): PlayerUiState = PlayerUiState(
   title = title,
   isPlaying = isPlaying,
   isBuffering = playbackState is StreamTvPlaybackState.Buffering,
   position = position,
   duration = duration,
   bufferedPosition = bufferedPosition,
+  isLiked = isLiked,
+  isSaved = isSaved,
+  details = details,
   settings = buildPlayerSettingsUiState(
     audioTracks = audioTracks,
     textTracks = textTracks,

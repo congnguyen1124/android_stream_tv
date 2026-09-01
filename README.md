@@ -8,11 +8,12 @@ StreamTV là ứng dụng Android TV dùng Jetpack Compose for TV, được tổ
 - TopBar còn có overlay riêng: gradient dọc từ `surface` xuống trong suốt, vẽ phía sau các item. Overlay do màn đang hiện bật/tắt — Home bật khi focus rời section đầu tiên, vì Banner full-bleed đã có scrim riêng.
 - Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content ngang.
 - `Banner` full-width cao 600dp nằm phía sau TopBar overlay, dùng hero scrim nhiều lớp, CTA, edge pages, indicator và lifecycle-aware auto-scroll khi không focus.
+- `Banner` phát trailer của item đang focus: thumbnail giữ 5 giây, sau đó video fade in đè lên thumbnail, chạy loop, không có controller. Rời focus, đổi item, mở player hoặc app xuống background đều dừng và unload player. Trailer lỗi hoặc thiếu `trailerUrl` thì banner vẫn là ảnh tĩnh — thumbnail không bao giờ bị bỏ đi. Chi tiết: `docs/home-banner-trailer/`.
 - `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop trên virtual pager dài khi có ít nhất 5 item, preload 5 page quanh viewport, scale item và đổi nền theo palette trích từ thumbnail active.
 - Focus đầu tiên thuộc về Banner; nhấn Up quay lại TopBar. Trái/phải chuyển item ngay trong carousel.
 - `Videos`, `ListSeries`, `Channels` và `Shorts` dùng `ContentRow`: horizontal lazy layout với selector cố định tại leading content edge và luôn đo thêm item ngoài hai biên để chuyển động không lộ khoảng trống.
 - Thumbnail không bị làm tối theo selection; title chưa selected dùng màu sáng vừa phải để vẫn giữ hierarchy.
-- Ảnh online được tải bằng Coil 3; dummy `videoUrl` dùng HLS test stream và `logoUrl` đang để trống.
+- Ảnh online được tải bằng Coil 3; dummy `videoUrl` và `trailerUrl` dùng HLS test stream (`trailerUrl` lấy từ cùng pool VOD nhưng xoay lệch một bậc nên không trùng `videoUrl` của chính item đó) và `logoUrl` đang để trống.
 - Dependency injection dùng Hilt; graph được kiểm tra và tạo code tại compile time bằng KSP.
 
 ## Cấu trúc Home feature
@@ -28,12 +29,14 @@ feature/home/
 │   ├── model/                  # Content, Video, Series, Channel, Short, HomeSection
 │   └── repository/             # Suspend HomeRepository contract
 └── presentation/
-    ├── component/              # HomeContent, Banner, VerticalBanner, ContentRow section, card
+    ├── component/              # HomeContent, Banner, BannerTrailer, VerticalBanner, ContentRow section, card
     ├── mapper/                 # Domain -> UI model
     ├── model/                  # UI item và UI viewType
-    ├── HomeRoute.kt            # HomeScreen: bind ViewModel
+    ├── HomeRoute.kt            # HomeScreen: bind ViewModel, cấp trailer slot cho banner
     ├── HomeUiState.kt
-    └── HomeViewModel.kt
+    ├── HomeViewModel.kt
+    ├── HomeBannerTrailerUiState.kt   # UiState + pure fold quyết định khi nào hiện video
+    └── HomeBannerTrailerViewModel.kt # sở hữu một player cho trailer của banner
 ```
 
 App composition root nằm tại `app/di/HomeModule.kt`. Presentation không tự khởi tạo data source hoặc repository.
@@ -101,7 +104,7 @@ HomeDummyDataSource
 - `Channel`: content phát live.
 - `Short`: video dọc, thumbnail 2:3.
 
-Mọi content có `id`, `videoUrl`, `thumbnailUrl`, `vastUrl`, `title`, `description`, `ageRestriction`, `logoUrl`. `id` được thêm để cung cấp stable key cho Compose; hậu tố `Url` của `logoUrl` làm rõ kiểu dữ liệu.
+Mọi content có `id`, `videoUrl`, `trailerUrl`, `thumbnailUrl`, `vastUrl`, `title`, `description`, `ageRestriction`, `logoUrl`. `id` được thêm để cung cấp stable key cho Compose; hậu tố `Url` của `logoUrl` làm rõ kiểu dữ liệu.
 
 Quan hệ hợp lệ được kiểm tra tại constructor của `HomeSection` và `HomeSectionUiItem`:
 
@@ -139,6 +142,7 @@ StreamTV không dùng `FocusRequesterModifiers` của dự án tham chiếu. Hà
 - `HomeBannerSection` gắn `contentFocusRequester` và khai báo `up = topBarFocusRequester`.
 - Banner và VerticalBanner tự xử lý D-pad trái/phải bằng `onPreviewKeyEvent`.
 - Auto-scroll dừng khi carousel nhận focus.
+- Trailer chỉ chạy khi carousel đang giữ focus và screen đang RESUMED. Một `LaunchedEffect` key theo `(item, isBannerFocused, isScreenResumed)` lo cả delay 5 giây lẫn điểm dừng duy nhất trong `finally`, nên mọi đường ra — mất focus, đổi item, dispose, navigate — đều dừng player.
 - Item TopBar khai báo hướng Down về content focus requester.
 - `HomeContent` theo dõi section nào đang giữ focus qua `onFocusChanged` và bật overlay TopBar khi index lớn hơn 0. `MainScreen` tự hạ overlay mỗi lần đổi destination.
 

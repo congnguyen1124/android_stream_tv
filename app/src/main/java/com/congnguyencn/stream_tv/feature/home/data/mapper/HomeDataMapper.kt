@@ -28,6 +28,7 @@ private fun HomeContentData.toDomain(): Content = when (this) {
   is SeriesData -> Series(
     id = id,
     videoUrl = videoUrl,
+    trailerUrl = trailerUrl,
     thumbnailUrl = thumbnailUrl,
     vastUrl = vastUrl,
     title = title,
@@ -40,6 +41,7 @@ private fun HomeContentData.toDomain(): Content = when (this) {
   is ChannelData -> Channel(
     id = id,
     videoUrl = videoUrl,
+    trailerUrl = trailerUrl,
     thumbnailUrl = thumbnailUrl,
     vastUrl = vastUrl,
     title = title,
@@ -51,6 +53,7 @@ private fun HomeContentData.toDomain(): Content = when (this) {
   is ShortData -> Short(
     id = id,
     videoUrl = videoUrl,
+    trailerUrl = trailerUrl,
     thumbnailUrl = thumbnailUrl,
     vastUrl = vastUrl,
     title = title,
@@ -63,6 +66,7 @@ private fun HomeContentData.toDomain(): Content = when (this) {
 private fun VideoData.toDomain(): Video = Video(
   id = id,
   videoUrl = videoUrl,
+  trailerUrl = trailerUrl,
   thumbnailUrl = thumbnailUrl,
   vastUrl = vastUrl,
   title = title,

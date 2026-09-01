@@ -1,6 +1,7 @@
 package com.congnguyencn.stream_tv.app.di
 
 import android.content.Context
+import com.congnguyencn.stream_tv.core.player.StreamTvPlayerFactory
 import com.congnguyencn.stream_tv.feature.player.data.repository.DummyPlayerDetailsRepository
 import com.congnguyencn.stream_tv.feature.player.data.source.PlayerDummyDataSource
 import com.congnguyencn.stream_tv.feature.player.domain.repository.PlayerDetailsRepository

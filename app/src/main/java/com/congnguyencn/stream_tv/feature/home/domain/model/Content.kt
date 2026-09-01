@@ -3,6 +3,7 @@ package com.congnguyencn.stream_tv.feature.home.domain.model
 sealed interface Content {
   val id: String
   val videoUrl: String
+  val trailerUrl: String
   val thumbnailUrl: String
   val vastUrl: String
   val title: String
@@ -14,6 +15,7 @@ sealed interface Content {
 data class Video(
   override val id: String,
   override val videoUrl: String,
+  override val trailerUrl: String,
   override val thumbnailUrl: String,
   override val vastUrl: String,
   override val title: String,
@@ -25,6 +27,7 @@ data class Video(
 data class Series(
   override val id: String,
   override val videoUrl: String,
+  override val trailerUrl: String,
   override val thumbnailUrl: String,
   override val vastUrl: String,
   override val title: String,
@@ -41,6 +44,7 @@ data class Series(
 data class Channel(
   override val id: String,
   override val videoUrl: String,
+  override val trailerUrl: String,
   override val thumbnailUrl: String,
   override val vastUrl: String,
   override val title: String,
@@ -52,6 +56,7 @@ data class Channel(
 data class Short(
   override val id: String,
   override val videoUrl: String,
+  override val trailerUrl: String,
   override val thumbnailUrl: String,
   override val vastUrl: String,
   override val title: String,

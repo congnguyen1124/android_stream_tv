@@ -47,6 +47,7 @@ internal fun HomeContent(
   onItemClick: (HomeContentUiItem) -> Unit,
   onTopBarOverlayVisibilityChange: (Boolean) -> Unit,
   modifier: Modifier = Modifier,
+  bannerTrailer: @Composable (item: VideoUiItem, isBannerFocused: Boolean) -> Unit = { _, _ -> },
 ) {
   var focusedSectionIndex by remember { mutableIntStateOf(HomeContentDefaults.FirstSectionIndex) }
 
@@ -101,6 +102,7 @@ internal fun HomeContent(
               focusedSectionIndex = index
             }
           },
+          bannerTrailer = bannerTrailer,
         )
       }
     }
@@ -114,6 +116,7 @@ private fun HomeSection(
   topBarFocusRequester: FocusRequester,
   onItemClick: (HomeContentUiItem) -> Unit,
   modifier: Modifier = Modifier,
+  bannerTrailer: @Composable (item: VideoUiItem, isBannerFocused: Boolean) -> Unit = { _, _ -> },
 ) {
   when (section.viewType) {
     HomeSectionViewTypeUi.Banner -> HomeBannerSection(
@@ -122,6 +125,7 @@ private fun HomeSection(
       topBarFocusRequester = topBarFocusRequester,
       modifier = modifier,
       onItemClick = onItemClick,
+      bannerTrailer = bannerTrailer,
     )
 
     HomeSectionViewTypeUi.VerticalBanner -> HomeVerticalBannerSection(

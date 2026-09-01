@@ -16,6 +16,7 @@ class HomeUiMapperTest {
     val series = Series(
       id = "series",
       videoUrl = "",
+      trailerUrl = "",
       thumbnailUrl = "https://example.com/series.jpg",
       vastUrl = "",
       title = "Series",
@@ -40,6 +41,7 @@ class HomeUiMapperTest {
   private fun video(id: String) = Video(
     id = id,
     videoUrl = "",
+    trailerUrl = "",
     thumbnailUrl = "https://example.com/$id.jpg",
     vastUrl = "",
     title = id,

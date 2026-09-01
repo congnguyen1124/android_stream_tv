@@ -50,11 +50,19 @@ internal class ContentRowItemProvider(
     }
 }
 
-/** Adds one temporary copy of item zero after the real collection for the forward reset animation. */
-internal class ResetEdgeContentRowItemProvider(
+/**
+ * Appends a complete second cycle when the source has more than five items.
+ *
+ * The duplicate cycle keeps the viewport populated while the last real item moves out and the
+ * first item moves under the fixed selector. Smaller collections remain finite.
+ */
+internal class LoopingContentRowItemProvider(
     private val source: ContentRowItemProvider,
 ) : LazyLayoutItemProvider {
-    override val itemCount: Int = source.itemCount + if (source.itemCount > 1) 1 else 0
+    val isLoopingEnabled: Boolean =
+        source.itemCount > ContentRowDefaults.LoopingItemCountThreshold
+
+    override val itemCount: Int = source.itemCount * if (isLoopingEnabled) 2 else 1
 
     fun anchorIndex(realIndex: Int): Int = realIndex
 
@@ -69,10 +77,9 @@ internal class ResetEdgeContentRowItemProvider(
     override fun getContentType(index: Int): Any? = source.getContentType(realIndex(index))
 
     private fun realIndex(index: Int): Int {
-        require(source.itemCount > 0) { "An empty ContentRow has no virtual items" }
+        require(source.itemCount > 0) { "An empty ContentRow has no items" }
         return index % source.itemCount
     }
-
 }
 
 internal class ContentRowScopeImpl : ContentRowScope {

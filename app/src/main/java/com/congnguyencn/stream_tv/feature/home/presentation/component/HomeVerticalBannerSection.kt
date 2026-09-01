@@ -73,12 +73,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private object HomeVerticalBannerDefaults {
     const val VisibleItemCount = 5
+    const val LoopingPageCount = Int.MAX_VALUE
+    const val PreloadPageCount = VisibleItemCount
     const val ItemRatio = 2f / 3f
     const val FocusedItemScale = 1.1f
     const val UnfocusedItemScale = 0.94f
@@ -110,20 +111,25 @@ internal fun HomeVerticalBannerSection(
     if (items.isEmpty()) return
 
     val isLoopingEnabled = items.size >= HomeVerticalBannerDefaults.VisibleItemCount
-    val pagerItems = remember(items, isLoopingEnabled) {
-        if (isLoopingEnabled) items.toLoopingVerticalBannerItems() else items
+    val pagerPageCount = if (isLoopingEnabled) {
+        HomeVerticalBannerDefaults.LoopingPageCount
+    } else {
+        items.size
     }
     val initialRealIndex = remember(items) { items.size / 2 }
-    val initialPage = remember(isLoopingEnabled, initialRealIndex) {
+    val initialPage = remember(items.size, isLoopingEnabled, initialRealIndex) {
         if (isLoopingEnabled) {
-            initialRealIndex + HomeVerticalBannerDefaults.VisibleItemCount
+            verticalBannerInitialPage(
+                realItemCount = items.size,
+                initialRealIndex = initialRealIndex,
+            )
         } else {
             initialRealIndex
         }
     }
     val pagerState = rememberPagerState(
         initialPage = initialPage,
-        pageCount = pagerItems::size,
+        pageCount = { pagerPageCount },
     )
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
@@ -136,12 +142,6 @@ internal fun HomeVerticalBannerSection(
         onDispose { }
     }
 
-    if (isLoopingEnabled) {
-        VerticalBannerLoopEdgeEffect(
-            pagerState = pagerState,
-            realItemCount = items.size,
-        )
-    }
     if (isAutoPlay) {
         VerticalBannerAutoScrollEffect(
             pagerState = pagerState,
@@ -172,14 +172,11 @@ internal fun HomeVerticalBannerSection(
                         Key.DirectionLeft -> {
                             if (
                                 event.type == KeyEventType.KeyDown &&
+                                !pagerState.isScrollInProgress &&
                                 (isLoopingEnabled || pagerState.currentPage > 0)
                             ) {
                                 scope.launch {
-                                    scrollVerticalBannerPrevious(
-                                        pagerState = pagerState,
-                                        isLoopingEnabled = isLoopingEnabled,
-                                        realItemCount = items.size,
-                                    )
+                                    scrollVerticalBannerPrevious(pagerState)
                                 }
                             }
                             true
@@ -188,13 +185,11 @@ internal fun HomeVerticalBannerSection(
                         Key.DirectionRight -> {
                             if (
                                 event.type == KeyEventType.KeyDown &&
-                                (isLoopingEnabled || pagerState.currentPage < pagerItems.lastIndex)
+                                !pagerState.isScrollInProgress &&
+                                pagerState.currentPage < pagerState.pageCount - 1
                             ) {
                                 scope.launch {
-                                    scrollVerticalBannerNext(
-                                        pagerState = pagerState,
-                                        isLoopingEnabled = isLoopingEnabled,
-                                    )
+                                    scrollVerticalBannerNext(pagerState)
                                 }
                             }
                             true
@@ -260,16 +255,24 @@ internal fun HomeVerticalBannerSection(
                     pageSize = PageSize.Fixed(itemWidth),
                     flingBehavior = PagerDefaults.flingBehavior(pagerState),
                     userScrollEnabled = true,
+                    beyondViewportPageCount = minOf(
+                        HomeVerticalBannerDefaults.PreloadPageCount,
+                        (pagerPageCount - 1).coerceAtLeast(0),
+                    ),
                     key = { page ->
                         val realIndex = page.toVerticalBannerRealIndex(
                             realItemCount = items.size,
                             isLoopingEnabled = isLoopingEnabled,
                         )
-                        "${pagerItems[page].id}_${page}_$realIndex"
+                        "${items[realIndex].id}:$page"
                     },
                 ) { page ->
+                    val realIndex = page.toVerticalBannerRealIndex(
+                        realItemCount = items.size,
+                        isLoopingEnabled = isLoopingEnabled,
+                    )
                     VerticalBannerItem(
-                        item = pagerItems[page],
+                        item = items[realIndex],
                         itemWidth = itemWidth,
                         pagerState = pagerState,
                         page = page,
@@ -300,13 +303,6 @@ private fun VerticalBannerItem(
     modifier: Modifier = Modifier,
 ) {
     var loadedImage by remember(item.id) { mutableStateOf<Image?>(null) }
-    val pageOffset = (pagerState.currentPage - page + pagerState.currentPageOffsetFraction).absoluteValue
-    val scaleFraction = 1f - pageOffset.coerceIn(0f, 1f)
-    val scale = lerp(
-        start = HomeVerticalBannerDefaults.UnfocusedItemScale,
-        stop = HomeVerticalBannerDefaults.FocusedItemScale,
-        fraction = scaleFraction,
-    )
 
     LaunchedEffect(item.id, loadedImage) {
         val image = loadedImage ?: return@LaunchedEffect
@@ -321,7 +317,19 @@ private fun VerticalBannerItem(
             modifier = Modifier
                 .width(itemWidth)
                 .aspectRatio(HomeVerticalBannerDefaults.ItemRatio)
-                .graphicsLayer(scaleX = scale, scaleY = scale)
+                .graphicsLayer {
+                    val pageOffset = (
+                        pagerState.currentPage - page + pagerState.currentPageOffsetFraction
+                    ).absoluteValue
+                    val scaleFraction = 1f - pageOffset.coerceIn(0f, 1f)
+                    val animatedScale = lerp(
+                        start = HomeVerticalBannerDefaults.UnfocusedItemScale,
+                        stop = HomeVerticalBannerDefaults.FocusedItemScale,
+                        fraction = scaleFraction,
+                    )
+                    scaleX = animatedScale
+                    scaleY = animatedScale
+                }
                 .clip(HomeVerticalBannerDefaults.ItemShape)
                 .background(Color.Black)
                 .border(
@@ -448,62 +456,29 @@ private fun VerticalBannerAutoScrollEffect(
     }
 }
 
-@Composable
-private fun VerticalBannerLoopEdgeEffect(pagerState: PagerState, realItemCount: Int) {
-    val scope = rememberCoroutineScope()
-    LifecycleResumeEffect(pagerState, scope, realItemCount) {
-        val loopEdgeJob = scope.launch {
-            snapshotFlow { pagerState.settledPage }
-                .mapNotNull { page -> page.toLoopedVerticalBannerPageOrNull(realItemCount) }
-                .collectLatest(pagerState::scrollToPage)
-        }
-        onPauseOrDispose { loopEdgeJob.cancel() }
-    }
-}
-
-private suspend fun scrollVerticalBannerPrevious(
-    pagerState: PagerState,
-    isLoopingEnabled: Boolean,
-    realItemCount: Int,
-) {
-    if (isLoopingEnabled && pagerState.currentPage <= 0) {
-        pagerState.scrollToPage(HomeVerticalBannerDefaults.VisibleItemCount + realItemCount - 1)
-    }
+private suspend fun scrollVerticalBannerPrevious(pagerState: PagerState) {
     pagerState.animateScrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
 }
 
-private suspend fun scrollVerticalBannerNext(pagerState: PagerState, isLoopingEnabled: Boolean) {
+private suspend fun scrollVerticalBannerNext(pagerState: PagerState) {
     val lastPage = pagerState.pageCount - 1
-    if (isLoopingEnabled && pagerState.currentPage >= lastPage) {
-        pagerState.scrollToPage(HomeVerticalBannerDefaults.VisibleItemCount)
-    }
     pagerState.animateScrollToPage((pagerState.currentPage + 1).coerceAtMost(lastPage))
 }
 
 internal fun Int.toVerticalBannerRealIndex(realItemCount: Int, isLoopingEnabled: Boolean): Int {
+    if (realItemCount <= 0) return 0
     if (!isLoopingEnabled) return coerceIn(0, realItemCount - 1)
-    val shiftedIndex = this - HomeVerticalBannerDefaults.VisibleItemCount
-    return (shiftedIndex % realItemCount + realItemCount) % realItemCount
+    return floorMod(realItemCount)
 }
 
-private fun Int.toLoopedVerticalBannerPageOrNull(realItemCount: Int): Int? {
-    val firstRealPage = HomeVerticalBannerDefaults.VisibleItemCount
-    val lastRealPage = firstRealPage + realItemCount - 1
-    return when {
-        this < firstRealPage -> this + realItemCount
-        this > lastRealPage -> this - realItemCount
-        else -> null
-    }
+internal fun verticalBannerInitialPage(realItemCount: Int, initialRealIndex: Int): Int {
+    require(realItemCount > 0) { "Vertical banner requires at least one real item" }
+    val middlePage = HomeVerticalBannerDefaults.LoopingPageCount / 2
+    val alignedCycleStart = middlePage - middlePage.floorMod(realItemCount)
+    return alignedCycleStart + initialRealIndex.coerceIn(0, realItemCount - 1)
 }
 
-internal fun <T> List<T>.toLoopingVerticalBannerItems(): List<T> = when {
-    size < HomeVerticalBannerDefaults.VisibleItemCount -> this
-    else -> buildList(size + HomeVerticalBannerDefaults.VisibleItemCount * 2) {
-        addAll(this@toLoopingVerticalBannerItems.takeLast(HomeVerticalBannerDefaults.VisibleItemCount))
-        addAll(this@toLoopingVerticalBannerItems)
-        addAll(this@toLoopingVerticalBannerItems.take(HomeVerticalBannerDefaults.VisibleItemCount))
-    }
-}
+private fun Int.floorMod(divisor: Int): Int = ((this % divisor) + divisor) % divisor
 
 private fun verticalBannerIntervalFlow(durationMillis: Long) = flow {
     while (true) {

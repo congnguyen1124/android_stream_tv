@@ -30,6 +30,18 @@ class DummyHomeRepositoryTest {
         assertTrue(content.all { it.thumbnailUrl.startsWith("https://images.pexels.com/") })
     }
 
+    @Test
+    fun `dummy home contains both looping and finite content rows`() {
+        val sectionsByType = DummyHomeRepository(HomeDummyDataSource())
+            .getHomeSections()
+            .associateBy { it.viewType }
+
+        assertTrue(sectionsByType.getValue(HomeSectionViewType.Videos).items.size > 5)
+        assertTrue(sectionsByType.getValue(HomeSectionViewType.Channels).items.size > 5)
+        assertTrue(sectionsByType.getValue(HomeSectionViewType.Shorts).items.size > 5)
+        assertTrue(sectionsByType.getValue(HomeSectionViewType.ListSeries).items.size <= 5)
+    }
+
     private fun Content.episodesOrEmpty(): List<Content> =
         if (this is Series) episodes else emptyList()
 }

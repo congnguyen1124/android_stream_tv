@@ -19,15 +19,31 @@ class DummyHomeRepositoryTest {
   }
 
   @Test
-  fun `dummy playback and logo urls remain empty`() {
-    val content = DummyHomeRepository(HomeDummyDataSource())
-      .getHomeSections()
-      .flatMap { it.items }
-      .flatMap { item -> listOf(item) + item.episodesOrEmpty() }
+  fun `every dummy item carries a playable hls stream`() {
+    val content = dummyContent()
 
-    assertTrue(content.all { it.videoUrl.isEmpty() })
-    assertTrue(content.all { it.logoUrl.isEmpty() })
+    // The player is only reachable from Home, so a single item without a stream is a dead end the
+    // viewer can still navigate into.
+    assertTrue(content.all { it.videoUrl.startsWith("https://") })
+    assertTrue(content.all { it.videoUrl.contains(".m3u8") })
     assertTrue(content.all { it.thumbnailUrl.startsWith("https://images.pexels.com/") })
+  }
+
+  @Test
+  fun `live channels use live streams so the seek bar stays suppressed`() {
+    val channels = DummyHomeRepository(HomeDummyDataSource())
+      .getHomeSections()
+      .first { it.viewType == HomeSectionViewType.Channels }
+      .items
+
+    // A live manifest reports no duration, which is what exercises the LIVE badge and the
+    // seek-suppressed path in PlayerScreen. A VOD stream here would silently stop covering that.
+    assertTrue(channels.all { it.videoUrl.contains("/live/") || it.videoUrl.contains("live-assets") })
+  }
+
+  @Test
+  fun `dummy logo urls remain empty`() {
+    assertTrue(dummyContent().all { it.logoUrl.isEmpty() })
   }
 
   @Test
@@ -41,6 +57,11 @@ class DummyHomeRepositoryTest {
     assertTrue(sectionsByType.getValue(HomeSectionViewType.Shorts).items.size > 5)
     assertTrue(sectionsByType.getValue(HomeSectionViewType.ListSeries).items.size <= 5)
   }
+
+  private fun dummyContent(): List<Content> = DummyHomeRepository(HomeDummyDataSource())
+    .getHomeSections()
+    .flatMap { it.items }
+    .flatMap { item -> listOf(item) + item.episodesOrEmpty() }
 
   private fun Content.episodesOrEmpty(): List<Content> = if (this is Series) episodes else emptyList()
 }

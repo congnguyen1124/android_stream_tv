@@ -34,6 +34,10 @@ android {
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    // Required by the Google IMA SDK that stream-player links against for client-side ad insertion.
+    // This app runs ads-off (StreamTvPlayerConfig.Tv), but the dependency is declared at compile
+    // time, and AAR metadata enforces the requirement regardless of whether the code path runs.
+    isCoreLibraryDesugaringEnabled = true
   }
 }
 
@@ -57,6 +61,9 @@ dependencies {
   implementation(libs.coil.network.okhttp)
   implementation(libs.hilt.android)
   implementation(libs.material)
+  implementation(libs.stream.player)
+
+  coreLibraryDesugaring(libs.desugar.jdk.libs)
 
   ksp(libs.hilt.compiler)
 

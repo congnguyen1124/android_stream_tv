@@ -19,7 +19,6 @@
     <string name="play">Watch now</string>
     <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>
-    <string name="player_buffering">Buffering</string>
     <string name="player_retry">Try again</string>
     <string name="player_live_badge">LIVE</string>
     <string name="player_error_no_network">No connection. Check your network and try again.</string>

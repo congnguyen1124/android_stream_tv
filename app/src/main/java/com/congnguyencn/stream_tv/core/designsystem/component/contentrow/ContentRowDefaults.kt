@@ -22,6 +22,7 @@ object ContentRowDefaults {
 
   internal const val ScrollDurationMillis = 190
   internal const val LoopingItemCountThreshold = 5
+  internal const val BeyondBoundsItemCount = 1
 
   /** The fixed, transparent focus target drawn above the moving lazy items. */
   @Composable

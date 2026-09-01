@@ -27,6 +27,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceDefaults
@@ -66,6 +67,7 @@ internal fun PlayerMetadataSection(
       .fillMaxSize()
       .focusRequester(focusRequester)
       .focusProperties { canFocus = isFocusEnabled }
+      .testTag("player-metadata-section")
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft)
       .onPreviewKeyEvent { event ->
         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -118,7 +120,6 @@ internal fun PlayerMetadataSection(
         Text(
           text = metadata.longDescription,
           modifier = Modifier.fillMaxWidth(),
-          color = StreamTvColors.Neutral20,
           textAlign = TextAlign.Justify,
           style = StreamTvTheme.typography.bodyLarge,
         )
@@ -129,7 +130,7 @@ internal fun PlayerMetadataSection(
           metadata = metadata,
           modifier = Modifier
             .fillMaxWidth()
-            .background(StreamTvColors.TransparentWhite5, RoundedCornerShape(8.dp))
+            .background(StreamTvColors.Neutral60.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
             .padding(16.dp),
         )
       }
@@ -154,7 +155,7 @@ private fun PlayerMetadataTable(metadata: PlayerMetadataUiState, modifier: Modif
         .fillMaxWidth()
         .padding(vertical = 8.dp)
         .height(1.dp)
-        .background(StreamTvColors.Neutral70),
+        .background(StreamTvColors.Neutral50),
     )
     MetadataRow(label = androidx.compose.ui.res.stringResource(R.string.player_genres), value = metadata.genres)
     MetadataRow(label = androidx.compose.ui.res.stringResource(R.string.player_directors), value = metadata.directors)
@@ -176,8 +177,7 @@ private fun MetadataRow(label: String, value: String) {
   ) {
     Text(
       text = label,
-      modifier = Modifier.width(104.dp),
-      color = StreamTvColors.Neutral20,
+      modifier = Modifier.width(120.dp),
       style = StreamTvTheme.typography.labelMedium,
     )
     Text(
@@ -199,14 +199,13 @@ private fun MetadataRatingRow(rating: String) {
   ) {
     Text(
       text = androidx.compose.ui.res.stringResource(R.string.player_rating),
-      modifier = Modifier.width(104.dp),
-      color = StreamTvColors.Neutral20,
+      modifier = Modifier.width(120.dp),
       style = StreamTvTheme.typography.labelMedium,
     )
     Text(
       text = rating,
       modifier = Modifier
-        .border(1.dp, StreamTvColors.TransparentWhite40, RoundedCornerShape(6.dp))
+        .border(1.dp, StreamTvColors.TransparentWhite20, RoundedCornerShape(6.dp))
         .padding(horizontal = 8.dp, vertical = 2.dp),
       style = StreamTvTheme.typography.labelMedium,
     )

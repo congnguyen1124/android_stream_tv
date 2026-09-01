@@ -190,6 +190,7 @@ internal fun VerticalPlayerScreen(
               else -> false
             }
           }
+          .testTag("vertical-player-input-target")
           .focusable(interactionSource = playerInteractionSource),
       )
     }
@@ -332,7 +333,8 @@ private fun VerticalPlayerInteractionSection(
           } else {
             false
           }
-        },
+        }
+        .testTag("vertical-player-title"),
     )
 
     Spacer(modifier = Modifier.height(VerticalPlayerScreenDefaults.TitleToActionsSpacing))

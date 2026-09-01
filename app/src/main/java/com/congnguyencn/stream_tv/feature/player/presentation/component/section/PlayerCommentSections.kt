@@ -196,8 +196,6 @@ internal fun PlayerReplyDetailSection(
       .fillMaxSize()
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft),
   ) {
-    PlayerSectionHeader(title = stringResource(R.string.player_replies))
-    Spacer(modifier = Modifier.height(8.dp))
     PlayerCommentCard(
       comment = reply,
       isFocusEnabled = false,
@@ -211,6 +209,7 @@ internal fun PlayerReplyDetailSection(
       label = reply.likeCount.toString(),
       onClick = { onLikeClick(reply.id) },
       modifier = Modifier
+        .padding(start = 48.dp)
         .focusRequester(focusRequester)
         .focusProperties { canFocus = isFocusEnabled }
         .testTag("player-reply-like"),
@@ -255,7 +254,7 @@ private fun PlayerCommentCard(
       .fillMaxWidth()
       .focusProperties { canFocus = isFocusEnabled }
       .testTag("player-comment-${comment.id}"),
-    shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(14.dp)),
+    shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(20.dp)),
     scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     colors = ClickableSurfaceDefaults.colors(
       containerColor = if (showBackground) StreamTvColors.TransparentWhite5 else StreamTvColors.Transparent,
@@ -267,7 +266,7 @@ private fun PlayerCommentCard(
     ),
   ) {
     Row(
-      modifier = Modifier.padding(16.dp),
+      modifier = Modifier.padding(20.dp),
       horizontalArrangement = Arrangement.spacedBy(12.dp),
       verticalAlignment = Alignment.Top,
     ) {
@@ -279,7 +278,7 @@ private fun PlayerCommentCard(
             modifier = if (comment.isAdmin) {
               Modifier
                 .background(StreamTvColors.Neutral90, RoundedCornerShape(100.dp))
-                .padding(horizontal = 8.dp, vertical = 3.dp)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
             } else {
               Modifier
             },
@@ -289,11 +288,11 @@ private fun PlayerCommentCard(
             overflow = TextOverflow.Ellipsis,
           )
           if (comment.isPinned) {
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             Icon(
               imageVector = ImageVector.vectorResource(R.drawable.ic_player_pin),
               contentDescription = null,
-              modifier = Modifier.size(12.dp),
+              modifier = Modifier.size(16.dp),
               tint = LocalContentColor.current,
             )
           }
@@ -304,7 +303,7 @@ private fun PlayerCommentCard(
             style = StreamTvTheme.typography.labelMedium,
           )
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
           text = comment.content,
           style = StreamTvTheme.typography.bodyLarge,
@@ -312,7 +311,7 @@ private fun PlayerCommentCard(
           overflow = TextOverflow.Ellipsis,
         )
         Spacer(modifier = Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
           PlayerCommentMetric(
             iconResId = if (comment.isLiked) R.drawable.ic_player_like_filled else R.drawable.ic_player_like,
             value = comment.likeCount.toString(),

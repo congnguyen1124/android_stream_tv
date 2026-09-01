@@ -16,12 +16,6 @@ internal class HomeDummyDataSource {
             items = featuredVideos,
         ),
         HomeSectionData(
-            id = "portrait-discovery",
-            title = "Portrait discoveries",
-            viewType = HomeSectionViewTypeData.VerticalBanner,
-            items = discoveryShorts,
-        ),
-        HomeSectionData(
             id = "videos-for-you",
             title = "Videos for you",
             viewType = HomeSectionViewTypeData.Videos,
@@ -38,6 +32,12 @@ internal class HomeDummyDataSource {
             title = "Live channels",
             viewType = HomeSectionViewTypeData.Channels,
             items = liveChannels,
+        ),
+        HomeSectionData(
+            id = "portrait-discovery",
+            title = "Portrait discoveries",
+            viewType = HomeSectionViewTypeData.VerticalBanner,
+            items = discoveryShorts,
         ),
         HomeSectionData(
             id = "shorts-feed",

@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImagePainter
 import coil3.compose.AsyncImage
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 
@@ -14,6 +15,7 @@ fun StreamTvNetworkImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
+    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
 ) {
     AsyncImage(
         model = imageUrl,
@@ -23,5 +25,6 @@ fun StreamTvNetworkImage(
         error = ColorPainter(Color(0xFF17202B)),
         fallback = ColorPainter(StreamTvColors.Neutral90),
         contentScale = contentScale,
+        onSuccess = onSuccess,
     )
 }

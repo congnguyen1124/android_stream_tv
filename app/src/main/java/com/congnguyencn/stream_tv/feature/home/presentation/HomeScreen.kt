@@ -15,11 +15,18 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
+import com.congnguyencn.stream_tv.core.designsystem.tokens.StreamTvDimensions
 import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeBannerSection
+import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeContentRowSection
+import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeContentRowStyle
 import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeVerticalBannerSection
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeContentUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionViewTypeUi
+import com.congnguyencn.stream_tv.feature.home.presentation.model.ChannelUiItem
+import com.congnguyencn.stream_tv.feature.home.presentation.model.SeriesUiItem
+import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
+import com.congnguyencn.stream_tv.feature.home.presentation.model.VideoUiItem
 
 @Composable
 internal fun HomeScreen(
@@ -46,7 +53,11 @@ internal fun HomeScreen(
         else -> LazyColumn(
             modifier = modifier.fillMaxSize(),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                top = 22.dp,
+                top = if (uiState.sections.firstOrNull()?.viewType.isBanner()) {
+                    0.dp
+                } else {
+                    StreamTvDimensions.TopBarHeight
+                },
                 bottom = 54.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(34.dp),
@@ -57,20 +68,37 @@ internal fun HomeScreen(
             ) { section ->
                 when (section.viewType) {
                     HomeSectionViewTypeUi.Banner -> HomeBannerSection(
-                        title = section.title,
-                        items = section.items.requireItemsOfType(),
+                        items = section.items.requireItemsOfType<VideoUiItem>(),
                         contentFocusRequester = contentFocusRequester,
                         topBarFocusRequester = topBarFocusRequester,
                     )
                     HomeSectionViewTypeUi.VerticalBanner -> HomeVerticalBannerSection(
-                        title = section.title,
-                        items = section.items.requireItemsOfType(),
+                        items = section.items.requireItemsOfType<ShortUiItem>(),
                     )
-                    HomeSectionViewTypeUi.Videos,
-                    HomeSectionViewTypeUi.ListSeries,
-                    HomeSectionViewTypeUi.Channels,
-                    HomeSectionViewTypeUi.Shorts,
-                    -> Unit
+                    HomeSectionViewTypeUi.Videos -> HomeContentRowSection(
+                        sectionId = section.id,
+                        title = section.title,
+                        items = section.items.requireItemsOfType<VideoUiItem>(),
+                        style = HomeContentRowStyle.Video,
+                    )
+                    HomeSectionViewTypeUi.ListSeries -> HomeContentRowSection(
+                        sectionId = section.id,
+                        title = section.title,
+                        items = section.items.requireItemsOfType<SeriesUiItem>(),
+                        style = HomeContentRowStyle.Series,
+                    )
+                    HomeSectionViewTypeUi.Channels -> HomeContentRowSection(
+                        sectionId = section.id,
+                        title = section.title,
+                        items = section.items.requireItemsOfType<ChannelUiItem>(),
+                        style = HomeContentRowStyle.Channel,
+                    )
+                    HomeSectionViewTypeUi.Shorts -> HomeContentRowSection(
+                        sectionId = section.id,
+                        title = section.title,
+                        items = section.items.requireItemsOfType<ShortUiItem>(),
+                        style = HomeContentRowStyle.Short,
+                    )
                 }
             }
         }
@@ -101,3 +129,6 @@ private inline fun <reified T : HomeContentUiItem> List<HomeContentUiItem>.requi
             "Expected ${T::class.simpleName}, but received ${item::class.simpleName}"
         }
     }
+
+private fun HomeSectionViewTypeUi?.isBanner(): Boolean =
+    this == HomeSectionViewTypeUi.Banner || this == HomeSectionViewTypeUi.VerticalBanner

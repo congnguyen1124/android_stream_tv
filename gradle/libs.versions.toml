@@ -8,6 +8,7 @@ activityCompose = "1.13.0"
 composeBom = "2026.08.00"
 coil = "3.6.0"
 composeRulesDetekt = "0.6.4"
+desugarJdkLibs = "2.1.5"
 detekt = "1.23.8"
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
@@ -19,6 +20,7 @@ material = "1.14.0"
 navigation = "2.10.0"
 palette = "1.0.0"
 spotless = "8.9.0"
+streamPlayer = "0.1.0"
 tvMaterial = "1.1.0"
 
 [libraries]
@@ -39,6 +41,7 @@ androidx-palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = 
 androidx-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvMaterial" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 compose-rules-detekt = { module = "io.nlopez.compose.rules:detekt", version.ref = "composeRulesDetekt" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -47,6 +50,9 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+# Substituted by the composite build declared in settings.gradle.kts; the version is only a
+# fallback for the mavenLocal route.
+stream-player = { module = "com.congnguyencn:stream-player", version.ref = "streamPlayer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

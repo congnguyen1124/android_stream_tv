@@ -50,6 +50,10 @@ internal class HomeDummyDataSource {
   private companion object {
     // Free public HLS test streams. Grouped by what each surface needs to exercise: VOD for the
     // seekable players, live for the channel rows (no seek bar, resume jumps to the live edge).
+    //
+    // `trailerUrl` draws from the same VOD pool, rotated so no item's trailer is its own stream: the
+    // banner's thumbnail-to-trailer hand-off is only visible when the two are different videos. Live
+    // manifests stay out of the rotation because a trailer has to end for the loop-back to run.
     private object StreamUrls {
       private const val AppleBase = "https://devstreaming-cdn.apple.com/videos/streaming/examples/"
       private const val MuxBase = "https://test-streams.mux.dev/"
@@ -105,6 +109,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-basketball-energy",
         videoUrl = StreamUrls.AppleBipBopTs,
+        trailerUrl = StreamUrls.AppleBipBopFmp4,
         thumbnailUrl = BasketballImage,
         title = "Pulse of the court",
         description = "Follow two athletes through a basketball game charged with speed, focus, and emotion.",
@@ -113,6 +118,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-wild-tiger",
         videoUrl = StreamUrls.TearsOfSteelTs,
+        trailerUrl = StreamUrls.AppleHevc,
         thumbnailUrl = TigerForestImage,
         title = "Realm of the Bengal tiger",
         description = "A quiet journey through Ranthambore and the hidden world of one of Asia's great predators.",
@@ -121,6 +127,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-tokyo-culture",
         videoUrl = StreamUrls.BigBuckBunnyAbr,
+        trailerUrl = StreamUrls.TearsOfSteelTs,
         thumbnailUrl = TokyoStreetImage,
         title = "Tokyo: Tradition in motion",
         description = "Explore Asakusa, where kimonos, ancient temples, and modern city life meet.",
@@ -129,6 +136,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-chinese-festival",
         videoUrl = StreamUrls.TearsOfSteelFmp4,
+        trailerUrl = StreamUrls.BigBuckBunnyAbr,
         thumbnailUrl = ChineseFestivalImage,
         title = "Colors of a Chinese festival",
         description = "Vivid costumes, music, and community rituals bring a traditional celebration to life.",
@@ -137,6 +145,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-football-decision",
         videoUrl = StreamUrls.AppleBipBopFmp4,
+        trailerUrl = StreamUrls.ShakaAngelOne,
         thumbnailUrl = FootballImage,
         title = "The decisive touch",
         description = "A football match turns on one perfectly timed run and a fearless finish.",
@@ -145,6 +154,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-cricket-pressure",
         videoUrl = StreamUrls.AppleHevc,
+        trailerUrl = StreamUrls.BitmovinSintel,
         thumbnailUrl = CricketImage,
         title = "Under pressure at the crease",
         description = "A batter prepares for the delivery that could decide the entire match.",
@@ -153,6 +163,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-lunar-new-year",
         videoUrl = StreamUrls.ShakaAngelOne,
+        trailerUrl = StreamUrls.AppleBipBopTs,
         thumbnailUrl = ChineseNewYearImage,
         title = "Welcoming the new spring",
         description = "Red, gold, and generations of tradition fill a joyful Lunar New Year celebration.",
@@ -161,6 +172,7 @@ internal class HomeDummyDataSource {
       VideoData(
         id = "video-japanese-ceremony",
         videoUrl = StreamUrls.BitmovinSintel,
+        trailerUrl = StreamUrls.AppleBipBopFmp4,
         thumbnailUrl = JapaneseCeremonyImage,
         title = "Grace in every gesture",
         description = "A close look at the details, discipline, and meaning of a Japanese ceremony.",
@@ -172,6 +184,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-cricket-focus",
         videoUrl = StreamUrls.JwPlayerBigBuckBunny,
+        trailerUrl = StreamUrls.AppleHevc,
         thumbnailUrl = CricketImage,
         title = "Before the strike",
         description = "A cricket player finds complete focus just before the game begins.",
@@ -180,6 +193,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-lunar-new-year",
         videoUrl = StreamUrls.LongtailBipBop,
+        trailerUrl = StreamUrls.TearsOfSteelTs,
         thumbnailUrl = ChineseNewYearImage,
         title = "A spring in red and gold",
         description = "Lunar New Year comes alive among lanterns and traditional dress.",
@@ -188,6 +202,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-japanese-ceremony",
         videoUrl = StreamUrls.MuxTest001,
+        trailerUrl = StreamUrls.TearsOfSteelFmp4,
         thumbnailUrl = JapaneseCeremonyImage,
         title = "A Japanese ceremony",
         description = "Intricate clothing and timeless gestures shape a traditional ceremony.",
@@ -196,6 +211,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-tiger-portrait",
         videoUrl = StreamUrls.BigBuckBunnyFixed,
+        trailerUrl = StreamUrls.BigBuckBunnyAbr,
         thumbnailUrl = TigerPortraitImage,
         title = "The wild gaze",
         description = "A close portrait captures a tiger's quiet power among autumn leaves.",
@@ -204,6 +220,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-football-motion",
         videoUrl = StreamUrls.MuxPtsShift,
+        trailerUrl = StreamUrls.ShakaAngelOne,
         thumbnailUrl = FootballImage,
         title = "Motion on the pitch",
         description = "One decisive touch in a football match played at full speed.",
@@ -212,6 +229,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-basketball-reach",
         videoUrl = StreamUrls.MuxSampleAes,
+        trailerUrl = StreamUrls.BitmovinSintel,
         thumbnailUrl = BasketballImage,
         title = "Above the rim",
         description = "Two players rise for a split-second contest above the basket.",
@@ -220,6 +238,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-tokyo-walk",
         videoUrl = StreamUrls.MuxIssue666,
+        trailerUrl = StreamUrls.AppleBipBopTs,
         thumbnailUrl = TokyoStreetImage,
         title = "A minute in old Tokyo",
         description = "A quick walk through Asakusa where every corner holds a story.",
@@ -228,6 +247,7 @@ internal class HomeDummyDataSource {
       ShortData(
         id = "short-festival-colors",
         videoUrl = StreamUrls.BigBuckBunnyAbr,
+        trailerUrl = StreamUrls.AppleBipBopFmp4,
         thumbnailUrl = ChineseFestivalImage,
         title = "Festival colors",
         description = "Traditional costumes sweep past the camera in a burst of color.",
@@ -239,6 +259,7 @@ internal class HomeDummyDataSource {
       SeriesData(
         id = "series-wild-asia",
         videoUrl = StreamUrls.AppleBipBopTs,
+        trailerUrl = StreamUrls.AppleHevc,
         thumbnailUrl = TigerForestImage,
         title = "Wild Asia",
         description = "A documentary series about Asia's landscapes and remarkable wildlife.",
@@ -247,6 +268,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-wild-asia-1",
             videoUrl = StreamUrls.AppleBipBopTs,
+            trailerUrl = StreamUrls.TearsOfSteelTs,
             thumbnailUrl = TigerForestImage,
             title = "Episode 1: Predator of the forest",
             description = "Track a Bengal tiger through its natural habitat.",
@@ -255,6 +277,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-wild-asia-2",
             videoUrl = StreamUrls.TearsOfSteelTs,
+            trailerUrl = StreamUrls.TearsOfSteelFmp4,
             thumbnailUrl = TigerPortraitImage,
             title = "Episode 2: Built to survive",
             description = "The adaptations that help large animals endure a demanding wilderness.",
@@ -265,6 +288,7 @@ internal class HomeDummyDataSource {
       SeriesData(
         id = "series-east-asia-culture",
         videoUrl = StreamUrls.TearsOfSteelTs,
+        trailerUrl = StreamUrls.BigBuckBunnyAbr,
         thumbnailUrl = TokyoStreetImage,
         title = "Living heritage of East Asia",
         description = "Meet the people and living traditions of China and Japan.",
@@ -273,6 +297,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-east-asia-1",
             videoUrl = StreamUrls.BigBuckBunnyAbr,
+            trailerUrl = StreamUrls.ShakaAngelOne,
             thumbnailUrl = ChineseFestivalImage,
             title = "Episode 1: Colors of China",
             description = "A day inside a vibrant traditional festival.",
@@ -281,6 +306,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-east-asia-2",
             videoUrl = StreamUrls.TearsOfSteelFmp4,
+            trailerUrl = StreamUrls.BitmovinSintel,
             thumbnailUrl = TokyoStreetImage,
             title = "Episode 2: Old Tokyo",
             description = "Asakusa through the eyes of the people who live there.",
@@ -291,6 +317,7 @@ internal class HomeDummyDataSource {
       SeriesData(
         id = "series-human-performance",
         videoUrl = StreamUrls.BigBuckBunnyAbr,
+        trailerUrl = StreamUrls.AppleBipBopTs,
         thumbnailUrl = BasketballImage,
         title = "The edge of performance",
         description = "Athletes reveal how preparation becomes instinct when the pressure rises.",
@@ -299,6 +326,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-performance-1",
             videoUrl = StreamUrls.AppleBipBopFmp4,
+            trailerUrl = StreamUrls.AppleHevc,
             thumbnailUrl = BasketballImage,
             title = "Episode 1: Reading the court",
             description = "Basketball players make complex decisions in fractions of a second.",
@@ -307,6 +335,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-performance-2",
             videoUrl = StreamUrls.AppleHevc,
+            trailerUrl = StreamUrls.TearsOfSteelTs,
             thumbnailUrl = FootballImage,
             title = "Episode 2: Space and timing",
             description = "A football attack is built from movement before the ball arrives.",
@@ -317,6 +346,7 @@ internal class HomeDummyDataSource {
       SeriesData(
         id = "series-rituals-of-asia",
         videoUrl = StreamUrls.TearsOfSteelFmp4,
+        trailerUrl = StreamUrls.BigBuckBunnyAbr,
         thumbnailUrl = JapaneseCeremonyImage,
         title = "Rituals of Asia",
         description = "A respectful journey through ceremonies that connect past and present.",
@@ -325,6 +355,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-rituals-1",
             videoUrl = StreamUrls.ShakaAngelOne,
+            trailerUrl = StreamUrls.BitmovinSintel,
             thumbnailUrl = JapaneseCeremonyImage,
             title = "Episode 1: A language of gestures",
             description = "Every movement carries meaning in a traditional Japanese ceremony.",
@@ -333,6 +364,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-rituals-2",
             videoUrl = StreamUrls.BitmovinSintel,
+            trailerUrl = StreamUrls.AppleBipBopTs,
             thumbnailUrl = ChineseNewYearImage,
             title = "Episode 2: The color of renewal",
             description = "Families welcome a new year through symbols of luck and renewal.",
@@ -341,6 +373,7 @@ internal class HomeDummyDataSource {
           VideoData(
             id = "episode-rituals-3",
             videoUrl = StreamUrls.MuxImscCaptions,
+            trailerUrl = StreamUrls.AppleBipBopFmp4,
             thumbnailUrl = ChineseFestivalImage,
             title = "Episode 3: A community in celebration",
             description = "Music and costume transform a gathering into shared memory.",
@@ -354,6 +387,7 @@ internal class HomeDummyDataSource {
       ChannelData(
         id = "channel-sport-live",
         videoUrl = StreamUrls.AkamaiLive,
+        trailerUrl = StreamUrls.AppleHevc,
         thumbnailUrl = BasketballImage,
         title = "StreamTV Sport",
         description = "The day's biggest sporting moments, live every day.",
@@ -362,6 +396,7 @@ internal class HomeDummyDataSource {
       ChannelData(
         id = "channel-nature-live",
         videoUrl = StreamUrls.ShakaLive,
+        trailerUrl = StreamUrls.TearsOfSteelTs,
         thumbnailUrl = TigerForestImage,
         title = "StreamTV Nature",
         description = "An uninterrupted window into the wild, 24/7.",
@@ -370,6 +405,7 @@ internal class HomeDummyDataSource {
       ChannelData(
         id = "channel-football-live",
         videoUrl = StreamUrls.AkamaiEightLive,
+        trailerUrl = StreamUrls.TearsOfSteelFmp4,
         thumbnailUrl = FootballImage,
         title = "StreamTV Football",
         description = "Live matches, tactical analysis, and the stories behind the final score.",
@@ -378,6 +414,7 @@ internal class HomeDummyDataSource {
       ChannelData(
         id = "channel-cricket-live",
         videoUrl = StreamUrls.AkamaiLive,
+        trailerUrl = StreamUrls.BigBuckBunnyAbr,
         thumbnailUrl = CricketImage,
         title = "StreamTV Cricket",
         description = "International cricket and classic matches throughout the day.",
@@ -386,6 +423,7 @@ internal class HomeDummyDataSource {
       ChannelData(
         id = "channel-culture-live",
         videoUrl = StreamUrls.ShakaLive,
+        trailerUrl = StreamUrls.ShakaAngelOne,
         thumbnailUrl = ChineseFestivalImage,
         title = "StreamTV Culture",
         description = "Festivals, art, food, and living traditions from around the world.",
@@ -394,6 +432,7 @@ internal class HomeDummyDataSource {
       ChannelData(
         id = "channel-city-live",
         videoUrl = StreamUrls.AkamaiEightLive,
+        trailerUrl = StreamUrls.BitmovinSintel,
         thumbnailUrl = TokyoStreetImage,
         title = "StreamTV Cities",
         description = "A continuous window into the streets and rhythms of remarkable cities.",

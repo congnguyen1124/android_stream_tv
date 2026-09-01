@@ -31,6 +31,24 @@ class DummyHomeRepositoryTest {
   }
 
   @Test
+  fun `every dummy item carries a trailer that is a different stream from its feature`() = runTest {
+    val content = dummyContent()
+
+    assertTrue(content.all { it.trailerUrl.startsWith("https://") })
+    assertTrue(content.all { it.trailerUrl.contains(".m3u8") })
+    // The banner hands over from thumbnail to trailer in place. With the same stream on both fields
+    // the hand-off is invisible, so the dummy rotation offsets them and this keeps it that way.
+    assertTrue(content.none { it.trailerUrl == it.videoUrl })
+  }
+
+  @Test
+  fun `dummy trailers avoid live streams so the banner's loop-back runs`() = runTest {
+    // A live manifest never reaches its end, so a live trailer would silently stop covering the
+    // replay path the banner depends on.
+    assertTrue(dummyContent().none { it.trailerUrl.contains("/live/") || it.trailerUrl.contains("live-assets") })
+  }
+
+  @Test
   fun `live channels use live streams so the seek bar stays suppressed`() = runTest {
     val channels = DummyHomeRepository(HomeDummyDataSource())
       .getHomeSections()

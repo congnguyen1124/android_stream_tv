@@ -14,12 +14,15 @@ The library deliberately ships **no player UI** — no play button, seek bar, or
 TV surface and a touch surface need different controls, so the app owns all of them. What this app
 added on top:
 
-| Screen | Content | Framing |
+| Surface | Content | Framing |
 |---|---|---|
 | `PlayerScreen` | Videos, series episodes, live channels | Landscape, letterboxed (`RESIZE_MODE_FIT`) |
 | `VerticalPlayerScreen` | Shorts, vertical banner | Portrait 9:16 stage, cropped (`RESIZE_MODE_ZOOM`) |
+| `HomeBannerTrailer` | The focused home banner item's trailer | Full-bleed hero, cropped (`RESIZE_MODE_ZOOM`), no chrome at all |
 
-Both are driven by **one `PlayerViewModel`**.
+The two screens are driven by **one `PlayerViewModel`**. The banner trailer has its own
+`HomeBannerTrailerViewModel` and its own player, because it is ambient playback with a different
+lifetime and no controls — see `docs/home-banner-trailer/`.
 
 ## 2. Dependency wiring
 
@@ -91,12 +94,12 @@ module — see §9.
 ```
 app/src/main/java/com/congnguyencn/stream_tv/
 ├── app/di/PlayerModule.kt                              ← provides StreamTvPlayerFactory
+├── core/player/StreamTvPlayerFactory.kt                ← test seam for player creation
 ├── feature/home/presentation/navigation/
 │   └── HomePlayerTarget.kt                              ← which player an item opens in
 └── feature/player/presentation/
     ├── PlayerUiState.kt                                 ← contract + state/error mappers
     ├── PlayerViewModel.kt                               ← shared by both screens
-    ├── StreamTvPlayerFactory.kt                         ← test seam for player creation
     ├── PlayerRoute.kt                                   ← binds VM → PlayerScreen
     ├── VerticalPlayerRoute.kt                           ← binds VM → VerticalPlayerScreen
     ├── PausePlaybackWhenStopped.kt                       ← lifecycle policy
@@ -213,6 +216,11 @@ URLs are grouped in a `private object StreamUrls` with shared base constants (`A
 Live streams are on the channel rows on purpose: they report no duration, which is what exercises the
 seek-bar-suppressed and `LIVE`-badge paths in `PlayerScreen`.
 
+Every item also carries a `trailerUrl` for the home banner, drawn from the same VOD pool but rotated
+one position, so no item's trailer is its own feature stream and the banner's hand-off from thumbnail
+to trailer is visible. Live manifests stay out of that rotation: a trailer has to reach its end for
+the banner's loop-back to run at all.
+
 ## 6. Player configuration
 
 `PlayerModule` provides every player with `StreamTvPlayerConfig.Tv`:
@@ -229,10 +237,11 @@ Switch to `StreamTvPlayerConfig.Feed` if a swipeable shorts feed lands: it enabl
 low-latency buffer, which is the right trade when an item is re-entered seconds after being swiped
 past. Nothing else has to change.
 
-`StreamTvPlayerFactory` exists so the ViewModel does not call `StreamTvPlayerManager.create` directly.
+`StreamTvPlayerFactory` exists so a ViewModel does not call `StreamTvPlayerManager.create` directly.
 Creating a real player needs a `Context`, a decoder and a surface, none of which a unit test can
 supply; with the seam, a test binds a fake and the ViewModel's state mapping becomes testable off
-device.
+device. It lives in `core/player/` rather than in this feature, because Home's banner trailer builds a
+player too and neither feature should reach into the other's package for the seam.
 
 ## 7. Controls and lifecycle
 

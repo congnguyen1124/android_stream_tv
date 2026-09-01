@@ -3,6 +3,7 @@ package com.congnguyencn.stream_tv.feature.home.data.model
 internal sealed interface HomeContentData {
   val id: String
   val videoUrl: String
+  val trailerUrl: String
   val thumbnailUrl: String
   val vastUrl: String
   val title: String
@@ -14,6 +15,7 @@ internal sealed interface HomeContentData {
 internal data class VideoData(
   override val id: String,
   override val videoUrl: String = "",
+  override val trailerUrl: String = "",
   override val thumbnailUrl: String,
   override val vastUrl: String = "",
   override val title: String,
@@ -25,6 +27,7 @@ internal data class VideoData(
 internal data class SeriesData(
   override val id: String,
   override val videoUrl: String = "",
+  override val trailerUrl: String = "",
   override val thumbnailUrl: String,
   override val vastUrl: String = "",
   override val title: String,
@@ -37,6 +40,7 @@ internal data class SeriesData(
 internal data class ChannelData(
   override val id: String,
   override val videoUrl: String = "",
+  override val trailerUrl: String = "",
   override val thumbnailUrl: String,
   override val vastUrl: String = "",
   override val title: String,
@@ -48,6 +52,7 @@ internal data class ChannelData(
 internal data class ShortData(
   override val id: String,
   override val videoUrl: String = "",
+  override val trailerUrl: String = "",
   override val thumbnailUrl: String,
   override val vastUrl: String = "",
   override val title: String,

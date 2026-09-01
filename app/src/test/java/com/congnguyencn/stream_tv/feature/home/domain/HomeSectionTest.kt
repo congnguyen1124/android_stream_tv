@@ -22,6 +22,7 @@ class HomeSectionTest {
   private fun testVideo() = Video(
     id = "video-1",
     videoUrl = "",
+    trailerUrl = "",
     thumbnailUrl = "https://example.com/video.jpg",
     vastUrl = "",
     title = "Video",

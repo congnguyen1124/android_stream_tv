@@ -32,6 +32,7 @@ private fun Content.toUi(): HomeContentUiItem = when (this) {
   is Series -> SeriesUiItem(
     id = id,
     videoUrl = videoUrl,
+    trailerUrl = trailerUrl,
     thumbnailUrl = thumbnailUrl,
     vastUrl = vastUrl,
     title = title,
@@ -44,6 +45,7 @@ private fun Content.toUi(): HomeContentUiItem = when (this) {
   is Channel -> ChannelUiItem(
     id = id,
     videoUrl = videoUrl,
+    trailerUrl = trailerUrl,
     thumbnailUrl = thumbnailUrl,
     vastUrl = vastUrl,
     title = title,
@@ -55,6 +57,7 @@ private fun Content.toUi(): HomeContentUiItem = when (this) {
   is Short -> ShortUiItem(
     id = id,
     videoUrl = videoUrl,
+    trailerUrl = trailerUrl,
     thumbnailUrl = thumbnailUrl,
     vastUrl = vastUrl,
     title = title,
@@ -67,6 +70,7 @@ private fun Content.toUi(): HomeContentUiItem = when (this) {
 private fun Video.toUi(): VideoUiItem = VideoUiItem(
   id = id,
   videoUrl = videoUrl,
+  trailerUrl = trailerUrl,
   thumbnailUrl = thumbnailUrl,
   vastUrl = vastUrl,
   title = title,

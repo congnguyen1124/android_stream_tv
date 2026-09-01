@@ -80,6 +80,11 @@ private object HomeBannerDefaults {
   val BannerHeight = 600.dp
 }
 
+/**
+ * @param bannerTrailer The trailer layer drawn over the active item's thumbnail, supplied by the
+ *   route. Empty by default, which is the whole banner minus playback — what previews and Compose
+ *   tests want, since neither has a player.
+ */
 @Suppress("LongMethod")
 @Composable
 internal fun HomeBannerSection(
@@ -90,6 +95,7 @@ internal fun HomeBannerSection(
   autoPlay: Boolean = true,
   autoScrollDurationMillis: Long = HomeBannerDefaults.AutoScrollDurationMillis,
   onItemClick: (VideoUiItem) -> Unit = {},
+  bannerTrailer: @Composable (item: VideoUiItem, isBannerFocused: Boolean) -> Unit = { _, _ -> },
 ) {
   if (items.isEmpty()) return
 
@@ -172,6 +178,10 @@ internal fun HomeBannerSection(
           contentScale = ContentScale.Crop,
         )
       }
+
+      // Over the thumbnail, under the gradients and the info block: a trailer is the hero image
+      // moving, not a layer that gets to cover the title.
+      bannerTrailer(activeItem, isFocused)
 
       HorizontalPager(
         state = pagerState,

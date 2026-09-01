@@ -8,49 +8,49 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
 
 private val StreamTvDarkColorScheme = darkColorScheme(
-    primary = StreamTvPrimary,
-    onPrimary = StreamTvOnPrimary,
-    primaryContainer = StreamTvPrimaryContainer,
-    onPrimaryContainer = StreamTvOnPrimaryContainer,
-    secondary = StreamTvSecondary,
-    onSecondary = StreamTvOnSecondary,
-    secondaryContainer = StreamTvSecondaryContainer,
-    onSecondaryContainer = StreamTvOnSecondaryContainer,
-    tertiary = StreamTvTertiary,
-    onTertiary = StreamTvOnTertiary,
-    tertiaryContainer = StreamTvTertiaryContainer,
-    onTertiaryContainer = StreamTvOnTertiaryContainer,
-    error = StreamTvError,
-    onError = StreamTvOnError,
-    errorContainer = StreamTvErrorContainer,
-    onErrorContainer = StreamTvOnErrorContainer,
-    background = StreamTvBackground,
-    onBackground = StreamTvOnBackground,
-    surface = StreamTvSurface,
-    onSurface = StreamTvOnSurface,
-    surfaceVariant = StreamTvSurfaceVariant,
-    onSurfaceVariant = StreamTvOnSurfaceVariant,
-    scrim = StreamTvScrim,
-    inverseSurface = StreamTvInverseSurface,
-    inverseOnSurface = StreamTvInverseOnSurface,
-    inversePrimary = StreamTvInversePrimary,
+  primary = StreamTvPrimary,
+  onPrimary = StreamTvOnPrimary,
+  primaryContainer = StreamTvPrimaryContainer,
+  onPrimaryContainer = StreamTvOnPrimaryContainer,
+  secondary = StreamTvSecondary,
+  onSecondary = StreamTvOnSecondary,
+  secondaryContainer = StreamTvSecondaryContainer,
+  onSecondaryContainer = StreamTvOnSecondaryContainer,
+  tertiary = StreamTvTertiary,
+  onTertiary = StreamTvOnTertiary,
+  tertiaryContainer = StreamTvTertiaryContainer,
+  onTertiaryContainer = StreamTvOnTertiaryContainer,
+  error = StreamTvError,
+  onError = StreamTvOnError,
+  errorContainer = StreamTvErrorContainer,
+  onErrorContainer = StreamTvOnErrorContainer,
+  background = StreamTvBackground,
+  onBackground = StreamTvOnBackground,
+  surface = StreamTvSurface,
+  onSurface = StreamTvOnSurface,
+  surfaceVariant = StreamTvSurfaceVariant,
+  onSurfaceVariant = StreamTvOnSurfaceVariant,
+  scrim = StreamTvScrim,
+  inverseSurface = StreamTvInverseSurface,
+  inverseOnSurface = StreamTvInverseOnSurface,
+  inversePrimary = StreamTvInversePrimary,
 )
 
 private val LocalStreamTvTypography = staticCompositionLocalOf { DefaultStreamTvTypography }
 
 @Composable
 fun StreamTvTheme(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalStreamTvTypography provides DefaultStreamTvTypography) {
-        MaterialTheme(
-            colorScheme = StreamTvDarkColorScheme,
-            content = content,
-        )
-    }
+  CompositionLocalProvider(LocalStreamTvTypography provides DefaultStreamTvTypography) {
+    MaterialTheme(
+      colorScheme = StreamTvDarkColorScheme,
+      content = content,
+    )
+  }
 }
 
 object StreamTvTheme {
-    val typography: StreamTvTypography
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalStreamTvTypography.current
+  val typography: StreamTvTypography
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalStreamTvTypography.current
 }

@@ -14,23 +14,20 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object HomeModule {
-    @Provides
-    @Singleton
-    fun provideHomeDummyDataSource(): HomeDummyDataSource = HomeDummyDataSource()
+  @Provides
+  @Singleton
+  fun provideHomeDummyDataSource(): HomeDummyDataSource = HomeDummyDataSource()
 
-    @Provides
-    @Singleton
-    fun provideHomeRepository(
-        dataSource: HomeDummyDataSource,
-    ): HomeRepository = DummyHomeRepository(dataSource)
+  @Provides
+  @Singleton
+  fun provideHomeRepository(dataSource: HomeDummyDataSource): HomeRepository = DummyHomeRepository(dataSource)
 
-    @Provides
-    @Singleton
-    fun provideGetHomeSectionsUseCase(
-        repository: HomeRepository,
-    ): GetHomeSectionsUseCase = GetHomeSectionsUseCase(repository)
+  @Provides
+  @Singleton
+  fun provideGetHomeSectionsUseCase(repository: HomeRepository): GetHomeSectionsUseCase =
+    GetHomeSectionsUseCase(repository)
 
-    @Provides
-    @Singleton
-    fun provideHomeUiMapper(): HomeUiMapper = HomeUiMapper()
+  @Provides
+  @Singleton
+  fun provideHomeUiMapper(): HomeUiMapper = HomeUiMapper()
 }

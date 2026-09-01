@@ -6,13 +6,13 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class StreamTvTopBarItem(
-    val id: String,
-    @param:DrawableRes val iconResId: Int,
-    @param:StringRes val titleResId: Int,
-    val role: StreamTvTopBarItemRole = StreamTvTopBarItemRole.Destination,
+  val id: String,
+  @param:DrawableRes val iconResId: Int,
+  @param:StringRes val titleResId: Int,
+  val role: StreamTvTopBarItemRole = StreamTvTopBarItemRole.Destination,
 )
 
 enum class StreamTvTopBarItemRole {
-    Destination,
-    Profile,
+  Destination,
+  Profile,
 }

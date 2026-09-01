@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 internal class SettingViewModel @Inject constructor() : ViewModel() {
-    private val mutableUiState = MutableStateFlow(SettingUiState())
-    val uiState: StateFlow<SettingUiState> = mutableUiState.asStateFlow()
+  private val mutableUiState = MutableStateFlow(SettingUiState())
+  val uiState: StateFlow<SettingUiState> = mutableUiState.asStateFlow()
 
-    fun openSetting() {
-        mutableUiState.update { it.copy(isSettingReady = true) }
-    }
+  fun openSetting() {
+    mutableUiState.update { it.copy(isSettingReady = true) }
+  }
 }

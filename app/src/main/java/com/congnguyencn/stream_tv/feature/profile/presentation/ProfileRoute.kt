@@ -8,16 +8,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun ProfileRoute(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    viewModel: ProfileViewModel = hiltViewModel(),
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  viewModel: ProfileViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    ProfileScreen(
-        uiState = uiState,
-        contentFocusRequester = contentFocusRequester,
-        topBarFocusRequester = topBarFocusRequester,
-        onPrimaryActionClick = viewModel::openProfile,
-    )
+  ProfileScreen(
+    uiState = uiState,
+    contentFocusRequester = contentFocusRequester,
+    topBarFocusRequester = topBarFocusRequester,
+    onPrimaryActionClick = viewModel::openProfile,
+  )
 }

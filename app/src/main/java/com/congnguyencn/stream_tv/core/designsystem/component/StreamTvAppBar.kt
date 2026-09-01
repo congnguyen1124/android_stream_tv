@@ -18,31 +18,28 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.core.designsystem.tokens.StreamTvDimensions
 
 @Composable
-fun StreamTvAppBar(
-    modifier: Modifier = Modifier,
-    colors: SurfaceColors = SurfaceDefaults.colors(),
-) {
-    Surface(
-        modifier = modifier.height(StreamTvDimensions.AppBarHeight),
-        colors = colors,
+fun StreamTvAppBar(modifier: Modifier = Modifier, colors: SurfaceColors = SurfaceDefaults.colors()) {
+  Surface(
+    modifier = modifier.height(StreamTvDimensions.AppBarHeight),
+    colors = colors,
+  ) {
+    Row(
+      modifier = Modifier
+        .width(144.dp)
+        .fillMaxHeight(),
+      horizontalArrangement = Arrangement.spacedBy(4.dp),
+      verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .width(144.dp)
-                .fillMaxHeight(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "STREAM",
-                color = StreamTvColors.NeutralWhite,
-                style = StreamTvTheme.typography.titleLarge,
-            )
-            Text(
-                text = "TV",
-                color = StreamTvColors.Primary40,
-                style = StreamTvTheme.typography.titleLarge,
-            )
-        }
+      Text(
+        text = "STREAM",
+        color = StreamTvColors.NeutralWhite,
+        style = StreamTvTheme.typography.titleLarge,
+      )
+      Text(
+        text = "TV",
+        color = StreamTvColors.Primary40,
+        style = StreamTvTheme.typography.titleLarge,
+      )
     }
+  }
 }

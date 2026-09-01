@@ -24,6 +24,7 @@ internal fun MainNavHost(
   navController: NavHostController,
   contentFocusRequester: FocusRequester,
   topBarFocusRequester: FocusRequester,
+  isTopBarFocused: Boolean,
   onTopBarOverlayVisibilityChange: (Boolean) -> Unit,
   onOpenPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
   onOpenVerticalPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
@@ -37,6 +38,7 @@ internal fun MainNavHost(
     homeScreen(
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+      isTopBarFocused = isTopBarFocused,
       onTopBarOverlayVisibilityChange = onTopBarOverlayVisibilityChange,
       onItemClick = { item ->
         // Portrait content has to be framed portrait, so the content type — not the section it was

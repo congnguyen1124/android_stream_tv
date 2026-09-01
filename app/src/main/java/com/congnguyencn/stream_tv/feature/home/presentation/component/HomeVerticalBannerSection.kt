@@ -37,6 +37,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -108,6 +110,7 @@ private object HomeVerticalBannerDefaults {
 @Composable
 internal fun HomeVerticalBannerSection(
   items: List<ShortUiItem>,
+  sectionFocusRequester: FocusRequester,
   modifier: Modifier = Modifier,
   autoPlay: Boolean = true,
   autoScrollDurationMillis: Long = HomeVerticalBannerDefaults.AutoScrollDurationMillis,
@@ -172,6 +175,7 @@ internal fun HomeVerticalBannerSection(
         .align(Alignment.Center)
         .fillMaxWidth()
         .height(1.dp)
+        .focusRequester(sectionFocusRequester)
         .onPreviewKeyEvent { event ->
           handleVerticalBannerKeyEvent(
             event = event,

@@ -11,6 +11,7 @@ const val HomeRoute = "home"
 fun NavGraphBuilder.homeScreen(
   contentFocusRequester: FocusRequester,
   topBarFocusRequester: FocusRequester,
+  isTopBarFocused: Boolean,
   onItemClick: (HomeContentUiItem) -> Unit,
   onTopBarOverlayVisibilityChange: (Boolean) -> Unit,
 ) {
@@ -18,6 +19,7 @@ fun NavGraphBuilder.homeScreen(
     HomeScreen(
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+      isTopBarFocused = isTopBarFocused,
       onItemClick = onItemClick,
       onTopBarOverlayVisibilityChange = onTopBarOverlayVisibilityChange,
     )

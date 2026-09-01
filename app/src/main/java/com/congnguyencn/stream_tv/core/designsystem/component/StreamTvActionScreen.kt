@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -18,6 +17,13 @@ import androidx.tv.material3.Text
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 
+/**
+ * The placeholder body shared by the destinations that have no content yet.
+ *
+ * Deliberately does not request focus on appearance: these screens are only ever reached by picking
+ * a top bar item, and that item keeps focus so the viewer can carry on along the bar. [contentFocusRequester]
+ * is where the bar's Down key lands, which is how focus gets here when the viewer asks for it.
+ */
 @Composable
 fun StreamTvActionScreen(
   title: String,
@@ -28,10 +34,6 @@ fun StreamTvActionScreen(
   onActionClick: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  LaunchedEffect(contentFocusRequester) {
-    contentFocusRequester.requestFocus()
-  }
-
   Box(
     modifier = modifier.fillMaxSize(),
     contentAlignment = Alignment.Center,

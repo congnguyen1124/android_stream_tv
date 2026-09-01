@@ -16,13 +16,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
@@ -76,12 +81,20 @@ internal enum class HomeContentRowStyle(
     get() = cardWidth / aspectRatio
 }
 
+/**
+ * One titled row of Home content.
+ *
+ * @param sectionFocusRequester Attached to the row's single focus target — the fixed selection
+ *   overlay — so Home can hand focus straight back to this row after a return from playback.
+ */
+@Suppress("LongParameterList")
 @Composable
 internal fun HomeContentRowSection(
   sectionId: String,
   title: String,
   items: List<HomeContentUiItem>,
   style: HomeContentRowStyle,
+  sectionFocusRequester: FocusRequester,
   modifier: Modifier = Modifier,
   onItemClick: (HomeContentUiItem) -> Unit = {},
 ) {
@@ -101,7 +114,9 @@ internal fun HomeContentRowSection(
         .fillMaxWidth()
         .testTag("home-content-row-$sectionId"),
       itemSpacing = 18.dp,
-      selectedItemModifier = Modifier.testTag("home-content-row-$sectionId-selected-item"),
+      selectedItemModifier = Modifier
+        .focusRequester(sectionFocusRequester)
+        .testTag("home-content-row-$sectionId-selected-item"),
       selectedItem = { isFocused ->
         HomeContentFocusFrame(
           style = style,
@@ -247,5 +262,22 @@ private fun ContentBadge(item: HomeContentUiItem, modifier: Modifier = Modifier)
       color = StreamTvColors.NeutralWhite,
       style = StreamTvTheme.typography.labelMedium,
     )
+  }
+}
+
+@Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF0B0B0F)
+@Composable
+private fun HomeContentRowSectionPreview() {
+  StreamTvTheme {
+    Box(modifier = Modifier.background(StreamTvColors.NeutralBlack)) {
+      HomeContentRowSection(
+        sectionId = "trending",
+        title = "Trending now",
+        items = HomePreviewData.Videos,
+        style = HomeContentRowStyle.Video,
+        sectionFocusRequester = remember { FocusRequester() },
+        modifier = Modifier.padding(vertical = 24.dp),
+      )
+    }
   }
 }

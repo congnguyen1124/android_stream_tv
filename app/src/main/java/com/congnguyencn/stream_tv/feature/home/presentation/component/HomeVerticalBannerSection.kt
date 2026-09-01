@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -66,6 +67,7 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.tokens.StreamTvDimensions
 import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
 import kotlin.math.absoluteValue
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -77,456 +79,458 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private object HomeVerticalBannerDefaults {
-    const val VisibleItemCount = 5
-    const val LoopingPageCount = Int.MAX_VALUE
-    const val PreloadPageCount = VisibleItemCount
-    const val ItemRatio = 2f / 3f
-    const val FocusedItemScale = 1.1f
-    const val UnfocusedItemScale = 0.94f
-    const val AutoScrollDurationMillis = 5_000L
-    const val BackgroundOverlayAlpha = 0.72f
-    const val PaletteBitmapWidth = 64
-    const val PaletteBitmapHeight = 96
-    const val PaletteMaxColorCount = 12
+  const val VisibleItemCount = 5
+  const val LoopingPageCount = Int.MAX_VALUE
+  const val PreloadPageCount = VisibleItemCount
+  const val ItemRatio = 2f / 3f
+  const val FocusedItemScale = 1.1f
+  const val UnfocusedItemScale = 0.94f
+  const val AutoScrollDurationMillis = 5_000L
+  const val BackgroundOverlayAlpha = 0.72f
+  const val PaletteBitmapWidth = 64
+  const val PaletteBitmapHeight = 96
+  const val PaletteMaxColorCount = 12
+  const val BackgroundAspectRatio = 16f / 9f
+  const val VerticalGradientWidthDivider = 3
+  const val HorizontalGradientHeightDivider = 1.5f
 
-    val TopContentPadding = StreamTvDimensions.TopBarHeight
-    val PagerHeight = 272.dp
-    val BannerHeight = TopContentPadding + PagerHeight + 20.dp
-    val ItemWidth = 164.dp
-    val ItemSpacing = 22.dp
-    val ItemShape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-    val FocusedBorderWidth = 3.dp
-    val UnfocusedBorderWidth = 1.dp
+  val TopContentPadding = StreamTvDimensions.TopBarHeight
+  val PagerHeight = 272.dp
+  val BannerHeight = TopContentPadding + PagerHeight + 20.dp
+  val ItemWidth = 164.dp
+  val ItemSpacing = 22.dp
+  val ItemShape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+  val FocusedBorderWidth = 3.dp
+  val UnfocusedBorderWidth = 1.dp
 }
 
 @Suppress("LongMethod", "CognitiveComplexMethod")
 @Composable
 internal fun HomeVerticalBannerSection(
-    items: List<ShortUiItem>,
-    modifier: Modifier = Modifier,
-    autoPlay: Boolean = true,
-    autoScrollDurationMillis: Long = HomeVerticalBannerDefaults.AutoScrollDurationMillis,
-    onItemClick: (ShortUiItem) -> Unit = {},
+  items: List<ShortUiItem>,
+  modifier: Modifier = Modifier,
+  autoPlay: Boolean = true,
+  autoScrollDurationMillis: Long = HomeVerticalBannerDefaults.AutoScrollDurationMillis,
+  onItemClick: (ShortUiItem) -> Unit = {},
 ) {
-    if (items.isEmpty()) return
+  if (items.isEmpty()) return
 
-    val isLoopingEnabled = items.size >= HomeVerticalBannerDefaults.VisibleItemCount
-    val pagerPageCount = if (isLoopingEnabled) {
-        HomeVerticalBannerDefaults.LoopingPageCount
-    } else {
-        items.size
-    }
-    val initialRealIndex = remember(items) { items.size / 2 }
-    val initialPage = remember(items.size, isLoopingEnabled, initialRealIndex) {
-        if (isLoopingEnabled) {
-            verticalBannerInitialPage(
-                realItemCount = items.size,
-                initialRealIndex = initialRealIndex,
-            )
-        } else {
-            initialRealIndex
-        }
-    }
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { pagerPageCount },
-    )
-    val scope = rememberCoroutineScope()
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val itemBackgroundColors = remember(items) { mutableStateMapOf<String, Color>() }
-    var isAutoPlay by remember { mutableStateOf(autoPlay && isLoopingEnabled) }
-
-    DisposableEffect(isFocused, autoPlay, isLoopingEnabled) {
-        isAutoPlay = autoPlay && isLoopingEnabled && !isFocused
-        onDispose { }
-    }
-
-    if (isAutoPlay) {
-        VerticalBannerAutoScrollEffect(
-            pagerState = pagerState,
-            autoScrollDurationMillis = autoScrollDurationMillis,
-        )
-    }
-
-    val activeIndex = pagerState.currentPage.toVerticalBannerRealIndex(
+  val isLoopingEnabled = items.size >= HomeVerticalBannerDefaults.VisibleItemCount
+  val pagerPageCount = if (isLoopingEnabled) {
+    HomeVerticalBannerDefaults.LoopingPageCount
+  } else {
+    items.size
+  }
+  val initialRealIndex = remember(items) { items.size / 2 }
+  val initialPage = remember(items.size, isLoopingEnabled, initialRealIndex) {
+    if (isLoopingEnabled) {
+      verticalBannerInitialPage(
         realItemCount = items.size,
-        isLoopingEnabled = isLoopingEnabled,
+        initialRealIndex = initialRealIndex,
+      )
+    } else {
+      initialRealIndex
+    }
+  }
+  val pagerState = rememberPagerState(
+    initialPage = initialPage,
+    pageCount = { pagerPageCount },
+  )
+  val scope = rememberCoroutineScope()
+  val interactionSource = remember { MutableInteractionSource() }
+  val isFocused by interactionSource.collectIsFocusedAsState()
+  val itemBackgroundColors = remember(items) { mutableStateMapOf<String, Color>() }
+  var isAutoPlay by remember { mutableStateOf(autoPlay && isLoopingEnabled) }
+
+  DisposableEffect(isFocused, autoPlay, isLoopingEnabled) {
+    isAutoPlay = autoPlay && isLoopingEnabled && !isFocused
+    onDispose { }
+  }
+
+  if (isAutoPlay) {
+    VerticalBannerAutoScrollEffect(
+      pagerState = pagerState,
+      autoScrollDurationMillis = autoScrollDurationMillis,
     )
-    val activeItem = items[activeIndex]
-    val activeBackgroundColor = itemBackgroundColors[activeItem.id] ?: StreamTvColors.TransparentBlack60
+  }
+
+  val activeIndex = pagerState.currentPage.toVerticalBannerRealIndex(
+    realItemCount = items.size,
+    isLoopingEnabled = isLoopingEnabled,
+  )
+  val activeItem = items[activeIndex]
+  val activeBackgroundColor = itemBackgroundColors[activeItem.id] ?: StreamTvColors.TransparentBlack60
+
+  Box(
+    modifier = modifier
+      .fillMaxWidth()
+      .height(HomeVerticalBannerDefaults.BannerHeight),
+    contentAlignment = Alignment.TopCenter,
+  ) {
+    Box(
+      modifier = Modifier
+        .align(Alignment.Center)
+        .fillMaxWidth()
+        .height(1.dp)
+        .onPreviewKeyEvent { event ->
+          handleVerticalBannerKeyEvent(
+            event = event,
+            pagerState = pagerState,
+            isLoopingEnabled = isLoopingEnabled,
+            scope = scope,
+            onSelect = { onItemClick(activeItem) },
+          )
+        }
+        .focusable(interactionSource = interactionSource)
+        .testTag("home-vertical-banner-carousel"),
+    )
+
+    BoxWithConstraints(
+      modifier = Modifier
+        .fillMaxWidth()
+        .aspectRatio(HomeVerticalBannerDefaults.BackgroundAspectRatio)
+        .align(Alignment.TopCenter)
+        .zIndex(-1f),
+    ) {
+      val verticalBannerOffset = (maxHeight - HomeVerticalBannerDefaults.BannerHeight) / 2
+      val verticalGradientWidth = maxWidth / HomeVerticalBannerDefaults.VerticalGradientWidthDivider
+      val horizontalGradientHeight = maxHeight / HomeVerticalBannerDefaults.HorizontalGradientHeightDivider
+
+      VerticalBannerBackground(
+        backgroundColor = activeBackgroundColor,
+        verticalGradientWidth = verticalGradientWidth,
+        horizontalGradientHeight = horizontalGradientHeight,
+        modifier = Modifier
+          .fillMaxSize()
+          .absoluteOffset(y = verticalBannerOffset),
+      )
+    }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(HomeVerticalBannerDefaults.BannerHeight),
-        contentAlignment = Alignment.TopCenter,
+      modifier = Modifier
+        .align(Alignment.TopCenter)
+        .fillMaxWidth()
+        .padding(top = HomeVerticalBannerDefaults.TopContentPadding),
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .fillMaxWidth()
-                .height(1.dp)
-                .onPreviewKeyEvent { event ->
-                    when (event.key) {
-                        Key.DirectionLeft -> {
-                            if (
-                                event.type == KeyEventType.KeyDown &&
-                                !pagerState.isScrollInProgress &&
-                                (isLoopingEnabled || pagerState.currentPage > 0)
-                            ) {
-                                scope.launch {
-                                    scrollVerticalBannerPrevious(pagerState)
-                                }
-                            }
-                            true
-                        }
+      BoxWithConstraints(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(HomeVerticalBannerDefaults.PagerHeight),
+      ) {
+        val itemSpacing = HomeVerticalBannerDefaults.ItemSpacing
+        val maxVisibleItemWidth = (
+          (maxWidth - itemSpacing * (HomeVerticalBannerDefaults.VisibleItemCount - 1)) /
+            HomeVerticalBannerDefaults.VisibleItemCount
+          ).coerceAtLeast(1.dp)
+        val itemWidth = HomeVerticalBannerDefaults.ItemWidth.coerceAtMost(maxVisibleItemWidth)
+        val horizontalPadding = ((maxWidth - itemWidth) / 2).coerceAtLeast(0.dp)
 
-                        Key.DirectionRight -> {
-                            if (
-                                event.type == KeyEventType.KeyDown &&
-                                !pagerState.isScrollInProgress &&
-                                pagerState.currentPage < pagerState.pageCount - 1
-                            ) {
-                                scope.launch {
-                                    scrollVerticalBannerNext(pagerState)
-                                }
-                            }
-                            true
-                        }
-
-                        Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                            if (event.type == KeyEventType.KeyDown) onItemClick(activeItem)
-                            true
-                        }
-
-                        else -> false
-                    }
-                }
-                .focusable(interactionSource = interactionSource)
-                .testTag("home-vertical-banner-carousel"),
-        )
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .align(Alignment.TopCenter)
-                .zIndex(-1f),
-        ) {
-            val verticalBannerOffset = (maxHeight - HomeVerticalBannerDefaults.BannerHeight) / 2
-            val verticalGradientWidth = maxWidth / 3
-            val horizontalGradientHeight = maxHeight / 1.5f
-
-            VerticalBannerBackground(
-                backgroundColor = activeBackgroundColor,
-                verticalGradientWidth = verticalGradientWidth,
-                horizontalGradientHeight = horizontalGradientHeight,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .absoluteOffset(y = verticalBannerOffset),
+        HorizontalPager(
+          state = pagerState,
+          modifier = Modifier.fillMaxSize(),
+          contentPadding = PaddingValues(horizontal = horizontalPadding),
+          pageSpacing = itemSpacing,
+          pageSize = PageSize.Fixed(itemWidth),
+          flingBehavior = PagerDefaults.flingBehavior(pagerState),
+          userScrollEnabled = true,
+          beyondViewportPageCount = minOf(
+            HomeVerticalBannerDefaults.PreloadPageCount,
+            (pagerPageCount - 1).coerceAtLeast(0),
+          ),
+          key = { page ->
+            val realIndex = page.toVerticalBannerRealIndex(
+              realItemCount = items.size,
+              isLoopingEnabled = isLoopingEnabled,
             )
-        }
-
-        Box(
+            "${items[realIndex].id}:$page"
+          },
+        ) { page ->
+          val realIndex = page.toVerticalBannerRealIndex(
+            realItemCount = items.size,
+            isLoopingEnabled = isLoopingEnabled,
+          )
+          VerticalBannerItem(
+            item = items[realIndex],
+            itemWidth = itemWidth,
+            pagerState = pagerState,
+            page = page,
+            isFocused = isFocused && page == pagerState.currentPage,
+            onBackgroundColorExtract = { itemId, backgroundColor ->
+              if (itemBackgroundColors[itemId] != backgroundColor) {
+                itemBackgroundColors[itemId] = backgroundColor
+              }
+            },
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(top = HomeVerticalBannerDefaults.TopContentPadding),
-        ) {
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(HomeVerticalBannerDefaults.PagerHeight),
-            ) {
-                val itemSpacing = HomeVerticalBannerDefaults.ItemSpacing
-                val maxVisibleItemWidth = (
-                    (maxWidth - itemSpacing * (HomeVerticalBannerDefaults.VisibleItemCount - 1)) /
-                        HomeVerticalBannerDefaults.VisibleItemCount
-                    ).coerceAtLeast(1.dp)
-                val itemWidth = HomeVerticalBannerDefaults.ItemWidth.coerceAtMost(maxVisibleItemWidth)
-                val horizontalPadding = ((maxWidth - itemWidth) / 2).coerceAtLeast(0.dp)
-
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = horizontalPadding),
-                    pageSpacing = itemSpacing,
-                    pageSize = PageSize.Fixed(itemWidth),
-                    flingBehavior = PagerDefaults.flingBehavior(pagerState),
-                    userScrollEnabled = true,
-                    beyondViewportPageCount = minOf(
-                        HomeVerticalBannerDefaults.PreloadPageCount,
-                        (pagerPageCount - 1).coerceAtLeast(0),
-                    ),
-                    key = { page ->
-                        val realIndex = page.toVerticalBannerRealIndex(
-                            realItemCount = items.size,
-                            isLoopingEnabled = isLoopingEnabled,
-                        )
-                        "${items[realIndex].id}:$page"
-                    },
-                ) { page ->
-                    val realIndex = page.toVerticalBannerRealIndex(
-                        realItemCount = items.size,
-                        isLoopingEnabled = isLoopingEnabled,
-                    )
-                    VerticalBannerItem(
-                        item = items[realIndex],
-                        itemWidth = itemWidth,
-                        pagerState = pagerState,
-                        page = page,
-                        isFocused = isFocused && page == pagerState.currentPage,
-                        onBackgroundColorExtract = { itemId, backgroundColor ->
-                            if (itemBackgroundColors[itemId] != backgroundColor) {
-                                itemBackgroundColors[itemId] = backgroundColor
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .zIndex(if (page == pagerState.currentPage) 1f else 0f),
-                    )
-                }
-            }
+              .fillMaxSize()
+              .zIndex(if (page == pagerState.currentPage) 1f else 0f),
+          )
         }
+      }
     }
+  }
+}
+
+private fun handleVerticalBannerKeyEvent(
+  event: KeyEvent,
+  pagerState: PagerState,
+  isLoopingEnabled: Boolean,
+  scope: CoroutineScope,
+  onSelect: () -> Unit,
+): Boolean {
+  val isKeyDown = event.type == KeyEventType.KeyDown
+  val isIdle = isKeyDown && !pagerState.isScrollInProgress
+
+  return when (event.key) {
+    Key.DirectionLeft -> {
+      if (isIdle && (isLoopingEnabled || pagerState.currentPage > 0)) {
+        scope.launch { scrollVerticalBannerPrevious(pagerState) }
+      }
+      true
+    }
+
+    Key.DirectionRight -> {
+      if (isIdle && pagerState.currentPage < pagerState.pageCount - 1) {
+        scope.launch { scrollVerticalBannerNext(pagerState) }
+      }
+      true
+    }
+
+    Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
+      if (isKeyDown) onSelect()
+      true
+    }
+
+    else -> false
+  }
 }
 
 @Composable
 private fun VerticalBannerItem(
-    item: ShortUiItem,
-    itemWidth: Dp,
-    pagerState: PagerState,
-    page: Int,
-    isFocused: Boolean,
-    onBackgroundColorExtract: (itemId: String, backgroundColor: Color) -> Unit,
-    modifier: Modifier = Modifier,
+  item: ShortUiItem,
+  itemWidth: Dp,
+  pagerState: PagerState,
+  page: Int,
+  isFocused: Boolean,
+  onBackgroundColorExtract: (itemId: String, backgroundColor: Color) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    var loadedImage by remember(item.id) { mutableStateOf<Image?>(null) }
+  var loadedImage by remember(item.id) { mutableStateOf<Image?>(null) }
 
-    LaunchedEffect(item.id, loadedImage) {
-        val image = loadedImage ?: return@LaunchedEffect
-        val backgroundColor = withContext(Dispatchers.Default) {
-            image.extractVerticalBannerBackgroundColor()
-        }
-        onBackgroundColorExtract(item.id, backgroundColor)
+  LaunchedEffect(item.id, loadedImage) {
+    val image = loadedImage ?: return@LaunchedEffect
+    val backgroundColor = withContext(Dispatchers.Default) {
+      image.extractVerticalBannerBackgroundColor()
     }
+    onBackgroundColorExtract(item.id, backgroundColor)
+  }
 
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Box(
-            modifier = Modifier
-                .width(itemWidth)
-                .aspectRatio(HomeVerticalBannerDefaults.ItemRatio)
-                .graphicsLayer {
-                    val pageOffset = (
-                        pagerState.currentPage - page + pagerState.currentPageOffsetFraction
-                    ).absoluteValue
-                    val scaleFraction = 1f - pageOffset.coerceIn(0f, 1f)
-                    val animatedScale = lerp(
-                        start = HomeVerticalBannerDefaults.UnfocusedItemScale,
-                        stop = HomeVerticalBannerDefaults.FocusedItemScale,
-                        fraction = scaleFraction,
-                    )
-                    scaleX = animatedScale
-                    scaleY = animatedScale
-                }
-                .clip(HomeVerticalBannerDefaults.ItemShape)
-                .background(Color.Black)
-                .border(
-                    border = BorderStroke(
-                        width = if (isFocused) {
-                            HomeVerticalBannerDefaults.FocusedBorderWidth
-                        } else {
-                            HomeVerticalBannerDefaults.UnfocusedBorderWidth
-                        },
-                        color = if (isFocused) {
-                            StreamTvColors.NeutralWhite
-                        } else {
-                            StreamTvColors.TransparentWhite10
-                        },
-                    ),
-                    shape = HomeVerticalBannerDefaults.ItemShape,
-                ),
-        ) {
-            StreamTvNetworkImage(
-                imageUrl = item.thumbnailUrl,
-                contentDescription = item.title,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                onSuccess = { state -> loadedImage = state.result.image },
-            )
+  Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Box(
+      modifier = Modifier
+        .width(itemWidth)
+        .aspectRatio(HomeVerticalBannerDefaults.ItemRatio)
+        .graphicsLayer {
+          val pageOffset = (
+            pagerState.currentPage - page + pagerState.currentPageOffsetFraction
+            ).absoluteValue
+          val scaleFraction = 1f - pageOffset.coerceIn(0f, 1f)
+          val animatedScale = lerp(
+            start = HomeVerticalBannerDefaults.UnfocusedItemScale,
+            stop = HomeVerticalBannerDefaults.FocusedItemScale,
+            fraction = scaleFraction,
+          )
+          scaleX = animatedScale
+          scaleY = animatedScale
         }
+        .clip(HomeVerticalBannerDefaults.ItemShape)
+        .background(Color.Black)
+        .border(
+          border = BorderStroke(
+            width = if (isFocused) {
+              HomeVerticalBannerDefaults.FocusedBorderWidth
+            } else {
+              HomeVerticalBannerDefaults.UnfocusedBorderWidth
+            },
+            color = if (isFocused) {
+              StreamTvColors.NeutralWhite
+            } else {
+              StreamTvColors.TransparentWhite10
+            },
+          ),
+          shape = HomeVerticalBannerDefaults.ItemShape,
+        ),
+    ) {
+      StreamTvNetworkImage(
+        imageUrl = item.thumbnailUrl,
+        contentDescription = item.title,
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop,
+        onSuccess = { state -> loadedImage = state.result.image },
+      )
     }
+  }
 }
 
 @Composable
 private fun VerticalBannerBackground(
-    backgroundColor: Color,
-    verticalGradientWidth: Dp,
-    horizontalGradientHeight: Dp,
-    modifier: Modifier = Modifier,
+  backgroundColor: Color,
+  verticalGradientWidth: Dp,
+  horizontalGradientHeight: Dp,
+  modifier: Modifier = Modifier,
 ) {
-    val animatedBackgroundColor by animateColorAsState(
-        targetValue = backgroundColor,
-        label = "VerticalBannerBackgroundColor",
-    )
+  val animatedBackgroundColor by animateColorAsState(
+    targetValue = backgroundColor,
+    label = "VerticalBannerBackgroundColor",
+  )
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(animatedBackgroundColor),
-        )
-        VerticalBannerVerticalGradient(
-            verticalGradientWidth = verticalGradientWidth,
-            modifier = Modifier.align(Alignment.CenterStart),
-        )
-        VerticalBannerHorizontalGradient(
-            horizontalGradientHeight = horizontalGradientHeight,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .width(verticalGradientWidth)
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(StreamTvColors.Transparent, MaterialTheme.colorScheme.surface),
-                    ),
-                ),
-        )
-    }
+  Box(modifier = modifier.fillMaxSize()) {
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .background(animatedBackgroundColor),
+    )
+    VerticalBannerVerticalGradient(
+      verticalGradientWidth = verticalGradientWidth,
+      modifier = Modifier.align(Alignment.CenterStart),
+    )
+    VerticalBannerHorizontalGradient(
+      horizontalGradientHeight = horizontalGradientHeight,
+      modifier = Modifier.align(Alignment.BottomCenter),
+    )
+    Box(
+      modifier = Modifier
+        .align(Alignment.CenterEnd)
+        .fillMaxHeight()
+        .width(verticalGradientWidth)
+        .background(
+          Brush.horizontalGradient(
+            colors = listOf(StreamTvColors.Transparent, MaterialTheme.colorScheme.surface),
+          ),
+        ),
+    )
+  }
 }
 
 @Composable
-private fun VerticalBannerHorizontalGradient(
-    horizontalGradientHeight: Dp,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(horizontalGradientHeight)
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(StreamTvColors.Transparent, MaterialTheme.colorScheme.surface),
-                ),
-            ),
-    )
+private fun VerticalBannerHorizontalGradient(horizontalGradientHeight: Dp, modifier: Modifier = Modifier) {
+  Box(
+    modifier = modifier
+      .fillMaxWidth()
+      .height(horizontalGradientHeight)
+      .background(
+        Brush.verticalGradient(
+          colors = listOf(StreamTvColors.Transparent, MaterialTheme.colorScheme.surface),
+        ),
+      ),
+  )
 }
 
 @Composable
-private fun VerticalBannerVerticalGradient(
-    verticalGradientWidth: Dp,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxHeight()
-            .width(verticalGradientWidth)
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(MaterialTheme.colorScheme.surface, StreamTvColors.Transparent),
-                ),
-            ),
-    )
+private fun VerticalBannerVerticalGradient(verticalGradientWidth: Dp, modifier: Modifier = Modifier) {
+  Box(
+    modifier = modifier
+      .fillMaxHeight()
+      .width(verticalGradientWidth)
+      .background(
+        Brush.horizontalGradient(
+          colors = listOf(MaterialTheme.colorScheme.surface, StreamTvColors.Transparent),
+        ),
+      ),
+  )
 }
 
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class)
-private fun VerticalBannerAutoScrollEffect(
-    pagerState: PagerState,
-    autoScrollDurationMillis: Long,
-) {
-    val scope = rememberCoroutineScope()
-    LifecycleResumeEffect(pagerState, scope, autoScrollDurationMillis) {
-        val autoSlideJob = scope.launch {
-            snapshotFlow { pagerState.isScrollInProgress }
-                .flatMapLatest { isScrollInProgress ->
-                    if (isScrollInProgress) emptyFlow() else verticalBannerIntervalFlow(autoScrollDurationMillis)
-                }
-                .collectLatest {
-                    if (!pagerState.isScrollInProgress && pagerState.currentPage < pagerState.pageCount - 1) {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    }
-                }
+private fun VerticalBannerAutoScrollEffect(pagerState: PagerState, autoScrollDurationMillis: Long) {
+  val scope = rememberCoroutineScope()
+  LifecycleResumeEffect(pagerState, scope, autoScrollDurationMillis) {
+    val autoSlideJob = scope.launch {
+      snapshotFlow { pagerState.isScrollInProgress }
+        .flatMapLatest { isScrollInProgress ->
+          if (isScrollInProgress) emptyFlow() else verticalBannerIntervalFlow(autoScrollDurationMillis)
         }
-        onPauseOrDispose { autoSlideJob.cancel() }
+        .collectLatest {
+          if (!pagerState.isScrollInProgress && pagerState.currentPage < pagerState.pageCount - 1) {
+            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+          }
+        }
     }
+    onPauseOrDispose { autoSlideJob.cancel() }
+  }
 }
 
 private suspend fun scrollVerticalBannerPrevious(pagerState: PagerState) {
-    pagerState.animateScrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
+  pagerState.animateScrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
 }
 
 private suspend fun scrollVerticalBannerNext(pagerState: PagerState) {
-    val lastPage = pagerState.pageCount - 1
-    pagerState.animateScrollToPage((pagerState.currentPage + 1).coerceAtMost(lastPage))
+  val lastPage = pagerState.pageCount - 1
+  pagerState.animateScrollToPage((pagerState.currentPage + 1).coerceAtMost(lastPage))
 }
 
 internal fun Int.toVerticalBannerRealIndex(realItemCount: Int, isLoopingEnabled: Boolean): Int {
-    if (realItemCount <= 0) return 0
-    if (!isLoopingEnabled) return coerceIn(0, realItemCount - 1)
-    return floorMod(realItemCount)
+  if (realItemCount <= 0) return 0
+  if (!isLoopingEnabled) return coerceIn(0, realItemCount - 1)
+  return floorMod(realItemCount)
 }
 
 internal fun verticalBannerInitialPage(realItemCount: Int, initialRealIndex: Int): Int {
-    require(realItemCount > 0) { "Vertical banner requires at least one real item" }
-    val middlePage = HomeVerticalBannerDefaults.LoopingPageCount / 2
-    val alignedCycleStart = middlePage - middlePage.floorMod(realItemCount)
-    return alignedCycleStart + initialRealIndex.coerceIn(0, realItemCount - 1)
+  require(realItemCount > 0) { "Vertical banner requires at least one real item" }
+  val middlePage = HomeVerticalBannerDefaults.LoopingPageCount / 2
+  val alignedCycleStart = middlePage - middlePage.floorMod(realItemCount)
+  return alignedCycleStart + initialRealIndex.coerceIn(0, realItemCount - 1)
 }
 
 private fun Int.floorMod(divisor: Int): Int = ((this % divisor) + divisor) % divisor
 
 private fun verticalBannerIntervalFlow(durationMillis: Long) = flow {
-    while (true) {
-        delay(durationMillis)
-        emit(Unit)
-    }
+  while (true) {
+    delay(durationMillis)
+    emit(Unit)
+  }
 }
 
 private fun Image.extractVerticalBannerBackgroundColor(): Color = runCatching {
-    val sourceBitmap = when (this) {
-        is BitmapImage -> bitmap
-        else -> toBitmap(
-            width = HomeVerticalBannerDefaults.PaletteBitmapWidth,
-            height = HomeVerticalBannerDefaults.PaletteBitmapHeight,
-        )
-    }
-    val softwareBitmap = if (sourceBitmap.config == Bitmap.Config.HARDWARE) {
-        sourceBitmap.copy(Bitmap.Config.ARGB_8888, false)
-    } else {
-        sourceBitmap
-    }
-    val paletteBitmap = if (
-        softwareBitmap.width == HomeVerticalBannerDefaults.PaletteBitmapWidth &&
-        softwareBitmap.height == HomeVerticalBannerDefaults.PaletteBitmapHeight
-    ) {
-        softwareBitmap
-    } else {
-        softwareBitmap.scale(
-            HomeVerticalBannerDefaults.PaletteBitmapWidth,
-            HomeVerticalBannerDefaults.PaletteBitmapHeight,
-            false,
-        )
-    }
-    val palette = Palette.from(paletteBitmap)
-        .maximumColorCount(HomeVerticalBannerDefaults.PaletteMaxColorCount)
-        .generate()
-    val swatchColor = palette.lightVibrantSwatch?.rgb
-        ?: palette.vibrantSwatch?.rgb
-        ?: palette.lightMutedSwatch?.rgb
-        ?: palette.mutedSwatch?.rgb
-        ?: palette.dominantSwatch?.rgb
-        ?: palette.darkVibrantSwatch?.rgb
-        ?: palette.darkMutedSwatch?.rgb
+  val sourceBitmap = when (this) {
+    is BitmapImage -> bitmap
 
-    swatchColor?.toVerticalBannerOverlayColor() ?: StreamTvColors.TransparentBlack60
+    else -> toBitmap(
+      width = HomeVerticalBannerDefaults.PaletteBitmapWidth,
+      height = HomeVerticalBannerDefaults.PaletteBitmapHeight,
+    )
+  }
+  val softwareBitmap = if (sourceBitmap.config == Bitmap.Config.HARDWARE) {
+    sourceBitmap.copy(Bitmap.Config.ARGB_8888, false)
+  } else {
+    sourceBitmap
+  }
+  val paletteBitmap = if (
+    softwareBitmap.width == HomeVerticalBannerDefaults.PaletteBitmapWidth &&
+    softwareBitmap.height == HomeVerticalBannerDefaults.PaletteBitmapHeight
+  ) {
+    softwareBitmap
+  } else {
+    softwareBitmap.scale(
+      HomeVerticalBannerDefaults.PaletteBitmapWidth,
+      HomeVerticalBannerDefaults.PaletteBitmapHeight,
+      false,
+    )
+  }
+  val palette = Palette.from(paletteBitmap)
+    .maximumColorCount(HomeVerticalBannerDefaults.PaletteMaxColorCount)
+    .generate()
+  val swatchColor = palette.lightVibrantSwatch?.rgb
+    ?: palette.vibrantSwatch?.rgb
+    ?: palette.lightMutedSwatch?.rgb
+    ?: palette.mutedSwatch?.rgb
+    ?: palette.dominantSwatch?.rgb
+    ?: palette.darkVibrantSwatch?.rgb
+    ?: palette.darkMutedSwatch?.rgb
+
+  swatchColor?.toVerticalBannerOverlayColor() ?: StreamTvColors.TransparentBlack60
 }.getOrDefault(StreamTvColors.TransparentBlack60)
 
 private fun Int.toVerticalBannerOverlayColor(): Color = Color(this)
-    .copy(alpha = 0.4f)
-    .compositeOver(Color.Black)
-    .copy(alpha = HomeVerticalBannerDefaults.BackgroundOverlayAlpha)
+  .copy(alpha = 0.4f)
+  .compositeOver(Color.Black)
+  .copy(alpha = HomeVerticalBannerDefaults.BackgroundOverlayAlpha)

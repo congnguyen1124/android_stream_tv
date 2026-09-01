@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -28,8 +29,9 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * A horizontal lazy layout controlled by one fixed focus target.
@@ -42,294 +44,294 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun ContentRow(
-    modifier: Modifier = Modifier,
-    state: ContentRowState = rememberContentRowState(),
-    contentPadding: PaddingValues = ContentRowDefaults.ContentPadding,
-    itemSpacing: Dp = ContentRowDefaults.ItemSpacing,
-    selectedItemContentPadding: Dp = ContentRowDefaults.SelectedItemContentPadding,
-    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
-    enabled: Boolean = true,
-    selectedItemModifier: Modifier = Modifier,
-    onSelectedItemClick: (index: Int) -> Unit = {},
-    selectedItem: @Composable (isFocused: Boolean) -> Unit = { isFocused ->
-        ContentRowDefaults.SelectedItem(isFocused = isFocused)
-    },
-    content: ContentRowScope.() -> Unit,
+  modifier: Modifier = Modifier,
+  state: ContentRowState = rememberContentRowState(),
+  contentPadding: PaddingValues = ContentRowDefaults.ContentPadding,
+  itemSpacing: Dp = ContentRowDefaults.ItemSpacing,
+  selectedItemContentPadding: Dp = ContentRowDefaults.SelectedItemContentPadding,
+  verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+  enabled: Boolean = true,
+  selectedItemModifier: Modifier = Modifier,
+  onSelectedItemClick: (index: Int) -> Unit = {},
+  selectedItem: @Composable (isFocused: Boolean) -> Unit = { isFocused ->
+    ContentRowDefaults.SelectedItem(isFocused = isFocused)
+  },
+  content: ContentRowScope.() -> Unit,
 ) {
-    val itemProvider = remember(content) {
-        ContentRowScopeImpl().apply(content).build()
+  val itemProvider = remember(content) {
+    ContentRowScopeImpl().apply(content).build()
+  }
+  val loopingItemProvider = remember(itemProvider) {
+    LoopingContentRowItemProvider(itemProvider)
+  }
+  val interactionSource = remember { MutableInteractionSource() }
+  val isFocused by interactionSource.collectIsFocusedAsState()
+  val coroutineScope = rememberCoroutineScope()
+
+  SideEffect {
+    state.updateItemCount(itemProvider.itemCount)
+  }
+
+  Box(modifier = modifier.fillMaxWidth()) {
+    LazyLayout(
+      itemProvider = { loopingItemProvider },
+      modifier = Modifier.fillMaxWidth(),
+      measurePolicy = rememberContentRowMeasurePolicy(
+        itemProvider = loopingItemProvider,
+        realItemCount = itemProvider.itemCount,
+        state = state,
+        contentPadding = contentPadding,
+        itemSpacing = itemSpacing,
+        selectedItemContentPadding = selectedItemContentPadding,
+        verticalAlignment = verticalAlignment,
+      ),
+    )
+
+    if (itemProvider.itemCount > 0) {
+      ContentRowSelectionOverlay(
+        bounds = state.selectionBounds,
+        modifier = Modifier.matchParentSize(),
+        selectedItemModifier = selectedItemModifier
+          .onPreviewKeyEvent { event ->
+            handleContentRowKeyEvent(
+              event = event,
+              state = state,
+              enabled = enabled,
+              coroutineScope = coroutineScope,
+              onSelectedItemClick = onSelectedItemClick,
+            )
+          }
+          .focusProperties { left = FocusRequester.Default }
+          .focusable(
+            enabled = enabled,
+            interactionSource = interactionSource,
+          ),
+      ) {
+        selectedItem(isFocused)
+      }
     }
-    val loopingItemProvider = remember(itemProvider) {
-        LoopingContentRowItemProvider(itemProvider)
+  }
+}
+
+private fun handleContentRowKeyEvent(
+  event: KeyEvent,
+  state: ContentRowState,
+  enabled: Boolean,
+  coroutineScope: CoroutineScope,
+  onSelectedItemClick: (index: Int) -> Unit,
+): Boolean {
+  val isKeyDown = event.type == KeyEventType.KeyDown
+  val isActionable = isKeyDown && enabled && !state.isScrollInProgress
+
+  return when (event.key) {
+    // At the first item the event stays unconsumed so focus can leave the row.
+    Key.DirectionLeft -> if (isKeyDown && state.selectedIndex == 0) {
+      false
+    } else {
+      if (isActionable) {
+        coroutineScope.launch { state.moveSelection(-1) }
+      }
+      true
     }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val coroutineScope = rememberCoroutineScope()
 
-    SideEffect {
-        state.updateItemCount(itemProvider.itemCount)
+    Key.DirectionRight -> {
+      if (isActionable) {
+        coroutineScope.launch { state.moveSelection(1) }
+      }
+      true
     }
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        LazyLayout(
-            itemProvider = { loopingItemProvider },
-            modifier = Modifier.fillMaxWidth(),
-            measurePolicy = rememberContentRowMeasurePolicy(
-                itemProvider = loopingItemProvider,
-                realItemCount = itemProvider.itemCount,
-                state = state,
-                contentPadding = contentPadding,
-                itemSpacing = itemSpacing,
-                selectedItemContentPadding = selectedItemContentPadding,
-                verticalAlignment = verticalAlignment,
-            ),
-        )
-
-        if (itemProvider.itemCount > 0) {
-            ContentRowSelectionOverlay(
-                bounds = state.selectionBounds,
-                modifier = Modifier.matchParentSize(),
-                selectedItemModifier = selectedItemModifier
-                    .onPreviewKeyEvent { event ->
-                        when (event.key) {
-                            Key.DirectionLeft -> {
-                                if (event.type == KeyEventType.KeyDown && state.selectedIndex == 0) {
-                                    return@onPreviewKeyEvent false
-                                }
-                                if (
-                                    event.type == KeyEventType.KeyDown &&
-                                    enabled &&
-                                    !state.isScrollInProgress
-                                ) {
-                                    coroutineScope.launch { state.moveSelection(-1) }
-                                }
-                                true
-                            }
-
-                            Key.DirectionRight -> {
-                                if (
-                                    event.type == KeyEventType.KeyDown &&
-                                    enabled &&
-                                    !state.isScrollInProgress
-                                ) {
-                                    coroutineScope.launch { state.moveSelection(1) }
-                                }
-                                true
-                            }
-
-                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                                if (
-                                    event.type == KeyEventType.KeyDown &&
-                                    enabled &&
-                                    !state.isScrollInProgress
-                                ) {
-                                    onSelectedItemClick(state.selectedIndex)
-                                }
-                                true
-                            }
-
-                            else -> false
-                        }
-                    }
-                    .focusProperties { left = FocusRequester.Default }
-                    .focusable(
-                        enabled = enabled,
-                        interactionSource = interactionSource,
-                    ),
-            ) {
-                selectedItem(isFocused)
-            }
-        }
+    Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
+      if (isActionable) {
+        onSelectedItemClick(state.selectedIndex)
+      }
+      true
     }
+
+    else -> false
+  }
 }
 
 @Composable
 private fun ContentRowSelectionOverlay(
-    bounds: ContentRowSelectionBounds,
-    modifier: Modifier,
-    selectedItemModifier: Modifier,
-    content: @Composable () -> Unit,
+  bounds: ContentRowSelectionBounds,
+  modifier: Modifier,
+  selectedItemModifier: Modifier,
+  content: @Composable () -> Unit,
 ) {
-    Layout(
-        content = {
-            Box(modifier = selectedItemModifier) {
-                content()
-            }
-        },
-        modifier = modifier,
-    ) { measurables, constraints ->
-        val width = constraints.maxWidth.takeIf { it != Constraints.Infinity } ?: bounds.width
-        val height = constraints.maxHeight.takeIf { it != Constraints.Infinity } ?: bounds.height
-        val placeable = measurables.singleOrNull()?.measure(
-            Constraints.fixed(
-                width = bounds.width.coerceAtMost(width),
-                height = bounds.height.coerceAtMost(height),
-            ),
-        )
+  Layout(
+    content = {
+      Box(modifier = selectedItemModifier) {
+        content()
+      }
+    },
+    modifier = modifier,
+  ) { measurables, constraints ->
+    val width = constraints.maxWidth.takeIf { it != Constraints.Infinity } ?: bounds.width
+    val height = constraints.maxHeight.takeIf { it != Constraints.Infinity } ?: bounds.height
+    val placeable = measurables.singleOrNull()?.measure(
+      Constraints.fixed(
+        width = bounds.width.coerceAtMost(width),
+        height = bounds.height.coerceAtMost(height),
+      ),
+    )
 
-        layout(width, height) {
-            placeable?.placeRelative(
-                x = bounds.left,
-                y = bounds.top,
-            )
-        }
+    layout(width, height) {
+      placeable?.placeRelative(
+        x = bounds.left,
+        y = bounds.top,
+      )
     }
+  }
 }
 
 @Composable
 private fun rememberContentRowMeasurePolicy(
-    itemProvider: LoopingContentRowItemProvider,
-    realItemCount: Int,
-    state: ContentRowState,
-    contentPadding: PaddingValues,
-    itemSpacing: Dp,
-    selectedItemContentPadding: Dp,
-    verticalAlignment: Alignment.Vertical,
+  itemProvider: LoopingContentRowItemProvider,
+  realItemCount: Int,
+  state: ContentRowState,
+  contentPadding: PaddingValues,
+  itemSpacing: Dp,
+  selectedItemContentPadding: Dp,
+  verticalAlignment: Alignment.Vertical,
 ): LazyLayoutMeasurePolicy = remember(
-    itemProvider,
-    realItemCount,
-    state,
-    contentPadding,
-    itemSpacing,
-    selectedItemContentPadding,
-    verticalAlignment,
+  itemProvider,
+  realItemCount,
+  state,
+  contentPadding,
+  itemSpacing,
+  selectedItemContentPadding,
+  verticalAlignment,
 ) {
-    LazyLayoutMeasurePolicy { constraints ->
-        require(constraints.hasBoundedWidth) { "ContentRow requires a bounded width" }
+  LazyLayoutMeasurePolicy { constraints ->
+    require(constraints.hasBoundedWidth) { "ContentRow requires a bounded width" }
 
-        if (realItemCount == 0) {
-            return@LazyLayoutMeasurePolicy layout(
-                width = constraints.constrainWidth(0),
-                height = constraints.constrainHeight(0),
-            ) {}
-        }
-
-        val leftPadding = contentPadding.calculateLeftPadding(layoutDirection).roundToPx()
-        val rightPadding = contentPadding.calculateRightPadding(layoutDirection).roundToPx()
-        val topPadding = contentPadding.calculateTopPadding().roundToPx()
-        val bottomPadding = contentPadding.calculateBottomPadding().roundToPx()
-        val spacingPx = itemSpacing.roundToPx()
-        val selectionPaddingPx = selectedItemContentPadding.roundToPx()
-        val availableItemHeight = if (constraints.hasBoundedHeight) {
-            (
-                constraints.maxHeight -
-                    topPadding -
-                    bottomPadding -
-                    selectionPaddingPx * 2
-                ).coerceAtLeast(0)
-        } else {
-            Constraints.Infinity
-        }
-        val itemConstraints = Constraints(
-            minWidth = 0,
-            maxWidth = Constraints.Infinity,
-            minHeight = 0,
-            maxHeight = availableItemHeight,
-        )
-        val selectedIndex = state.selectedIndex.coerceIn(0, realItemCount - 1)
-        val selectedVirtualIndex = itemProvider.anchorIndex(selectedIndex)
-        val measuredByIndex = mutableMapOf<Int, MeasuredContentRowItem>()
-
-        fun measureItem(index: Int): MeasuredContentRowItem = measuredByIndex.getOrPut(index) {
-            val placeables = compose(index).map { measurable -> measurable.measure(itemConstraints) }
-            MeasuredContentRowItem(
-                placeables = placeables,
-                width = placeables.sumOf(Placeable::width),
-                height = placeables.maxOfOrNull(Placeable::height) ?: 0,
-            )
-        }
-
-        val selected = measureItem(selectedVirtualIndex)
-        val layoutWidth = constraints.maxWidth
-        val desiredSelectedX = leftPadding + selectionPaddingPx
-        val maximumSelectedX = (
-            layoutWidth - rightPadding - selected.width - selectionPaddingPx
-            ).coerceAtLeast(leftPadding + selectionPaddingPx)
-        val selectedBaseX = desiredSelectedX.coerceAtMost(maximumSelectedX)
-        val placedItems = mutableListOf(
-            PositionedContentRowItem(selected, selectedBaseX),
-        )
-        var rightCursor = selectedBaseX + selected.width + spacingPx
-        var rightIndex = selectedVirtualIndex + 1
-        if (rightIndex < itemProvider.itemCount) {
-            val item = measureItem(rightIndex)
-            placedItems += PositionedContentRowItem(item, rightCursor)
-            rightCursor += item.width + spacingPx
-        }
-
-        var leftCursor = selectedBaseX - spacingPx
-        var leftIndex = selectedVirtualIndex - 1
-        if (leftIndex >= 0) {
-            val item = measureItem(leftIndex)
-            leftCursor -= item.width
-            placedItems += PositionedContentRowItem(item, leftCursor)
-            leftCursor -= spacingPx
-        }
-
-        rightIndex += 1
-        while (rightCursor < layoutWidth - rightPadding && rightIndex < itemProvider.itemCount) {
-            val item = measureItem(rightIndex)
-            placedItems += PositionedContentRowItem(item, rightCursor)
-            rightCursor += item.width + spacingPx
-            rightIndex += 1
-        }
-
-        leftIndex -= 1
-        while (leftCursor > leftPadding && leftIndex >= 0) {
-            val item = measureItem(leftIndex)
-            leftCursor -= item.width
-            placedItems += PositionedContentRowItem(item, leftCursor)
-            leftCursor -= spacingPx
-            leftIndex -= 1
-        }
-
-        val next = measuredByIndex[selectedVirtualIndex + 1]
-        val previous = measuredByIndex[selectedVirtualIndex - 1]
-        val contentHeight = measuredByIndex.values.maxOfOrNull(MeasuredContentRowItem::height) ?: 0
-        val layoutHeight = constraints.constrainHeight(
-            topPadding + selectionPaddingPx * 2 + contentHeight + bottomPadding,
-        )
-        val availableHeight = (
-            layoutHeight - topPadding - bottomPadding - selectionPaddingPx * 2
-            ).coerceAtLeast(0)
-        val selectedY = topPadding + selectionPaddingPx +
-            verticalAlignment.align(selected.height, availableHeight)
-
-        state.updateLayoutInfo(
-            bounds = ContentRowSelectionBounds(
-                left = selectedBaseX - selectionPaddingPx,
-                top = selectedY - selectionPaddingPx,
-                width = selected.width + selectionPaddingPx * 2,
-                height = selected.height + selectionPaddingPx * 2,
-            ),
-            forwardStepPx = next?.let { (selected.width + it.width) / 2f + spacingPx } ?: 0f,
-            backwardStepPx = previous?.let { (selected.width + it.width) / 2f + spacingPx } ?: 0f,
-        )
-
-        layout(layoutWidth, layoutHeight) {
-            val animationOffset = state.animationOffsetPx.roundToInt()
-            placedItems.forEach { positionedItem ->
-                val itemY = topPadding + selectionPaddingPx + verticalAlignment.align(
-                    positionedItem.item.height,
-                    availableHeight,
-                )
-                var placeableX = positionedItem.x + animationOffset
-                positionedItem.item.placeables.forEach { placeable ->
-                    placeable.placeRelative(placeableX, itemY)
-                    placeableX += placeable.width
-                }
-            }
-        }
+    if (realItemCount == 0) {
+      return@LazyLayoutMeasurePolicy layout(
+        width = constraints.constrainWidth(0),
+        height = constraints.constrainHeight(0),
+      ) {}
     }
+
+    val leftPadding = contentPadding.calculateLeftPadding(layoutDirection).roundToPx()
+    val rightPadding = contentPadding.calculateRightPadding(layoutDirection).roundToPx()
+    val topPadding = contentPadding.calculateTopPadding().roundToPx()
+    val bottomPadding = contentPadding.calculateBottomPadding().roundToPx()
+    val spacingPx = itemSpacing.roundToPx()
+    val selectionPaddingPx = selectedItemContentPadding.roundToPx()
+    val availableItemHeight = if (constraints.hasBoundedHeight) {
+      (
+        constraints.maxHeight -
+          topPadding -
+          bottomPadding -
+          selectionPaddingPx * 2
+        ).coerceAtLeast(0)
+    } else {
+      Constraints.Infinity
+    }
+    val itemConstraints = Constraints(
+      minWidth = 0,
+      maxWidth = Constraints.Infinity,
+      minHeight = 0,
+      maxHeight = availableItemHeight,
+    )
+    val selectedIndex = state.selectedIndex.coerceIn(0, realItemCount - 1)
+    val selectedVirtualIndex = itemProvider.anchorIndex(selectedIndex)
+    val measuredByIndex = mutableMapOf<Int, MeasuredContentRowItem>()
+
+    fun measureItem(index: Int): MeasuredContentRowItem = measuredByIndex.getOrPut(index) {
+      val placeables = compose(index).map { measurable -> measurable.measure(itemConstraints) }
+      MeasuredContentRowItem(
+        placeables = placeables,
+        width = placeables.sumOf(Placeable::width),
+        height = placeables.maxOfOrNull(Placeable::height) ?: 0,
+      )
+    }
+
+    val selected = measureItem(selectedVirtualIndex)
+    val layoutWidth = constraints.maxWidth
+    val desiredSelectedX = leftPadding + selectionPaddingPx
+    val maximumSelectedX = (
+      layoutWidth - rightPadding - selected.width - selectionPaddingPx
+      ).coerceAtLeast(leftPadding + selectionPaddingPx)
+    val selectedBaseX = desiredSelectedX.coerceAtMost(maximumSelectedX)
+    val placedItems = mutableListOf(
+      PositionedContentRowItem(selected, selectedBaseX),
+    )
+    var rightCursor = selectedBaseX + selected.width + spacingPx
+    var rightIndex = selectedVirtualIndex + 1
+    if (rightIndex < itemProvider.itemCount) {
+      val item = measureItem(rightIndex)
+      placedItems += PositionedContentRowItem(item, rightCursor)
+      rightCursor += item.width + spacingPx
+    }
+
+    var leftCursor = selectedBaseX - spacingPx
+    var leftIndex = selectedVirtualIndex - 1
+    if (leftIndex >= 0) {
+      val item = measureItem(leftIndex)
+      leftCursor -= item.width
+      placedItems += PositionedContentRowItem(item, leftCursor)
+      leftCursor -= spacingPx
+    }
+
+    rightIndex += 1
+    while (rightCursor < layoutWidth - rightPadding && rightIndex < itemProvider.itemCount) {
+      val item = measureItem(rightIndex)
+      placedItems += PositionedContentRowItem(item, rightCursor)
+      rightCursor += item.width + spacingPx
+      rightIndex += 1
+    }
+
+    leftIndex -= 1
+    while (leftCursor > leftPadding && leftIndex >= 0) {
+      val item = measureItem(leftIndex)
+      leftCursor -= item.width
+      placedItems += PositionedContentRowItem(item, leftCursor)
+      leftCursor -= spacingPx
+      leftIndex -= 1
+    }
+
+    val next = measuredByIndex[selectedVirtualIndex + 1]
+    val previous = measuredByIndex[selectedVirtualIndex - 1]
+    val contentHeight = measuredByIndex.values.maxOfOrNull(MeasuredContentRowItem::height) ?: 0
+    val layoutHeight = constraints.constrainHeight(
+      topPadding + selectionPaddingPx * 2 + contentHeight + bottomPadding,
+    )
+    val availableHeight = (
+      layoutHeight - topPadding - bottomPadding - selectionPaddingPx * 2
+      ).coerceAtLeast(0)
+    val selectedY = topPadding + selectionPaddingPx +
+      verticalAlignment.align(selected.height, availableHeight)
+
+    state.updateLayoutInfo(
+      bounds = ContentRowSelectionBounds(
+        left = selectedBaseX - selectionPaddingPx,
+        top = selectedY - selectionPaddingPx,
+        width = selected.width + selectionPaddingPx * 2,
+        height = selected.height + selectionPaddingPx * 2,
+      ),
+      forwardStepPx = next?.let { (selected.width + it.width) / 2f + spacingPx } ?: 0f,
+      backwardStepPx = previous?.let { (selected.width + it.width) / 2f + spacingPx } ?: 0f,
+    )
+
+    layout(layoutWidth, layoutHeight) {
+      val animationOffset = state.animationOffsetPx.roundToInt()
+      placedItems.forEach { positionedItem ->
+        val itemY = topPadding + selectionPaddingPx + verticalAlignment.align(
+          positionedItem.item.height,
+          availableHeight,
+        )
+        var placeableX = positionedItem.x + animationOffset
+        positionedItem.item.placeables.forEach { placeable ->
+          placeable.placeRelative(placeableX, itemY)
+          placeableX += placeable.width
+        }
+      }
+    }
+  }
 }
 
-private data class MeasuredContentRowItem(
-    val placeables: List<Placeable>,
-    val width: Int,
-    val height: Int,
-)
+private data class MeasuredContentRowItem(val placeables: List<Placeable>, val width: Int, val height: Int)
 
-private data class PositionedContentRowItem(
-    val item: MeasuredContentRowItem,
-    val x: Int,
-)
+private data class PositionedContentRowItem(val item: MeasuredContentRowItem, val x: Int)

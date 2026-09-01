@@ -9,14 +9,11 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.core.designsystem.tokens.StreamTvDimensions
 
 @Composable
-internal fun HomeSectionHeader(
-    title: String,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text = title,
-        modifier = modifier.padding(horizontal = StreamTvDimensions.ScreenHorizontalPadding),
-        color = StreamTvColors.NeutralWhite,
-        style = StreamTvTheme.typography.titleLarge,
-    )
+internal fun HomeSectionHeader(title: String, modifier: Modifier = Modifier) {
+  Text(
+    text = title,
+    modifier = modifier.padding(horizontal = StreamTvDimensions.ScreenHorizontalPadding),
+    color = StreamTvColors.NeutralWhite,
+    style = StreamTvTheme.typography.titleLarge,
+  )
 }

@@ -16,48 +16,16 @@ import com.congnguyencn.stream_tv.feature.home.domain.model.Short
 import com.congnguyencn.stream_tv.feature.home.domain.model.Video
 
 internal fun HomeSectionData.toDomain(): HomeSection = HomeSection(
-    id = id,
-    title = title,
-    viewType = viewType.toDomain(),
-    items = items.map(HomeContentData::toDomain),
+  id = id,
+  title = title,
+  viewType = viewType.toDomain(),
+  items = items.map(HomeContentData::toDomain),
 )
 
 private fun HomeContentData.toDomain(): Content = when (this) {
-    is VideoData -> toDomain()
-    is SeriesData -> Series(
-        id = id,
-        videoUrl = videoUrl,
-        thumbnailUrl = thumbnailUrl,
-        vastUrl = vastUrl,
-        title = title,
-        description = description,
-        ageRestriction = ageRestriction,
-        logoUrl = logoUrl,
-        episodes = episodes.map(VideoData::toDomain),
-    )
-    is ChannelData -> Channel(
-        id = id,
-        videoUrl = videoUrl,
-        thumbnailUrl = thumbnailUrl,
-        vastUrl = vastUrl,
-        title = title,
-        description = description,
-        ageRestriction = ageRestriction,
-        logoUrl = logoUrl,
-    )
-    is ShortData -> Short(
-        id = id,
-        videoUrl = videoUrl,
-        thumbnailUrl = thumbnailUrl,
-        vastUrl = vastUrl,
-        title = title,
-        description = description,
-        ageRestriction = ageRestriction,
-        logoUrl = logoUrl,
-    )
-}
+  is VideoData -> toDomain()
 
-private fun VideoData.toDomain(): Video = Video(
+  is SeriesData -> Series(
     id = id,
     videoUrl = videoUrl,
     thumbnailUrl = thumbnailUrl,
@@ -66,13 +34,48 @@ private fun VideoData.toDomain(): Video = Video(
     description = description,
     ageRestriction = ageRestriction,
     logoUrl = logoUrl,
+    episodes = episodes.map(VideoData::toDomain),
+  )
+
+  is ChannelData -> Channel(
+    id = id,
+    videoUrl = videoUrl,
+    thumbnailUrl = thumbnailUrl,
+    vastUrl = vastUrl,
+    title = title,
+    description = description,
+    ageRestriction = ageRestriction,
+    logoUrl = logoUrl,
+  )
+
+  is ShortData -> Short(
+    id = id,
+    videoUrl = videoUrl,
+    thumbnailUrl = thumbnailUrl,
+    vastUrl = vastUrl,
+    title = title,
+    description = description,
+    ageRestriction = ageRestriction,
+    logoUrl = logoUrl,
+  )
+}
+
+private fun VideoData.toDomain(): Video = Video(
+  id = id,
+  videoUrl = videoUrl,
+  thumbnailUrl = thumbnailUrl,
+  vastUrl = vastUrl,
+  title = title,
+  description = description,
+  ageRestriction = ageRestriction,
+  logoUrl = logoUrl,
 )
 
 private fun HomeSectionViewTypeData.toDomain(): HomeSectionViewType = when (this) {
-    HomeSectionViewTypeData.Banner -> HomeSectionViewType.Banner
-    HomeSectionViewTypeData.VerticalBanner -> HomeSectionViewType.VerticalBanner
-    HomeSectionViewTypeData.Videos -> HomeSectionViewType.Videos
-    HomeSectionViewTypeData.ListSeries -> HomeSectionViewType.ListSeries
-    HomeSectionViewTypeData.Channels -> HomeSectionViewType.Channels
-    HomeSectionViewTypeData.Shorts -> HomeSectionViewType.Shorts
+  HomeSectionViewTypeData.Banner -> HomeSectionViewType.Banner
+  HomeSectionViewTypeData.VerticalBanner -> HomeSectionViewType.VerticalBanner
+  HomeSectionViewTypeData.Videos -> HomeSectionViewType.Videos
+  HomeSectionViewTypeData.ListSeries -> HomeSectionViewType.ListSeries
+  HomeSectionViewTypeData.Channels -> HomeSectionViewType.Channels
+  HomeSectionViewTypeData.Shorts -> HomeSectionViewType.Shorts
 }

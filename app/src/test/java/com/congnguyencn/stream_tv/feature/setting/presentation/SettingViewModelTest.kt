@@ -5,14 +5,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SettingViewModelTest {
-    @Test
-    fun `openSetting marks setting as ready`() {
-        val viewModel = SettingViewModel()
+  @Test
+  fun `openSetting marks setting as ready`() {
+    val viewModel = SettingViewModel()
 
-        assertFalse(viewModel.uiState.value.isSettingReady)
+    assertFalse(viewModel.uiState.value.isSettingReady)
 
-        viewModel.openSetting()
+    viewModel.openSetting()
 
-        assertTrue(viewModel.uiState.value.isSettingReady)
-    }
+    assertTrue(viewModel.uiState.value.isSettingReady)
+  }
 }

@@ -20,46 +20,46 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 
 @Composable
 fun StreamTvActionScreen(
-    title: String,
-    description: String,
-    actionText: String,
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    onActionClick: () -> Unit,
-    modifier: Modifier = Modifier,
+  title: String,
+  description: String,
+  actionText: String,
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  onActionClick: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(contentFocusRequester) {
-        contentFocusRequester.requestFocus()
-    }
+  LaunchedEffect(contentFocusRequester) {
+    contentFocusRequester.requestFocus()
+  }
 
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+  Box(
+    modifier = modifier.fillMaxSize(),
+    contentAlignment = Alignment.Center,
+  ) {
+    Column(
+      modifier = Modifier.padding(horizontal = 48.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(
-                text = title,
-                color = StreamTvColors.NeutralWhite,
-                textAlign = TextAlign.Center,
-                style = StreamTvTheme.typography.headlineLarge,
-            )
-            Text(
-                text = description,
-                color = StreamTvColors.Neutral20,
-                textAlign = TextAlign.Center,
-                style = StreamTvTheme.typography.bodyLarge,
-            )
-            StreamTvButton(
-                text = actionText,
-                onClick = onActionClick,
-                modifier = Modifier
-                    .focusRequester(contentFocusRequester)
-                    .focusProperties { up = topBarFocusRequester },
-            )
-        }
+      Text(
+        text = title,
+        color = StreamTvColors.NeutralWhite,
+        textAlign = TextAlign.Center,
+        style = StreamTvTheme.typography.headlineLarge,
+      )
+      Text(
+        text = description,
+        color = StreamTvColors.Neutral20,
+        textAlign = TextAlign.Center,
+        style = StreamTvTheme.typography.bodyLarge,
+      )
+      StreamTvButton(
+        text = actionText,
+        onClick = onActionClick,
+        modifier = Modifier
+          .focusRequester(contentFocusRequester)
+          .focusProperties { up = topBarFocusRequester },
+      )
     }
+  }
 }

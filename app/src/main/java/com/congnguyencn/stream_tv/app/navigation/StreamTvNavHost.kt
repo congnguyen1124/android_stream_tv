@@ -13,31 +13,31 @@ import com.congnguyencn.stream_tv.feature.setting.presentation.navigation.settin
 
 @Composable
 internal fun StreamTvNavHost(
-    navController: NavHostController,
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    modifier: Modifier = Modifier,
+  navController: NavHostController,
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  modifier: Modifier = Modifier,
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = HomeRoute,
-        modifier = modifier,
-    ) {
-        homeScreen(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-        searchScreen(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-        settingScreen(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-        profileScreen(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-    }
+  NavHost(
+    navController = navController,
+    startDestination = HomeRoute,
+    modifier = modifier,
+  ) {
+    homeScreen(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+    searchScreen(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+    settingScreen(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+    profileScreen(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+  }
 }

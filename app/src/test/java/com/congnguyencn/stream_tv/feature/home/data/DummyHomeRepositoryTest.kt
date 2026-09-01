@@ -10,38 +10,37 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DummyHomeRepositoryTest {
-    @Test
-    fun `dummy source maps every supported view type with valid content`() {
-        val sections = DummyHomeRepository(HomeDummyDataSource()).getHomeSections()
+  @Test
+  fun `dummy source maps every supported view type with valid content`() {
+    val sections = DummyHomeRepository(HomeDummyDataSource()).getHomeSections()
 
-        assertEquals(HomeSectionViewType.entries.toSet(), sections.map { it.viewType }.toSet())
-        assertTrue(sections.all { section -> section.items.all(section.viewType::accepts) })
-    }
+    assertEquals(HomeSectionViewType.entries.toSet(), sections.map { it.viewType }.toSet())
+    assertTrue(sections.all { section -> section.items.all(section.viewType::accepts) })
+  }
 
-    @Test
-    fun `dummy playback and logo urls remain empty`() {
-        val content = DummyHomeRepository(HomeDummyDataSource())
-            .getHomeSections()
-            .flatMap { it.items }
-            .flatMap { item -> listOf(item) + item.episodesOrEmpty() }
+  @Test
+  fun `dummy playback and logo urls remain empty`() {
+    val content = DummyHomeRepository(HomeDummyDataSource())
+      .getHomeSections()
+      .flatMap { it.items }
+      .flatMap { item -> listOf(item) + item.episodesOrEmpty() }
 
-        assertTrue(content.all { it.videoUrl.isEmpty() })
-        assertTrue(content.all { it.logoUrl.isEmpty() })
-        assertTrue(content.all { it.thumbnailUrl.startsWith("https://images.pexels.com/") })
-    }
+    assertTrue(content.all { it.videoUrl.isEmpty() })
+    assertTrue(content.all { it.logoUrl.isEmpty() })
+    assertTrue(content.all { it.thumbnailUrl.startsWith("https://images.pexels.com/") })
+  }
 
-    @Test
-    fun `dummy home contains both looping and finite content rows`() {
-        val sectionsByType = DummyHomeRepository(HomeDummyDataSource())
-            .getHomeSections()
-            .associateBy { it.viewType }
+  @Test
+  fun `dummy home contains both looping and finite content rows`() {
+    val sectionsByType = DummyHomeRepository(HomeDummyDataSource())
+      .getHomeSections()
+      .associateBy { it.viewType }
 
-        assertTrue(sectionsByType.getValue(HomeSectionViewType.Videos).items.size > 5)
-        assertTrue(sectionsByType.getValue(HomeSectionViewType.Channels).items.size > 5)
-        assertTrue(sectionsByType.getValue(HomeSectionViewType.Shorts).items.size > 5)
-        assertTrue(sectionsByType.getValue(HomeSectionViewType.ListSeries).items.size <= 5)
-    }
+    assertTrue(sectionsByType.getValue(HomeSectionViewType.Videos).items.size > 5)
+    assertTrue(sectionsByType.getValue(HomeSectionViewType.Channels).items.size > 5)
+    assertTrue(sectionsByType.getValue(HomeSectionViewType.Shorts).items.size > 5)
+    assertTrue(sectionsByType.getValue(HomeSectionViewType.ListSeries).items.size <= 5)
+  }
 
-    private fun Content.episodesOrEmpty(): List<Content> =
-        if (this is Series) episodes else emptyList()
+  private fun Content.episodesOrEmpty(): List<Content> = if (this is Series) episodes else emptyList()
 }

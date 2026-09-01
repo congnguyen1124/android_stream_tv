@@ -9,25 +9,25 @@ import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvActionScre
 
 @Composable
 internal fun SettingScreen(
-    uiState: SettingUiState,
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    onPrimaryActionClick: () -> Unit,
-    modifier: Modifier = Modifier,
+  uiState: SettingUiState,
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  onPrimaryActionClick: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    StreamTvActionScreen(
-        title = stringResource(R.string.setting_title),
-        description = stringResource(
-            if (uiState.isSettingReady) {
-                R.string.setting_ready_message
-            } else {
-                R.string.setting_description
-            },
-        ),
-        actionText = stringResource(R.string.setting_primary_action),
-        contentFocusRequester = contentFocusRequester,
-        topBarFocusRequester = topBarFocusRequester,
-        onActionClick = onPrimaryActionClick,
-        modifier = modifier,
-    )
+  StreamTvActionScreen(
+    title = stringResource(R.string.setting_title),
+    description = stringResource(
+      if (uiState.isSettingReady) {
+        R.string.setting_ready_message
+      } else {
+        R.string.setting_description
+      },
+    ),
+    actionText = stringResource(R.string.setting_primary_action),
+    contentFocusRequester = contentFocusRequester,
+    topBarFocusRequester = topBarFocusRequester,
+    onActionClick = onPrimaryActionClick,
+    modifier = modifier,
+  )
 }

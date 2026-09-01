@@ -7,14 +7,18 @@ espressoCore = "3.7.0"
 activityCompose = "1.13.0"
 composeBom = "2026.08.00"
 coil = "3.6.0"
+composeRulesDetekt = "0.6.4"
+detekt = "1.23.8"
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 kotlin = "2.4.10"
+ktlint = "1.8.0"
 ksp = "2.3.11"
 lifecycle = "2.11.0"
 material = "1.14.0"
 navigation = "2.10.0"
 palette = "1.0.0"
+spotless = "8.9.0"
 tvMaterial = "1.1.0"
 
 [libraries]
@@ -36,6 +40,7 @@ androidx-tv-material = { module = "androidx.tv:tv-material", version.ref = "tvMa
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+compose-rules-detekt = { module = "io.nlopez.compose.rules:detekt", version.ref = "composeRulesDetekt" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,5 +51,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

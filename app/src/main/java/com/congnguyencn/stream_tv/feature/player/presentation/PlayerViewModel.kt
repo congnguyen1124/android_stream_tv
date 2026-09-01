@@ -4,6 +4,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.congnguyencn.stream_tv.feature.player.domain.model.PlayerDetailsRequest
+import com.congnguyencn.stream_tv.feature.player.domain.repository.PlayerDetailsRepository
+import com.congnguyencn.stream_tv.feature.player.presentation.mapper.toUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingCategory
 import com.congnguyencn.stream_tv.feature.player.presentation.navigation.PlayerArgs
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.loadAndPlay
@@ -12,12 +17,16 @@ import com.congnguyencn.streamplayer.play
 import com.congnguyencn.streamplayer.prepare
 import com.congnguyencn.streamplayer.seekBack
 import com.congnguyencn.streamplayer.seekForward
+import com.congnguyencn.streamplayer.selectAudioTrack
+import com.congnguyencn.streamplayer.selectTextTrack
+import com.congnguyencn.streamplayer.selectVideoTrack
 import com.congnguyencn.streamplayer.togglePlayPause
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -33,8 +42,10 @@ import kotlinx.coroutines.flow.stateIn
  * per screen is exactly right.
  */
 @HiltViewModel
+@Suppress("TooManyFunctions")
 internal class PlayerViewModel @Inject constructor(
   playerFactory: StreamTvPlayerFactory,
+  playerDetailsRepository: PlayerDetailsRepository,
   savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -48,19 +59,39 @@ internal class PlayerViewModel @Inject constructor(
    */
   val playerManager: StreamTvPlayerManager = playerFactory.create()
 
-  val uiState: StateFlow<PlayerUiState> = playerManager.playerState
-    .map { state -> state.toPlayerUiState(title = args.title) }
+  private val contentState = MutableStateFlow(
+    PlayerContentState(
+      details = playerDetailsRepository.getDetails(
+        PlayerDetailsRequest(
+          title = args.title,
+          description = args.description,
+          ageRestriction = args.ageRestriction,
+        ),
+      ).toUiState(),
+    ),
+  )
+
+  val uiState: StateFlow<PlayerUiState> = combine(
+    playerManager.playerState,
+    contentState,
+  ) { playerState, contentState ->
+    playerState.toPlayerUiState(
+      title = args.title,
+      details = contentState.details,
+      isLiked = contentState.isLiked,
+      isSaved = contentState.isSaved,
+    )
+  }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.Eagerly,
-      initialValue = PlayerUiState.Initial.copy(title = args.title),
+      initialValue = PlayerUiState.Initial.copy(
+        title = args.title,
+        details = contentState.value.details,
+      ),
     )
 
   init {
-    startPlayback()
-  }
-
-  private fun startPlayback() {
     playerManager.loadAndPlay(uri = args.videoUrl.toUri())
   }
 
@@ -74,6 +105,28 @@ internal class PlayerViewModel @Inject constructor(
 
   fun seekBack() {
     playerManager.seekBack()
+  }
+
+  fun selectTrack(category: PlayerSettingCategory, id: String) {
+    when (category) {
+      PlayerSettingCategory.Quality -> playerManager.selectVideoTrack(id)
+      PlayerSettingCategory.Subtitles -> playerManager.selectTextTrack(id)
+      PlayerSettingCategory.Audio -> playerManager.selectAudioTrack(id)
+    }
+  }
+
+  fun toggleLike() {
+    contentState.value = contentState.value.copy(isLiked = !contentState.value.isLiked)
+  }
+
+  fun toggleSaved() {
+    contentState.value = contentState.value.copy(isSaved = !contentState.value.isSaved)
+  }
+
+  fun toggleCommentLike(commentId: Long) {
+    contentState.value = contentState.value.copy(
+      details = contentState.value.details.toggleLike(commentId),
+    )
   }
 
   /** Pauses without tearing down, for when the screen stops but the destination is still on the stack. */
@@ -100,3 +153,9 @@ internal class PlayerViewModel @Inject constructor(
     playerManager.close()
   }
 }
+
+private data class PlayerContentState(
+  val details: PlayerDetailsUiState,
+  val isLiked: Boolean = false,
+  val isSaved: Boolean = false,
+)

@@ -43,8 +43,8 @@ private object MainScreenDefaults {
  */
 @Composable
 internal fun MainScreen(
-  onOpenPlayer: (videoUrl: String, title: String) -> Unit,
-  onOpenVerticalPlayer: (videoUrl: String, title: String) -> Unit,
+  onOpenPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
+  onOpenVerticalPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
   modifier: Modifier = Modifier,
   navController: NavHostController = rememberNavController(),
 ) {

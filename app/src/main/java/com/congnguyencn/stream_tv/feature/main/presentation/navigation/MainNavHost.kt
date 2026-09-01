@@ -25,8 +25,8 @@ internal fun MainNavHost(
   contentFocusRequester: FocusRequester,
   topBarFocusRequester: FocusRequester,
   onTopBarOverlayVisibilityChange: (Boolean) -> Unit,
-  onOpenPlayer: (videoUrl: String, title: String) -> Unit,
-  onOpenVerticalPlayer: (videoUrl: String, title: String) -> Unit,
+  onOpenPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
+  onOpenVerticalPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   NavHost(
@@ -42,8 +42,11 @@ internal fun MainNavHost(
         // Portrait content has to be framed portrait, so the content type — not the section it was
         // tapped in — chooses the destination.
         when (item.playerTarget()) {
-          HomePlayerTarget.Horizontal -> onOpenPlayer(item.videoUrl, item.title)
-          HomePlayerTarget.Vertical -> onOpenVerticalPlayer(item.videoUrl, item.title)
+          HomePlayerTarget.Horizontal ->
+            onOpenPlayer(item.videoUrl, item.title, item.description, item.ageRestriction)
+
+          HomePlayerTarget.Vertical ->
+            onOpenVerticalPlayer(item.videoUrl, item.title, item.description, item.ageRestriction)
         }
       },
     )

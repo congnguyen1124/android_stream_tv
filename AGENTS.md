@@ -8,6 +8,8 @@
 
 - Every new or materially changed UI composable must include a deterministic `@Preview` using an appropriate TV device. Preview code must not require a real player, network access, or runtime-only dependency.
 - Keep focus navigation explicit and deterministic. Park focus before replacing or animating a focused subtree, disable focus for retained hidden layers, and restore the previously selected row when a child section closes.
+- A destination under `MainScreen` claims focus only when the top bar is not holding it. Selecting a top bar item leaves focus on that item; opening the app and returning from playback leave focus nowhere, so the content takes it. See `docs/adr/2026-09-02-shell-focus-ownership.md`.
+- Home restores focus to the section that had it, not to the opening section. A new section type must expose a `FocusRequester` that reaches its own single focus target.
 - Preserve Back and D-pad exit behavior from the reference `ottclouds-android` player. A section transition must finish before its first focus request is issued.
 - Share player section content between landscape and portrait screens. Keep orientation-specific framing at the screen boundary: landscape uses a rounded dark translucent panel; portrait sections remain transparent over the ambient background.
 - The portrait player surface uses an inset white focus border. The border softens after focus is held and restarts its animation after a center press.

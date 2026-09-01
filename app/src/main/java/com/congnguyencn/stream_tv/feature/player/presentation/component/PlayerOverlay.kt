@@ -1,12 +1,5 @@
 package com.congnguyencn.stream_tv.feature.player.presentation.component
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,16 +16,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -54,17 +43,12 @@ import kotlin.time.Duration
  * Pieces both player screens share.
  *
  * The two screens differ in how they frame the video, not in what they say about it — so the badge,
- * the spinner, the progress bar and the error panel live here rather than being written twice with a
- * chance to drift apart.
+ * the progress bar and the error panel live here rather than being written twice with a chance to
+ * drift apart. The buffering spinner is a sibling file because it owns an animation asset of its own.
  */
 internal object PlayerOverlayDefaults {
   val PlaybackBadgeSize: Dp = 96.dp
   val PlaybackBadgeIconSize: Dp = 40.dp
-  val SpinnerSize: Dp = 56.dp
-  val SpinnerStrokeWidth: Dp = 4.dp
-  const val SpinnerSweepDegrees = 90f
-  const val FullTurnDegrees = 360f
-  const val SpinnerRotationDurationMillis = 900
   val ProgressBarHeight: Dp = 4.dp
   val ProgressBarShape = RoundedCornerShape(2.dp)
   val ErrorPanelPadding: Dp = 48.dp
@@ -103,56 +87,6 @@ internal fun PlayerPlaybackBadge(isPlaying: Boolean, modifier: Modifier = Modifi
       contentDescription = contentDescription,
       modifier = Modifier.size(PlayerOverlayDefaults.PlaybackBadgeIconSize),
       tint = StreamTvColors.NeutralWhite,
-    )
-  }
-}
-
-/**
- * An indeterminate spinner, drawn rather than imported.
- *
- * `androidx.tv.material3` ships no progress indicator, and pulling in `compose-material3` purely for
- * a rotating arc would add a second, differently-themed design system to the app.
- */
-@Composable
-internal fun PlayerBufferingIndicator(modifier: Modifier = Modifier) {
-  val transition = rememberInfiniteTransition(label = "PlayerBuffering")
-  val rotation by transition.animateFloat(
-    initialValue = 0f,
-    targetValue = PlayerOverlayDefaults.FullTurnDegrees,
-    animationSpec = infiniteRepeatable(
-      animation = tween(
-        durationMillis = PlayerOverlayDefaults.SpinnerRotationDurationMillis,
-        easing = LinearEasing,
-      ),
-      repeatMode = RepeatMode.Restart,
-    ),
-    label = "PlayerBufferingRotation",
-  )
-
-  Canvas(
-    modifier = modifier
-      .size(PlayerOverlayDefaults.SpinnerSize)
-      .testTag("player-buffering"),
-  ) {
-    val strokeWidth = PlayerOverlayDefaults.SpinnerStrokeWidth.toPx()
-    val inset = strokeWidth / 2f
-    drawArc(
-      color = StreamTvColors.TransparentWhite20,
-      startAngle = 0f,
-      sweepAngle = PlayerOverlayDefaults.FullTurnDegrees,
-      useCenter = false,
-      topLeft = Offset(inset, inset),
-      size = Size(size.width - strokeWidth, size.height - strokeWidth),
-      style = Stroke(width = strokeWidth),
-    )
-    drawArc(
-      color = StreamTvColors.NeutralWhite,
-      startAngle = rotation,
-      sweepAngle = PlayerOverlayDefaults.SpinnerSweepDegrees,
-      useCenter = false,
-      topLeft = Offset(inset, inset),
-      size = Size(size.width - strokeWidth, size.height - strokeWidth),
-      style = Stroke(width = strokeWidth),
     )
   }
 }

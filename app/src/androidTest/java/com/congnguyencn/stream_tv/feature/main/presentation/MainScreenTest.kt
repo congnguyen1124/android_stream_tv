@@ -2,6 +2,8 @@ package com.congnguyencn.stream_tv.feature.main.presentation
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -61,7 +63,7 @@ class MainScreenTest {
   }
 
   @Test
-  fun searchItemNavigatesAndMovesFocusToSearchContent() {
+  fun searchItemNavigatesWithoutTakingFocusOffTheTopBar() {
     composeRule
       .onNodeWithTag("home-banner-carousel")
       .performKeyInput {
@@ -69,10 +71,36 @@ class MainScreenTest {
         pressKey(Key.DirectionLeft)
         pressKey(Key.DirectionCenter)
       }
+    composeRule.waitForIdle()
 
     composeRule
       .onNodeWithText("Open search")
       .assertIsDisplayed()
+      .assertIsNotFocused()
+    composeRule
+      .onNodeWithText("Search")
+      .assertIsFocused()
+  }
+
+  @Test
+  fun topBarDownKeyHandsFocusToTheDestinationContent() {
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput {
+        pressKey(Key.DirectionUp)
+        pressKey(Key.DirectionLeft)
+        pressKey(Key.DirectionCenter)
+      }
+    composeRule.waitForIdle()
+
+    composeRule
+      .onNodeWithText("Search")
+      .performKeyInput { pressKey(Key.DirectionDown) }
+    composeRule.waitForIdle()
+
+    composeRule
+      .onNodeWithText("Open search")
+      .assertIsFocused()
   }
 
   @Test

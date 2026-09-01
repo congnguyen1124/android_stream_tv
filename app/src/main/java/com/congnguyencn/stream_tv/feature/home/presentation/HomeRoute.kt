@@ -13,6 +13,7 @@ import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeContentUiI
 internal fun HomeScreen(
   contentFocusRequester: FocusRequester,
   topBarFocusRequester: FocusRequester,
+  isTopBarFocused: Boolean,
   onItemClick: (HomeContentUiItem) -> Unit,
   onTopBarOverlayVisibilityChange: (Boolean) -> Unit,
   viewModel: HomeViewModel = hiltViewModel(),
@@ -23,6 +24,7 @@ internal fun HomeScreen(
     uiState = uiState,
     contentFocusRequester = contentFocusRequester,
     topBarFocusRequester = topBarFocusRequester,
+    isTopBarFocused = isTopBarFocused,
     onItemClick = onItemClick,
     onTopBarOverlayVisibilityChange = onTopBarOverlayVisibilityChange,
     // Only the route builds a player, so a banner rendered anywhere else — a preview, a Compose test

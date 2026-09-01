@@ -60,6 +60,7 @@ dependencies {
   implementation(libs.coil.compose)
   implementation(libs.coil.network.okhttp)
   implementation(libs.hilt.android)
+  implementation(libs.lottie.compose)
   implementation(libs.material)
   implementation(libs.stream.player)
 

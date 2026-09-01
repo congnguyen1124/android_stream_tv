@@ -67,6 +67,7 @@ internal fun MainScreen(
       navController = navController,
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+      isTopBarFocused = isTopBarFocused,
       onTopBarOverlayVisibilityChange = { isVisible -> isTopBarOverlayVisible = isVisible },
       onOpenPlayer = onOpenPlayer,
       onOpenVerticalPlayer = onOpenVerticalPlayer,

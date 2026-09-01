@@ -17,6 +17,7 @@
     <string name="profile_primary_action">Manage profile</string>
     <string name="profile_ready_message">Your StreamTV profile is ready</string>
     <string name="play">Watch now</string>
+    <string name="home_banner_featured_label">STREAMTV FEATURED</string>
     <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>
     <string name="player_retry">Try again</string>

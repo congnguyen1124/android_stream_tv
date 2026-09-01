@@ -17,6 +17,7 @@ kotlinxCoroutines = "1.11.0"
 ktlint = "1.8.0"
 ksp = "2.3.11"
 lifecycle = "2.11.0"
+lottie = "6.7.1"
 material = "1.14.0"
 navigation = "2.10.0"
 palette = "1.0.0"
@@ -49,6 +50,7 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

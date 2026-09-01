@@ -167,6 +167,24 @@ ContentRow(state = state) {
 - Collection có tối đa 5 item giữ finite: D-pad Right tại item cuối không reset về item `0`.
 - `ContentRowState.scrollToItem(index)` wrap index đối với row loop và clamp index đối với row finite.
 
+## Player
+
+Player là destination full-screen ở graph ngoài và có hai cách trình bày dùng chung một
+`PlayerViewModel`:
+
+- `PlayerScreen` phát nội dung ngang bằng surface 16:9. Controller là overlay trong `Box`, tự ẩn sau
+  5 giây khi video đang chạy và chỉ có title, Settings cùng duration/progress; không có
+  related/episodes và không dùng `LazyColumn` cho content.
+- `VerticalPlayerScreen` giữ stage 9:16 ở giữa lệch trái, nền ambient tối và interaction section ở
+  bên phải. D-pad Right đi từ player sang Settings; D-pad Left quay về player.
+- Cả hai dùng chung `component/setting/PlayerSettingsPanel`: root gồm Quality, Subtitles và Audio;
+  child hiển thị các track đang có. Root vẫn được compose phía dưới child để giữ focus và list state.
+  Back pop child trước, sau đó mới đóng root.
+- Track snapshot từ `stream_player` được map một lần tại `presentation/mapper`. Chọn option dispatch
+  trực tiếp `selectVideoTrack`, `selectTextTrack` hoặc `selectAudioTrack` qua `PlayerViewModel`.
+- Settings không hiển thị category rỗng; Subtitles có option Off và Quality có Auto khi manifest có
+  nhiều rendition.
+
 ## Thêm một ContentRow section
 
 1. Map view type về một `HomeContentRowStyle` trong `HomeScreen.kt`.

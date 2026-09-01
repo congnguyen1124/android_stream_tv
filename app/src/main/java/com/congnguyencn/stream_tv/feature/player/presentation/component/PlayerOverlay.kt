@@ -22,10 +22,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -227,6 +231,12 @@ internal fun PlayerLiveBadge(modifier: Modifier = Modifier) {
  */
 @Composable
 internal fun PlayerErrorPanel(error: PlayerErrorUiItem, onRetry: (() -> Unit)?, modifier: Modifier = Modifier) {
+  val retryFocusRequester = remember { FocusRequester() }
+
+  LaunchedEffect(onRetry) {
+    if (onRetry != null) retryFocusRequester.requestFocus()
+  }
+
   Column(
     modifier = modifier
       .fillMaxSize()
@@ -249,6 +259,7 @@ internal fun PlayerErrorPanel(error: PlayerErrorUiItem, onRetry: (() -> Unit)?, 
       StreamTvButton(
         text = stringResource(R.string.player_retry),
         onClick = onRetry,
+        modifier = Modifier.focusRequester(retryFocusRequester),
       )
     }
   }
@@ -272,7 +283,7 @@ internal fun PlayerTitleRow(title: String, isLive: Boolean, modifier: Modifier =
   }
 }
 
-private fun Duration.toClockString(): String = toComponents { hours, minutes, seconds, _ ->
+internal fun Duration.toClockString(): String = toComponents { hours, minutes, seconds, _ ->
   if (hours > 0) {
     "%d:%02d:%02d".format(hours, minutes, seconds)
   } else {

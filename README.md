@@ -4,10 +4,10 @@ StreamTV là ứng dụng Android TV dùng Jetpack Compose for TV, được tổ
 
 ## Chức năng hiện tại
 
-- TopBar điều hướng giữa Search, Home, Setting và Profile bằng D-pad, nổi trên content với gradient từ `surface` xuống trong suốt.
+- TopBar điều hướng giữa Search, Home, Setting và Profile bằng D-pad. Khi navigation nhận focus, app phủ một lớp `surface` bán trong suốt lên toàn bộ screen và giữ TopBar nổi phía trên.
 - Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content ngang.
 - `Banner` full-width cao 600dp nằm phía sau TopBar overlay, dùng hero scrim nhiều lớp, CTA, edge pages, indicator và lifecycle-aware auto-scroll khi không focus.
-- `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop khi có ít nhất 5 item, scale item và đổi nền theo palette trích từ thumbnail active.
+- `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop trên virtual pager dài khi có ít nhất 5 item, preload 5 page quanh viewport, scale item và đổi nền theo palette trích từ thumbnail active.
 - Focus đầu tiên thuộc về Banner; nhấn Up quay lại TopBar. Trái/phải chuyển item ngay trong carousel.
 - `Videos`, `ListSeries`, `Channels` và `Shorts` dùng `ContentRow`: horizontal lazy layout với selector cố định tại leading content edge; thumbnail, badge và metadata được tách thành hierarchy rõ ràng.
 - Ảnh online được tải bằng Coil 3; `videoUrl` và `logoUrl` đang để trống theo yêu cầu.
@@ -87,6 +87,8 @@ Section sai kiểu bị từ chối ngay tại boundary thay vì bị lọc âm 
 
 Dummy thumbnail dùng ảnh từ Pexels cho các chủ đề sport, animal, Chinese culture và Japanese culture. Các trang ảnh gốc:
 
+Dummy sections cố ý bao gồm cả hai boundary của `ContentRow`: Videos có 8 item, Channels có 6 item và Shorts có 8 item để chạy loop; Documentary Series có 4 item để giữ finite.
+
 - [Basketball](https://www.pexels.com/photo/men-playing-basketball-9839903/)
 - [Football](https://www.pexels.com/photo/soccer-player-on-field-during-match-36958062/)
 - [Cricket](https://www.pexels.com/photo/a-man-holding-a-wooden-paddle-11023865/)
@@ -129,8 +131,9 @@ ContentRow(state = state) {
 - D-pad Left/Right dịch chuyển danh sách bên dưới selector; Center/Enter gọi callback của real selected index.
 - Khi di chuyển sang phải, item trước trượt ra ngoài leading edge nhưng vẫn để lại một phần nhỏ ở mép màn hình trong lúc row đang ở các index tiếp theo.
 - Ở item `0`, không có item giả phía trái và D-pad Left trả quyền xử lý về `FocusRequester.Default`.
-- Một edge slot tạm thời sau item cuối cho phép D-pad Right animate sang item `0`, sau đó state rebase atomically và loại bỏ lịch sử vòng cũ.
-- `ContentRowState.scrollToItem(index)` nhận mọi số nguyên và chuẩn hóa về real index tương ứng.
+- Khi có hơn 5 item, provider nối thêm một cycle đầy đủ của collection. Vì vậy ở gần cuối row vẫn luôn thấy các item `0, 1, 2...` phía sau; sau animation qua cuối, state rebase về cycle đầu mà không tạo khoảng trống hoặc nhảy hình.
+- Collection có tối đa 5 item giữ finite: D-pad Right tại item cuối không reset về item `0`.
+- `ContentRowState.scrollToItem(index)` wrap index đối với row loop và clamp index đối với row finite.
 
 ## Thêm một ContentRow section
 

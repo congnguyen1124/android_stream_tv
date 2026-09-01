@@ -96,6 +96,34 @@ internal class HomeDummyDataSource {
                 description = "Vivid costumes, music, and community rituals bring a traditional celebration to life.",
                 ageRestriction = "P",
             ),
+            VideoData(
+                id = "video-football-decision",
+                thumbnailUrl = FootballImage,
+                title = "The decisive touch",
+                description = "A football match turns on one perfectly timed run and a fearless finish.",
+                ageRestriction = "P",
+            ),
+            VideoData(
+                id = "video-cricket-pressure",
+                thumbnailUrl = CricketImage,
+                title = "Under pressure at the crease",
+                description = "A batter prepares for the delivery that could decide the entire match.",
+                ageRestriction = "P",
+            ),
+            VideoData(
+                id = "video-lunar-new-year",
+                thumbnailUrl = ChineseNewYearImage,
+                title = "Welcoming the new spring",
+                description = "Red, gold, and generations of tradition fill a joyful Lunar New Year celebration.",
+                ageRestriction = "P",
+            ),
+            VideoData(
+                id = "video-japanese-ceremony",
+                thumbnailUrl = JapaneseCeremonyImage,
+                title = "Grace in every gesture",
+                description = "A close look at the details, discipline, and meaning of a Japanese ceremony.",
+                ageRestriction = "P",
+            ),
         )
 
         val discoveryShorts = listOf(
@@ -132,6 +160,27 @@ internal class HomeDummyDataSource {
                 thumbnailUrl = FootballImage,
                 title = "Motion on the pitch",
                 description = "One decisive touch in a football match played at full speed.",
+                ageRestriction = "P",
+            ),
+            ShortData(
+                id = "short-basketball-reach",
+                thumbnailUrl = BasketballImage,
+                title = "Above the rim",
+                description = "Two players rise for a split-second contest above the basket.",
+                ageRestriction = "P",
+            ),
+            ShortData(
+                id = "short-tokyo-walk",
+                thumbnailUrl = TokyoStreetImage,
+                title = "A minute in old Tokyo",
+                description = "A quick walk through Asakusa where every corner holds a story.",
+                ageRestriction = "P",
+            ),
+            ShortData(
+                id = "short-festival-colors",
+                thumbnailUrl = ChineseFestivalImage,
+                title = "Festival colors",
+                description = "Traditional costumes sweep past the camera in a burst of color.",
                 ageRestriction = "P",
             ),
         )
@@ -183,6 +232,59 @@ internal class HomeDummyDataSource {
                     ),
                 ),
             ),
+            SeriesData(
+                id = "series-human-performance",
+                thumbnailUrl = BasketballImage,
+                title = "The edge of performance",
+                description = "Athletes reveal how preparation becomes instinct when the pressure rises.",
+                ageRestriction = "P",
+                episodes = listOf(
+                    VideoData(
+                        id = "episode-performance-1",
+                        thumbnailUrl = BasketballImage,
+                        title = "Episode 1: Reading the court",
+                        description = "Basketball players make complex decisions in fractions of a second.",
+                        ageRestriction = "P",
+                    ),
+                    VideoData(
+                        id = "episode-performance-2",
+                        thumbnailUrl = FootballImage,
+                        title = "Episode 2: Space and timing",
+                        description = "A football attack is built from movement before the ball arrives.",
+                        ageRestriction = "P",
+                    ),
+                ),
+            ),
+            SeriesData(
+                id = "series-rituals-of-asia",
+                thumbnailUrl = JapaneseCeremonyImage,
+                title = "Rituals of Asia",
+                description = "A respectful journey through ceremonies that connect past and present.",
+                ageRestriction = "P",
+                episodes = listOf(
+                    VideoData(
+                        id = "episode-rituals-1",
+                        thumbnailUrl = JapaneseCeremonyImage,
+                        title = "Episode 1: A language of gestures",
+                        description = "Every movement carries meaning in a traditional Japanese ceremony.",
+                        ageRestriction = "P",
+                    ),
+                    VideoData(
+                        id = "episode-rituals-2",
+                        thumbnailUrl = ChineseNewYearImage,
+                        title = "Episode 2: The color of renewal",
+                        description = "Families welcome a new year through symbols of luck and renewal.",
+                        ageRestriction = "P",
+                    ),
+                    VideoData(
+                        id = "episode-rituals-3",
+                        thumbnailUrl = ChineseFestivalImage,
+                        title = "Episode 3: A community in celebration",
+                        description = "Music and costume transform a gathering into shared memory.",
+                        ageRestriction = "P",
+                    ),
+                ),
+            ),
         )
 
         val liveChannels = listOf(
@@ -198,6 +300,34 @@ internal class HomeDummyDataSource {
                 thumbnailUrl = TigerForestImage,
                 title = "StreamTV Nature",
                 description = "An uninterrupted window into the wild, 24/7.",
+                ageRestriction = "P",
+            ),
+            ChannelData(
+                id = "channel-football-live",
+                thumbnailUrl = FootballImage,
+                title = "StreamTV Football",
+                description = "Live matches, tactical analysis, and the stories behind the final score.",
+                ageRestriction = "P",
+            ),
+            ChannelData(
+                id = "channel-cricket-live",
+                thumbnailUrl = CricketImage,
+                title = "StreamTV Cricket",
+                description = "International cricket and classic matches throughout the day.",
+                ageRestriction = "P",
+            ),
+            ChannelData(
+                id = "channel-culture-live",
+                thumbnailUrl = ChineseFestivalImage,
+                title = "StreamTV Culture",
+                description = "Festivals, art, food, and living traditions from around the world.",
+                ageRestriction = "P",
+            ),
+            ChannelData(
+                id = "channel-city-live",
+                thumbnailUrl = TokyoStreetImage,
+                title = "StreamTV Cities",
+                description = "A continuous window into the streets and rhythms of remarkable cities.",
                 ageRestriction = "P",
             ),
         )

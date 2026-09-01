@@ -19,20 +19,20 @@ class HomeBannerPagerTest {
     }
 
     @Test
-    fun `vertical banner pads five items on each edge and maps its middle page`() {
-        val realItems = listOf("A", "B", "C", "D", "E")
+    fun `vertical banner starts in a distant aligned cycle and maps pages by modulo`() {
+        val realItemCount = 7
+        val initialPage = verticalBannerInitialPage(
+            realItemCount = realItemCount,
+            initialRealIndex = 3,
+        )
 
-        assertEquals(15, realItems.toLoopingVerticalBannerItems().size)
-        assertEquals(2, 7.toVerticalBannerRealIndex(realItemCount = 5, isLoopingEnabled = true))
-        assertEquals(4, 4.toVerticalBannerRealIndex(realItemCount = 5, isLoopingEnabled = true))
-        assertEquals(0, 10.toVerticalBannerRealIndex(realItemCount = 5, isLoopingEnabled = true))
+        assertEquals(3, initialPage.toVerticalBannerRealIndex(realItemCount, isLoopingEnabled = true))
+        assertEquals(4, (initialPage + 1).toVerticalBannerRealIndex(realItemCount, true))
+        assertEquals(2, (initialPage + 6).toVerticalBannerRealIndex(realItemCount, true))
     }
 
     @Test
     fun `vertical banner stays finite below five items`() {
-        val realItems = listOf("A", "B", "C", "D")
-
-        assertEquals(realItems, realItems.toLoopingVerticalBannerItems())
         assertEquals(3, 8.toVerticalBannerRealIndex(realItemCount = 4, isLoopingEnabled = false))
     }
 }

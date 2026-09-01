@@ -7,7 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,7 +32,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -43,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
-import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.SelectableSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
@@ -60,6 +58,7 @@ fun StreamTvTopBar(
     contentFocusRequester: FocusRequester,
     onItemClick: (StreamTvTopBarItem) -> Unit,
     modifier: Modifier = Modifier,
+    onFocusStateChanged: (hasFocus: Boolean) -> Unit = {},
 ) {
     val navigationItems = remember(items) {
         items.filter { it.role == StreamTvTopBarItemRole.Destination }
@@ -82,16 +81,8 @@ fun StreamTvTopBar(
         modifier = modifier
             .fillMaxWidth()
             .height(StreamTvDimensions.TopBarGradientHeight)
-            .background(
-                Brush.verticalGradient(
-                    colorStops = arrayOf(
-                        0f to MaterialTheme.colorScheme.surface,
-                        0.5f to MaterialTheme.colorScheme.surface,
-                        0.72f to MaterialTheme.colorScheme.surface.copy(alpha = 0.74f),
-                        1f to StreamTvColors.Transparent,
-                    ),
-                ),
-            ),
+            .onFocusChanged { focusState -> onFocusStateChanged(focusState.hasFocus) }
+            .focusGroup(),
     ) {
         LazyRow(
             modifier = Modifier

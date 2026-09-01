@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -78,6 +79,93 @@ class ContentRowTest {
         composeRule.waitUntil(timeoutMillis = 2_000) { state.selectedIndex == 0 }
         assertEquals(0, state.selectedIndex)
         composeRule.onAllNodes(isFocusable()).assertCountEquals(1)
+    }
+
+    @Test
+    fun loopingRowKeepsNextCycleVisibleBeforeResettingToItemZero() {
+        lateinit var state: ContentRowState
+
+        composeRule.setContent {
+            val focusRequester = remember { FocusRequester() }
+            state = rememberContentRowState(initialSelectedIndex = 5)
+
+            StreamTvTheme {
+                StreamTvSurface {
+                    ContentRow(
+                        state = state,
+                        modifier = Modifier.width(720.dp),
+                        selectedItemModifier = Modifier
+                            .focusRequester(focusRequester)
+                            .testTag("content-row-selected-item"),
+                    ) {
+                        items(count = 6) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .height(112.dp)
+                                    .testTag("content-row-item-$index"),
+                            )
+                        }
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+        }
+
+        composeRule.onNodeWithTag("content-row-item-0").assertIsDisplayed()
+        composeRule
+            .onNodeWithTag("content-row-selected-item")
+            .assertIsFocused()
+            .performKeyInput { pressKey(Key.DirectionRight) }
+
+        composeRule.waitUntil(timeoutMillis = 2_000) { state.selectedIndex == 0 }
+        composeRule.onNodeWithTag("content-row-item-1").assertIsDisplayed()
+    }
+
+    @Test
+    fun finiteRowStopsAtLastItemWithoutResetting() {
+        lateinit var state: ContentRowState
+
+        composeRule.setContent {
+            val focusRequester = remember { FocusRequester() }
+            state = rememberContentRowState(initialSelectedIndex = 4)
+
+            StreamTvTheme {
+                StreamTvSurface {
+                    ContentRow(
+                        state = state,
+                        modifier = Modifier.width(720.dp),
+                        selectedItemModifier = Modifier
+                            .focusRequester(focusRequester)
+                            .testTag("content-row-selected-item"),
+                    ) {
+                        items(count = 5) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .height(112.dp)
+                                    .testTag("content-row-item-$index"),
+                            )
+                        }
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+        }
+
+        composeRule
+            .onNodeWithTag("content-row-selected-item")
+            .assertIsFocused()
+            .performKeyInput { pressKey(Key.DirectionRight) }
+        composeRule.waitForIdle()
+
+        assertEquals(4, state.selectedIndex)
     }
 
     @Test

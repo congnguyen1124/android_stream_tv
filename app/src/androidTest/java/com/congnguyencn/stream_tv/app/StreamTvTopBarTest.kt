@@ -31,6 +31,24 @@ class StreamTvTopBarTest {
     }
 
     @Test
+    fun focusingTopBarDimsScreenUntilFocusReturnsToContent() {
+        composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
+
+        composeRule
+            .onNodeWithTag("home-banner-carousel")
+            .performKeyInput { pressKey(Key.DirectionUp) }
+
+        composeRule.onNodeWithTag("stream-tv-screen-overlay").assertIsDisplayed()
+
+        composeRule
+            .onNodeWithText("Home")
+            .performKeyInput { pressKey(Key.DirectionDown) }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
+    }
+
+    @Test
     fun searchItemNavigatesAndMovesFocusToSearchContent() {
         composeRule
             .onNodeWithTag("home-banner-carousel")

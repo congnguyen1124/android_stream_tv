@@ -22,6 +22,7 @@ object ContentRowDefaults {
     val SelectedItemShape: Shape = RoundedCornerShape(8.dp)
 
     internal const val ScrollDurationMillis = 190
+    internal const val LoopingItemCountThreshold = 5
 
     /** The fixed, transparent focus target drawn above the moving lazy items. */
     @Composable

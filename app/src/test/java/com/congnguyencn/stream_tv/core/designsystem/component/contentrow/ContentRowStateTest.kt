@@ -10,6 +10,16 @@ class ContentRowStateTest {
     }
 
     @Test
+    fun `six items enable looping at the first supported collection size`() {
+        assertEquals(0, contentRowTargetIndex(currentIndex = 5, delta = 1, itemCount = 6))
+    }
+
+    @Test
+    fun `five items remain finite at the last index`() {
+        assertEquals(4, contentRowTargetIndex(currentIndex = 4, delta = 1, itemCount = 5))
+    }
+
+    @Test
     fun `moving backward from the first item stays at the first real index`() {
         assertEquals(0, contentRowTargetIndex(currentIndex = 0, delta = -1, itemCount = 10))
     }
@@ -21,6 +31,6 @@ class ContentRowStateTest {
         state.updateItemCount(10)
         state.updateItemCount(3)
 
-        assertEquals(0, state.selectedIndex)
+        assertEquals(2, state.selectedIndex)
     }
 }

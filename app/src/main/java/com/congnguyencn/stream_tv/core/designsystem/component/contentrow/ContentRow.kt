@@ -32,10 +32,12 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * A forward-resetting horizontal lazy layout controlled by one fixed focus target.
+ * A horizontal lazy layout controlled by one fixed focus target.
  *
  * Items move underneath [selectedItem] while that overlay stays at the leading content edge.
  * Previous items slide out beyond that edge instead of reserving an empty card-sized slot.
+ * Collections with more than five items append one duplicate cycle for a seamless forward loop;
+ * smaller collections stop at their final item.
  * Item content must not add its own focus target.
  */
 @Composable
@@ -57,8 +59,8 @@ fun ContentRow(
     val itemProvider = remember(content) {
         ContentRowScopeImpl().apply(content).build()
     }
-    val resetEdgeItemProvider = remember(itemProvider) {
-        ResetEdgeContentRowItemProvider(itemProvider)
+    val loopingItemProvider = remember(itemProvider) {
+        LoopingContentRowItemProvider(itemProvider)
     }
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -70,10 +72,10 @@ fun ContentRow(
 
     Box(modifier = modifier.fillMaxWidth()) {
         LazyLayout(
-            itemProvider = { resetEdgeItemProvider },
+            itemProvider = { loopingItemProvider },
             modifier = Modifier.fillMaxWidth(),
             measurePolicy = rememberContentRowMeasurePolicy(
-                itemProvider = resetEdgeItemProvider,
+                itemProvider = loopingItemProvider,
                 realItemCount = itemProvider.itemCount,
                 state = state,
                 contentPadding = contentPadding,
@@ -176,7 +178,7 @@ private fun ContentRowSelectionOverlay(
 
 @Composable
 private fun rememberContentRowMeasurePolicy(
-    itemProvider: ResetEdgeContentRowItemProvider,
+    itemProvider: LoopingContentRowItemProvider,
     realItemCount: Int,
     state: ContentRowState,
     contentPadding: PaddingValues,

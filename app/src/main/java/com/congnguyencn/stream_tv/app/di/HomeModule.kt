@@ -3,7 +3,6 @@ package com.congnguyencn.stream_tv.app.di
 import com.congnguyencn.stream_tv.feature.home.data.repository.DummyHomeRepository
 import com.congnguyencn.stream_tv.feature.home.data.source.HomeDummyDataSource
 import com.congnguyencn.stream_tv.feature.home.domain.repository.HomeRepository
-import com.congnguyencn.stream_tv.feature.home.domain.usecase.GetHomeSectionsUseCase
 import com.congnguyencn.stream_tv.feature.home.presentation.mapper.HomeUiMapper
 import dagger.Module
 import dagger.Provides
@@ -21,11 +20,6 @@ internal object HomeModule {
   @Provides
   @Singleton
   fun provideHomeRepository(dataSource: HomeDummyDataSource): HomeRepository = DummyHomeRepository(dataSource)
-
-  @Provides
-  @Singleton
-  fun provideGetHomeSectionsUseCase(repository: HomeRepository): GetHomeSectionsUseCase =
-    GetHomeSectionsUseCase(repository)
 
   @Provides
   @Singleton

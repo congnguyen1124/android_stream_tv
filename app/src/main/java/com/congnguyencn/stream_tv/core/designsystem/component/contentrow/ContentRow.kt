@@ -258,39 +258,21 @@ private fun rememberContentRowMeasurePolicy(
     val placedItems = mutableListOf(
       PositionedContentRowItem(selected, selectedBaseX),
     )
-    var rightCursor = selectedBaseX + selected.width + spacingPx
-    var rightIndex = selectedVirtualIndex + 1
-    if (rightIndex < itemProvider.itemCount) {
-      val item = measureItem(rightIndex)
-      placedItems += PositionedContentRowItem(item, rightCursor)
-      rightCursor += item.width + spacingPx
-    }
-
-    var leftCursor = selectedBaseX - spacingPx
-    var leftIndex = selectedVirtualIndex - 1
-    if (leftIndex >= 0) {
-      val item = measureItem(leftIndex)
-      leftCursor -= item.width
-      placedItems += PositionedContentRowItem(item, leftCursor)
-      leftCursor -= spacingPx
-    }
-
-    rightIndex += 1
-    while (rightCursor < layoutWidth - rightPadding && rightIndex < itemProvider.itemCount) {
-      val item = measureItem(rightIndex)
-      placedItems += PositionedContentRowItem(item, rightCursor)
-      rightCursor += item.width + spacingPx
-      rightIndex += 1
-    }
-
-    leftIndex -= 1
-    while (leftCursor > leftPadding && leftIndex >= 0) {
-      val item = measureItem(leftIndex)
-      leftCursor -= item.width
-      placedItems += PositionedContentRowItem(item, leftCursor)
-      leftCursor -= spacingPx
-      leftIndex -= 1
-    }
+    placedItems += positionContentRowItemsAfterSelection(
+      firstIndex = selectedVirtualIndex + 1,
+      firstX = selectedBaseX + selected.width + spacingPx,
+      itemCount = itemProvider.itemCount,
+      viewportEnd = layoutWidth - rightPadding,
+      spacingPx = spacingPx,
+      measureItem = ::measureItem,
+    )
+    placedItems += positionContentRowItemsBeforeSelection(
+      firstIndex = selectedVirtualIndex - 1,
+      firstRight = selectedBaseX - spacingPx,
+      viewportStart = leftPadding,
+      spacingPx = spacingPx,
+      measureItem = ::measureItem,
+    )
 
     val next = measuredByIndex[selectedVirtualIndex + 1]
     val previous = measuredByIndex[selectedVirtualIndex - 1]
@@ -335,3 +317,62 @@ private fun rememberContentRowMeasurePolicy(
 private data class MeasuredContentRowItem(val placeables: List<Placeable>, val width: Int, val height: Int)
 
 private data class PositionedContentRowItem(val item: MeasuredContentRowItem, val x: Int)
+
+private fun positionContentRowItemsAfterSelection(
+  firstIndex: Int,
+  firstX: Int,
+  itemCount: Int,
+  viewportEnd: Int,
+  spacingPx: Int,
+  measureItem: (index: Int) -> MeasuredContentRowItem,
+): List<PositionedContentRowItem> {
+  val positionedItems = mutableListOf<PositionedContentRowItem>()
+  var index = firstIndex
+  var cursor = firstX
+
+  while (index < itemCount && (positionedItems.isEmpty() || cursor < viewportEnd)) {
+    val item = measureItem(index)
+    positionedItems += PositionedContentRowItem(item, cursor)
+    cursor += item.width + spacingPx
+    index += 1
+  }
+  repeat(ContentRowDefaults.BeyondBoundsItemCount) {
+    if (index < itemCount) {
+      val item = measureItem(index)
+      positionedItems += PositionedContentRowItem(item, cursor)
+      cursor += item.width + spacingPx
+      index += 1
+    }
+  }
+  return positionedItems
+}
+
+private fun positionContentRowItemsBeforeSelection(
+  firstIndex: Int,
+  firstRight: Int,
+  viewportStart: Int,
+  spacingPx: Int,
+  measureItem: (index: Int) -> MeasuredContentRowItem,
+): List<PositionedContentRowItem> {
+  val positionedItems = mutableListOf<PositionedContentRowItem>()
+  var index = firstIndex
+  var cursor = firstRight
+
+  while (index >= 0 && (positionedItems.isEmpty() || cursor > viewportStart)) {
+    val item = measureItem(index)
+    cursor -= item.width
+    positionedItems += PositionedContentRowItem(item, cursor)
+    cursor -= spacingPx
+    index -= 1
+  }
+  repeat(ContentRowDefaults.BeyondBoundsItemCount) {
+    if (index >= 0) {
+      val item = measureItem(index)
+      cursor -= item.width
+      positionedItems += PositionedContentRowItem(item, cursor)
+      cursor -= spacingPx
+      index -= 1
+    }
+  }
+  return positionedItems
+}

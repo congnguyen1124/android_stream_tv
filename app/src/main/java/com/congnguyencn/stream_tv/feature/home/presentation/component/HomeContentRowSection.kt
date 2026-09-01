@@ -1,7 +1,6 @@
 package com.congnguyencn.stream_tv.feature.home.presentation.component
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -156,15 +154,13 @@ private fun HomeContentCard(
   isSelected: Boolean,
   modifier: Modifier = Modifier,
 ) {
-  val itemAlpha by animateFloatAsState(
-    targetValue = if (isSelected) 1f else 0.66f,
-    label = "HomeContentCardAlpha",
+  val titleColor by animateColorAsState(
+    targetValue = if (isSelected) StreamTvColors.NeutralWhite else StreamTvColors.Neutral20,
+    label = "HomeContentCardTitleColor",
   )
 
   Column(
-    modifier = modifier
-      .width(style.cardWidth)
-      .graphicsLayer { alpha = itemAlpha },
+    modifier = modifier.width(style.cardWidth),
   ) {
     Box(
       modifier = Modifier
@@ -210,7 +206,7 @@ private fun HomeContentCard(
     ) {
       Text(
         text = item.title,
-        color = if (isSelected) StreamTvColors.NeutralWhite else StreamTvColors.Neutral30,
+        color = titleColor,
         style = StreamTvTheme.typography.bodyLarge,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

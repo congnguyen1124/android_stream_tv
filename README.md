@@ -9,8 +9,9 @@ StreamTV là ứng dụng Android TV dùng Jetpack Compose for TV, được tổ
 - `Banner` full-width cao 600dp nằm phía sau TopBar overlay, dùng hero scrim nhiều lớp, CTA, edge pages, indicator và lifecycle-aware auto-scroll khi không focus.
 - `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop trên virtual pager dài khi có ít nhất 5 item, preload 5 page quanh viewport, scale item và đổi nền theo palette trích từ thumbnail active.
 - Focus đầu tiên thuộc về Banner; nhấn Up quay lại TopBar. Trái/phải chuyển item ngay trong carousel.
-- `Videos`, `ListSeries`, `Channels` và `Shorts` dùng `ContentRow`: horizontal lazy layout với selector cố định tại leading content edge; thumbnail, badge và metadata được tách thành hierarchy rõ ràng.
-- Ảnh online được tải bằng Coil 3; `videoUrl` và `logoUrl` đang để trống theo yêu cầu.
+- `Videos`, `ListSeries`, `Channels` và `Shorts` dùng `ContentRow`: horizontal lazy layout với selector cố định tại leading content edge và luôn đo thêm item ngoài hai biên để chuyển động không lộ khoảng trống.
+- Thumbnail không bị làm tối theo selection; title chưa selected dùng màu sáng vừa phải để vẫn giữ hierarchy.
+- Ảnh online được tải bằng Coil 3; dummy `videoUrl` dùng HLS test stream và `logoUrl` đang để trống.
 - Dependency injection dùng Hilt; graph được kiểm tra và tạo code tại compile time bằng KSP.
 
 ## Cấu trúc Home feature
@@ -24,8 +25,7 @@ feature/home/
 │   └── repository/             # DummyHomeRepository adapter
 ├── domain/
 │   ├── model/                  # Content, Video, Series, Channel, Short, HomeSection
-│   ├── repository/             # HomeRepository contract
-│   └── usecase/                # GetHomeSectionsUseCase
+│   └── repository/             # Suspend HomeRepository contract
 └── presentation/
     ├── component/              # Banner, VerticalBanner, ContentRow section, card
     ├── mapper/                 # Domain -> UI model
@@ -42,7 +42,7 @@ App composition root nằm tại `app/di/HomeModule.kt`. Presentation không t�
 
 - `StreamTvApplication` dùng `@HiltAndroidApp` để tạo application-level container.
 - `MainActivity` dùng `@AndroidEntryPoint` để kết nối Android entry point với Hilt graph.
-- `HomeModule` được cài vào `SingletonComponent`; module cung cấp `HomeDummyDataSource`, `HomeRepository`, `GetHomeSectionsUseCase` và `HomeUiMapper`.
+- `HomeModule` được cài vào `SingletonComponent`; module cung cấp `HomeDummyDataSource`, `HomeRepository` và `HomeUiMapper`.
 - Toàn bộ `HomeViewModel`, `SearchViewModel`, `SettingViewModel`, `ProfileViewModel` dùng `@HiltViewModel` và constructor injection.
 - Mọi feature Route lấy ViewModel bằng `hiltViewModel()`; không còn factory hoặc dependency container thủ công trong production code.
 
@@ -54,12 +54,13 @@ Domain giữ nguyên thuần Kotlin. Hilt wiring chỉ nằm tại app compositi
 HomeDummyDataSource
     -> DummyHomeRepository
     -> HomeDataMapper
-    -> GetHomeSectionsUseCase
     -> HomeViewModel
     -> HomeUiMapper
     -> HomeUiState
     -> HomeScreen
 ```
+
+`HomeViewModel` gọi suspend repository trực tiếp trong `viewModelScope`, hủy request cũ khi reload và không nuốt `CancellationException`. `PlayerViewModel` chuyển `playerState` thành immutable UI state bằng `map` và `stateIn(SharingStarted.Eagerly)`.
 
 `Content` là sealed hierarchy gồm:
 

@@ -126,6 +126,46 @@ class ContentRowTest {
   }
 
   @Test
+  fun trailingItemIsVisibleWhileSelectionIsStillAnimating() {
+    composeRule.setContent {
+      val focusRequester = remember { FocusRequester() }
+
+      StreamTvTheme {
+        StreamTvSurface {
+          ContentRow(
+            modifier = Modifier.width(720.dp),
+            selectedItemModifier = Modifier
+              .focusRequester(focusRequester)
+              .testTag("content-row-selected-item"),
+          ) {
+            items(count = 6) { index ->
+              Box(
+                modifier = Modifier
+                  .width(200.dp)
+                  .height(112.dp)
+                  .testTag("content-row-item-$index"),
+              )
+            }
+          }
+        }
+      }
+
+      LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+      }
+    }
+
+    composeRule.onNodeWithTag("content-row-selected-item").assertIsFocused()
+    composeRule.mainClock.autoAdvance = false
+    composeRule
+      .onNodeWithTag("content-row-selected-item")
+      .performKeyInput { pressKey(Key.DirectionRight) }
+    composeRule.mainClock.advanceTimeBy(100)
+
+    composeRule.onNodeWithTag("content-row-item-3").assertIsDisplayed()
+  }
+
+  @Test
   fun finiteRowStopsAtLastItemWithoutResetting() {
     lateinit var state: ContentRowState
 

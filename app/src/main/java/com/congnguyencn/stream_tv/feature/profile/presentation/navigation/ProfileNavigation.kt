@@ -7,14 +7,11 @@ import com.congnguyencn.stream_tv.feature.profile.presentation.ProfileRoute as P
 
 const val ProfileRoute = "profile"
 
-fun NavGraphBuilder.profileScreen(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-) {
-    composable(route = ProfileRoute) {
-        ProfileRouteContent(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-    }
+fun NavGraphBuilder.profileScreen(contentFocusRequester: FocusRequester, topBarFocusRequester: FocusRequester) {
+  composable(route = ProfileRoute) {
+    ProfileRouteContent(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+  }
 }

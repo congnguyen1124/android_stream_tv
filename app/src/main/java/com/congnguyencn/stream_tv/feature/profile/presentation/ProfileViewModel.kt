@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 internal class ProfileViewModel @Inject constructor() : ViewModel() {
-    private val mutableUiState = MutableStateFlow(ProfileUiState())
-    val uiState: StateFlow<ProfileUiState> = mutableUiState.asStateFlow()
+  private val mutableUiState = MutableStateFlow(ProfileUiState())
+  val uiState: StateFlow<ProfileUiState> = mutableUiState.asStateFlow()
 
-    fun openProfile() {
-        mutableUiState.update { it.copy(isProfileReady = true) }
-    }
+  fun openProfile() {
+    mutableUiState.update { it.copy(isProfileReady = true) }
+  }
 }

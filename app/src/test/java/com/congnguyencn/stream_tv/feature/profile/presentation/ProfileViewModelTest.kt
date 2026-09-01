@@ -5,14 +5,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProfileViewModelTest {
-    @Test
-    fun `openProfile marks profile as ready`() {
-        val viewModel = ProfileViewModel()
+  @Test
+  fun `openProfile marks profile as ready`() {
+    val viewModel = ProfileViewModel()
 
-        assertFalse(viewModel.uiState.value.isProfileReady)
+    assertFalse(viewModel.uiState.value.isProfileReady)
 
-        viewModel.openProfile()
+    viewModel.openProfile()
 
-        assertTrue(viewModel.uiState.value.isProfileReady)
-    }
+    assertTrue(viewModel.uiState.value.isProfileReady)
+  }
 }

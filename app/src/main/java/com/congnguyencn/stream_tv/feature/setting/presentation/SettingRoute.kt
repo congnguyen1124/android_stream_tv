@@ -8,16 +8,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun SettingRoute(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-    viewModel: SettingViewModel = hiltViewModel(),
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  viewModel: SettingViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    SettingScreen(
-        uiState = uiState,
-        contentFocusRequester = contentFocusRequester,
-        topBarFocusRequester = topBarFocusRequester,
-        onPrimaryActionClick = viewModel::openSetting,
-    )
+  SettingScreen(
+    uiState = uiState,
+    contentFocusRequester = contentFocusRequester,
+    topBarFocusRequester = topBarFocusRequester,
+    onPrimaryActionClick = viewModel::openSetting,
+  )
 }

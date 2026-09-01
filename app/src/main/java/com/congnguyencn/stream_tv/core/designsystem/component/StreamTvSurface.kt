@@ -11,20 +11,17 @@ import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.contentColorFor
 
 @Composable
-fun StreamTvSurface(
-    modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit,
-) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        colors = SurfaceDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.background,
-            contentColor = contentColorFor(MaterialTheme.colorScheme.background),
-        ),
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            content = content,
-        )
-    }
+fun StreamTvSurface(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
+  Surface(
+    modifier = modifier.fillMaxSize(),
+    colors = SurfaceDefaults.colors(
+      containerColor = MaterialTheme.colorScheme.background,
+      contentColor = contentColorFor(MaterialTheme.colorScheme.background),
+    ),
+  ) {
+    Box(
+      modifier = Modifier.fillMaxSize(),
+      content = content,
+    )
+  }
 }

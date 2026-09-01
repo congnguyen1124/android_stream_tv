@@ -9,45 +9,40 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 
 object ContentRowDefaults {
-    val ItemSpacing: Dp = 18.dp
-    val ContentPadding: PaddingValues = PaddingValues(horizontal = 48.dp)
-    val SelectedItemContentPadding: Dp = 2.dp
-    val SelectedItemShape: Shape = RoundedCornerShape(8.dp)
+  val ItemSpacing: Dp = 18.dp
+  val ContentPadding: PaddingValues = PaddingValues(horizontal = 48.dp)
+  val SelectedItemContentPadding: Dp = 2.dp
+  val SelectedItemShape: Shape = RoundedCornerShape(8.dp)
 
-    internal const val ScrollDurationMillis = 190
-    internal const val LoopingItemCountThreshold = 5
+  internal const val ScrollDurationMillis = 190
+  internal const val LoopingItemCountThreshold = 5
 
-    /** The fixed, transparent focus target drawn above the moving lazy items. */
-    @Composable
-    fun SelectedItem(
-        isFocused: Boolean,
-        modifier: Modifier = Modifier,
-        shape: Shape = SelectedItemShape,
-    ) {
-        val borderColor by animateColorAsState(
-            targetValue = if (isFocused) {
-                StreamTvColors.NeutralWhite
-            } else {
-                StreamTvColors.TransparentWhite20
-            },
-            label = "ContentRowSelectedItemBorder",
-        )
+  /** The fixed, transparent focus target drawn above the moving lazy items. */
+  @Composable
+  fun SelectedItem(isFocused: Boolean, modifier: Modifier = Modifier, shape: Shape = SelectedItemShape) {
+    val borderColor by animateColorAsState(
+      targetValue = if (isFocused) {
+        StreamTvColors.NeutralWhite
+      } else {
+        StreamTvColors.TransparentWhite20
+      },
+      label = "ContentRowSelectedItemBorder",
+    )
 
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .border(
-                    width = if (isFocused) 3.dp else 1.dp,
-                    color = borderColor,
-                    shape = shape,
-                ),
-        )
-    }
+    Box(
+      modifier = modifier
+        .fillMaxSize()
+        .border(
+          width = if (isFocused) 3.dp else 1.dp,
+          color = borderColor,
+          shape = shape,
+        ),
+    )
+  }
 }

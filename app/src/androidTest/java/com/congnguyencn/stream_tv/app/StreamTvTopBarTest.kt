@@ -13,68 +13,68 @@ import org.junit.Rule
 import org.junit.Test
 
 class StreamTvTopBarTest {
-    @get:Rule
-    val composeRule = createAndroidComposeRule<MainActivity>()
+  @get:Rule
+  val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @Test
-    fun destinationLabelIsOnlyVisibleWhileItemIsFocused() {
-        composeRule.onNodeWithText("Home").assertDoesNotExist()
+  @Test
+  fun destinationLabelIsOnlyVisibleWhileItemIsFocused() {
+    composeRule.onNodeWithText("Home").assertDoesNotExist()
 
-        composeRule
-            .onNodeWithTag("home-banner-carousel")
-            .performKeyInput { pressKey(Key.DirectionUp) }
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput { pressKey(Key.DirectionUp) }
 
-        composeRule.onNodeWithText("Home").assertIsDisplayed()
-        composeRule.onNodeWithText("Search").assertDoesNotExist()
-        composeRule.onNodeWithText("Setting").assertDoesNotExist()
-        composeRule.onNodeWithText("Profile").assertDoesNotExist()
-    }
+    composeRule.onNodeWithText("Home").assertIsDisplayed()
+    composeRule.onNodeWithText("Search").assertDoesNotExist()
+    composeRule.onNodeWithText("Setting").assertDoesNotExist()
+    composeRule.onNodeWithText("Profile").assertDoesNotExist()
+  }
 
-    @Test
-    fun focusingTopBarDimsScreenUntilFocusReturnsToContent() {
-        composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
+  @Test
+  fun focusingTopBarDimsScreenUntilFocusReturnsToContent() {
+    composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
 
-        composeRule
-            .onNodeWithTag("home-banner-carousel")
-            .performKeyInput { pressKey(Key.DirectionUp) }
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput { pressKey(Key.DirectionUp) }
 
-        composeRule.onNodeWithTag("stream-tv-screen-overlay").assertIsDisplayed()
+    composeRule.onNodeWithTag("stream-tv-screen-overlay").assertIsDisplayed()
 
-        composeRule
-            .onNodeWithText("Home")
-            .performKeyInput { pressKey(Key.DirectionDown) }
-        composeRule.waitForIdle()
+    composeRule
+      .onNodeWithText("Home")
+      .performKeyInput { pressKey(Key.DirectionDown) }
+    composeRule.waitForIdle()
 
-        composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
-    }
+    composeRule.onNodeWithTag("stream-tv-screen-overlay").assertDoesNotExist()
+  }
 
-    @Test
-    fun searchItemNavigatesAndMovesFocusToSearchContent() {
-        composeRule
-            .onNodeWithTag("home-banner-carousel")
-            .performKeyInput {
-                pressKey(Key.DirectionUp)
-                pressKey(Key.DirectionLeft)
-                pressKey(Key.DirectionCenter)
-            }
+  @Test
+  fun searchItemNavigatesAndMovesFocusToSearchContent() {
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput {
+        pressKey(Key.DirectionUp)
+        pressKey(Key.DirectionLeft)
+        pressKey(Key.DirectionCenter)
+      }
 
-        composeRule
-            .onNodeWithText("Open search")
-            .assertIsDisplayed()
-    }
+    composeRule
+      .onNodeWithText("Open search")
+      .assertIsDisplayed()
+  }
 
-    @Test
-    fun homeBannerStartsBehindTopBar() {
-        val bannerBounds = composeRule
-            .onNodeWithTag("home-banner-container")
-            .fetchSemanticsNode()
-            .boundsInRoot
-        val topBarBounds = composeRule
-            .onNodeWithTag("stream-tv-top-bar")
-            .fetchSemanticsNode()
-            .boundsInRoot
+  @Test
+  fun homeBannerStartsBehindTopBar() {
+    val bannerBounds = composeRule
+      .onNodeWithTag("home-banner-container")
+      .fetchSemanticsNode()
+      .boundsInRoot
+    val topBarBounds = composeRule
+      .onNodeWithTag("stream-tv-top-bar")
+      .fetchSemanticsNode()
+      .boundsInRoot
 
-        assertTrue(bannerBounds.top <= topBarBounds.top)
-        assertTrue(bannerBounds.bottom > topBarBounds.bottom)
-    }
+    assertTrue(bannerBounds.top <= topBarBounds.top)
+    assertTrue(bannerBounds.bottom > topBarBounds.bottom)
+  }
 }

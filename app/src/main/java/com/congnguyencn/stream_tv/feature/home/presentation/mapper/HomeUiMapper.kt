@@ -16,52 +16,20 @@ import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.VideoUiItem
 
 internal class HomeUiMapper {
-    fun map(sections: List<HomeSection>): List<HomeSectionUiItem> = sections.map(::map)
+  fun map(sections: List<HomeSection>): List<HomeSectionUiItem> = sections.map(::map)
 
-    private fun map(section: HomeSection): HomeSectionUiItem = HomeSectionUiItem(
-        id = section.id,
-        title = section.title,
-        viewType = section.viewType.toUi(),
-        items = section.items.map(Content::toUi),
-    )
+  private fun map(section: HomeSection): HomeSectionUiItem = HomeSectionUiItem(
+    id = section.id,
+    title = section.title,
+    viewType = section.viewType.toUi(),
+    items = section.items.map(Content::toUi),
+  )
 }
 
 private fun Content.toUi(): HomeContentUiItem = when (this) {
-    is Video -> toUi()
-    is Series -> SeriesUiItem(
-        id = id,
-        videoUrl = videoUrl,
-        thumbnailUrl = thumbnailUrl,
-        vastUrl = vastUrl,
-        title = title,
-        description = description,
-        ageRestriction = ageRestriction,
-        logoUrl = logoUrl,
-        episodes = episodes.map(Video::toUi),
-    )
-    is Channel -> ChannelUiItem(
-        id = id,
-        videoUrl = videoUrl,
-        thumbnailUrl = thumbnailUrl,
-        vastUrl = vastUrl,
-        title = title,
-        description = description,
-        ageRestriction = ageRestriction,
-        logoUrl = logoUrl,
-    )
-    is Short -> ShortUiItem(
-        id = id,
-        videoUrl = videoUrl,
-        thumbnailUrl = thumbnailUrl,
-        vastUrl = vastUrl,
-        title = title,
-        description = description,
-        ageRestriction = ageRestriction,
-        logoUrl = logoUrl,
-    )
-}
+  is Video -> toUi()
 
-private fun Video.toUi(): VideoUiItem = VideoUiItem(
+  is Series -> SeriesUiItem(
     id = id,
     videoUrl = videoUrl,
     thumbnailUrl = thumbnailUrl,
@@ -70,13 +38,48 @@ private fun Video.toUi(): VideoUiItem = VideoUiItem(
     description = description,
     ageRestriction = ageRestriction,
     logoUrl = logoUrl,
+    episodes = episodes.map(Video::toUi),
+  )
+
+  is Channel -> ChannelUiItem(
+    id = id,
+    videoUrl = videoUrl,
+    thumbnailUrl = thumbnailUrl,
+    vastUrl = vastUrl,
+    title = title,
+    description = description,
+    ageRestriction = ageRestriction,
+    logoUrl = logoUrl,
+  )
+
+  is Short -> ShortUiItem(
+    id = id,
+    videoUrl = videoUrl,
+    thumbnailUrl = thumbnailUrl,
+    vastUrl = vastUrl,
+    title = title,
+    description = description,
+    ageRestriction = ageRestriction,
+    logoUrl = logoUrl,
+  )
+}
+
+private fun Video.toUi(): VideoUiItem = VideoUiItem(
+  id = id,
+  videoUrl = videoUrl,
+  thumbnailUrl = thumbnailUrl,
+  vastUrl = vastUrl,
+  title = title,
+  description = description,
+  ageRestriction = ageRestriction,
+  logoUrl = logoUrl,
 )
 
 private fun HomeSectionViewType.toUi(): HomeSectionViewTypeUi = when (this) {
-    HomeSectionViewType.Banner -> HomeSectionViewTypeUi.Banner
-    HomeSectionViewType.VerticalBanner -> HomeSectionViewTypeUi.VerticalBanner
-    HomeSectionViewType.Videos -> HomeSectionViewTypeUi.Videos
-    HomeSectionViewType.ListSeries -> HomeSectionViewTypeUi.ListSeries
-    HomeSectionViewType.Channels -> HomeSectionViewTypeUi.Channels
-    HomeSectionViewType.Shorts -> HomeSectionViewTypeUi.Shorts
+  HomeSectionViewType.Banner -> HomeSectionViewTypeUi.Banner
+  HomeSectionViewType.VerticalBanner -> HomeSectionViewTypeUi.VerticalBanner
+  HomeSectionViewType.Videos -> HomeSectionViewTypeUi.Videos
+  HomeSectionViewType.ListSeries -> HomeSectionViewTypeUi.ListSeries
+  HomeSectionViewType.Channels -> HomeSectionViewTypeUi.Channels
+  HomeSectionViewType.Shorts -> HomeSectionViewTypeUi.Shorts
 }

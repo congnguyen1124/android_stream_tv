@@ -11,28 +11,28 @@ import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 internal class HomeViewModel @Inject constructor(
-    private val getHomeSections: GetHomeSectionsUseCase,
-    private val uiMapper: HomeUiMapper,
+  private val getHomeSections: GetHomeSectionsUseCase,
+  private val uiMapper: HomeUiMapper,
 ) : ViewModel() {
-    private val mutableUiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = mutableUiState.asStateFlow()
+  private val mutableUiState = MutableStateFlow(HomeUiState())
+  val uiState: StateFlow<HomeUiState> = mutableUiState.asStateFlow()
 
-    init {
-        loadHome()
-    }
+  init {
+    loadHome()
+  }
 
-    fun loadHome() {
-        mutableUiState.value = HomeUiState(isLoading = true)
-        mutableUiState.value = runCatching {
-            HomeUiState(
-                isLoading = false,
-                sections = uiMapper.map(getHomeSections()),
-            )
-        }.getOrElse { throwable ->
-            HomeUiState(
-                isLoading = false,
-                errorMessage = throwable.message ?: "Unable to load Home content",
-            )
-        }
+  fun loadHome() {
+    mutableUiState.value = HomeUiState(isLoading = true)
+    mutableUiState.value = runCatching {
+      HomeUiState(
+        isLoading = false,
+        sections = uiMapper.map(getHomeSections()),
+      )
+    }.getOrElse { throwable ->
+      HomeUiState(
+        isLoading = false,
+        errorMessage = throwable.message ?: "Unable to load Home content",
+      )
     }
+  }
 }

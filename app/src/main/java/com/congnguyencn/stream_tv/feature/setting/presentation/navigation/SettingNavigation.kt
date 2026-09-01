@@ -7,14 +7,11 @@ import com.congnguyencn.stream_tv.feature.setting.presentation.SettingRoute as S
 
 const val SettingRoute = "setting"
 
-fun NavGraphBuilder.settingScreen(
-    contentFocusRequester: FocusRequester,
-    topBarFocusRequester: FocusRequester,
-) {
-    composable(route = SettingRoute) {
-        SettingRouteContent(
-            contentFocusRequester = contentFocusRequester,
-            topBarFocusRequester = topBarFocusRequester,
-        )
-    }
+fun NavGraphBuilder.settingScreen(contentFocusRequester: FocusRequester, topBarFocusRequester: FocusRequester) {
+  composable(route = SettingRoute) {
+    SettingRouteContent(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+    )
+  }
 }

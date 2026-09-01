@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 internal class SearchViewModel @Inject constructor() : ViewModel() {
-    private val mutableUiState = MutableStateFlow(SearchUiState())
-    val uiState: StateFlow<SearchUiState> = mutableUiState.asStateFlow()
+  private val mutableUiState = MutableStateFlow(SearchUiState())
+  val uiState: StateFlow<SearchUiState> = mutableUiState.asStateFlow()
 
-    fun openSearch() {
-        mutableUiState.update { it.copy(isSearchReady = true) }
-    }
+  fun openSearch() {
+    mutableUiState.update { it.copy(isSearchReady = true) }
+  }
 }

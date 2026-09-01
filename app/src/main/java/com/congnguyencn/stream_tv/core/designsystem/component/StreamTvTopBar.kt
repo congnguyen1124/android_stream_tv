@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -61,10 +61,9 @@ private object StreamTvTopBarDefaults {
   /** The logo occupies slot 0; every destination is arranged as one right-aligned group after it. */
   const val FirstNavigationItemIndex = 1
   const val ItemExpansionDurationMillis = 180
-  const val OverlayFadeDurationMillis = 220
-  const val OverlayTopAlpha = 0.62f
-  const val OverlayMidStop = 0.5f
-  const val OverlayMidAlpha = 0.24f
+  const val OverlayFadeDurationMillis = 300
+  const val OverlayMidStop = 0.55f
+  const val OverlayMidAlpha = 0.45f
 }
 
 @Composable
@@ -158,11 +157,12 @@ fun StreamTvTopBar(
 }
 
 /**
- * Scrim painted behind the bar's items, fading downwards into the content.
+ * Scrim painted behind the bar's items, running the bar's own height from solid surface at the top
+ * edge to nothing at the bottom.
  *
  * Screens raise it when whatever sits under the bar would otherwise swallow the icons — a bright
  * poster, a scrolled row — and drop it again when the content behind already carries its own
- * gradient. It is deliberately weak: enough separation to read the items, not a band across the top.
+ * gradient, so the fade is what the viewer reads as the bar arriving rather than a band blinking on.
  */
 @Composable
 private fun BoxScope.TopBarOverlay(visible: Boolean) {
@@ -170,7 +170,7 @@ private fun BoxScope.TopBarOverlay(visible: Boolean) {
   val overlayBrush = remember(surfaceColor) {
     Brush.verticalGradient(
       colorStops = arrayOf(
-        0f to surfaceColor.copy(alpha = StreamTvTopBarDefaults.OverlayTopAlpha),
+        0f to surfaceColor,
         StreamTvTopBarDefaults.OverlayMidStop to surfaceColor.copy(
           alpha = StreamTvTopBarDefaults.OverlayMidAlpha,
         ),
@@ -180,17 +180,16 @@ private fun BoxScope.TopBarOverlay(visible: Boolean) {
   }
 
   AnimatedVisibility(
+    // matchParentSize, not a height of its own: the scrim is the bar's backdrop, so it tracks the
+    // bar's height without ever contributing to it.
+    modifier = Modifier.matchParentSize(),
     visible = visible,
-    modifier = Modifier.align(Alignment.TopCenter),
     enter = fadeIn(animationSpec = tween(StreamTvTopBarDefaults.OverlayFadeDurationMillis)),
     exit = fadeOut(animationSpec = tween(StreamTvTopBarDefaults.OverlayFadeDurationMillis)),
   ) {
     Box(
       modifier = Modifier
-        .fillMaxWidth()
-        // requiredHeight, not height: the bar is 80.dp tall, so a coerced height would cut the
-        // gradient off at the bar's own edge instead of letting it fade out over the content.
-        .requiredHeight(StreamTvDimensions.TopBarOverlayHeight)
+        .fillMaxSize()
         .background(overlayBrush)
         .testTag("stream-tv-top-bar-overlay"),
     )

@@ -1,7 +1,10 @@
 package com.congnguyencn.stream_tv.feature.home.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.assertIsDisplayed
@@ -116,6 +119,33 @@ class HomeContentTest {
     composeRule.waitForIdle()
 
     assertEquals(listOf(false, true), overlayVisibilityChanges)
+  }
+
+  @Test
+  fun topBarOverlayIsLoweredWhenHomeLeavesTheComposition() {
+    val overlayVisibilityChanges = mutableListOf<Boolean>()
+    var isHomeComposed by mutableStateOf(true)
+
+    composeRule.setContent {
+      if (isHomeComposed) {
+        HomeContentUnderTest(
+          uiState = HomeUiState(isLoading = false, sections = listOf(bannerSection(), videoSection())),
+          isTopBarFocused = false,
+          onTopBarOverlayVisibilityChange = overlayVisibilityChanges::add,
+        )
+      }
+    }
+
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput { pressKey(Key.DirectionDown) }
+    composeRule.waitForIdle()
+
+    // The scrim outlives Home, so leaving without lowering it strands a band over the next screen.
+    isHomeComposed = false
+    composeRule.waitForIdle()
+
+    assertEquals(listOf(false, true, false), overlayVisibilityChanges)
   }
 
   private fun setHomeContent(

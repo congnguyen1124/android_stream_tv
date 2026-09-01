@@ -206,7 +206,8 @@ private fun ControllerTitleAndActions(
         }
         .onFocusChanged {
           if (it.hasFocus) onFocusTargetChanged(PlayerControllerFocusTarget.Title)
-        },
+        }
+        .testTag("player-controller-title"),
     )
 
     Row(horizontalArrangement = Arrangement.spacedBy(PlayerControllerDefaults.ActionSpacing)) {

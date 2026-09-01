@@ -42,8 +42,9 @@ import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettin
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingsUiState
 
 private object PlayerSettingSectionDefaults {
-  val ItemShape = RoundedCornerShape(10.dp)
+  val ItemShape = RoundedCornerShape(8.dp)
   val ItemIconSize = 24.dp
+  val TrailingIconSize = 16.dp
 }
 
 @Composable
@@ -73,12 +74,12 @@ internal fun PlayerSettingRootSection(
       .fillMaxSize()
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft)
       .focusGroup(),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     PlayerSectionHeader(title = stringResource(R.string.player_settings))
+    Spacer(modifier = Modifier.size(16.dp))
     LazyColumn(
       modifier = Modifier.weight(1f),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
       items(
         items = settings.items,
@@ -123,9 +124,9 @@ internal fun PlayerSettingOptionsSection(
       .fillMaxSize()
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft)
       .focusGroup(),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     PlayerSectionHeader(title = stringResource(item.category.titleResId()))
+    Spacer(modifier = Modifier.size(20.dp))
     LazyColumn(
       modifier = Modifier.weight(1f),
       verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -153,7 +154,7 @@ internal fun PlayerSettingOptionsSection(
 internal fun PlayerSectionHeader(title: String, modifier: Modifier = Modifier) {
   Text(
     text = title,
-    modifier = modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+    modifier = modifier,
     color = StreamTvColors.NeutralWhite,
     style = StreamTvTheme.typography.headlineLarge,
   )
@@ -174,7 +175,7 @@ private fun PlayerSettingRootItem(
       .testTag("player-setting-${item.category.name.lowercase()}"),
   ) {
     Row(
-      modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+      modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(
@@ -183,7 +184,7 @@ private fun PlayerSettingRootItem(
         modifier = Modifier.size(PlayerSettingSectionDefaults.ItemIconSize),
         tint = LocalContentColor.current,
       )
-      Spacer(modifier = Modifier.width(16.dp))
+      Spacer(modifier = Modifier.width(8.dp))
       Column(modifier = Modifier.weight(1f)) {
         Text(
           text = stringResource(item.category.titleResId()),
@@ -200,7 +201,7 @@ private fun PlayerSettingRootItem(
       Icon(
         imageVector = ImageVector.vectorResource(R.drawable.ic_player_chevron_right),
         contentDescription = null,
-        modifier = Modifier.size(PlayerSettingSectionDefaults.ItemIconSize),
+        modifier = Modifier.size(PlayerSettingSectionDefaults.TrailingIconSize),
         tint = LocalContentColor.current,
       )
     }
@@ -222,7 +223,7 @@ private fun PlayerSettingOptionItem(
       .testTag("player-setting-option-${option.id}"),
   ) {
     Row(
-      modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+      modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
@@ -236,7 +237,7 @@ private fun PlayerSettingOptionItem(
         Icon(
           imageVector = ImageVector.vectorResource(R.drawable.ic_player_check),
           contentDescription = stringResource(R.string.player_setting_selected),
-          modifier = Modifier.size(PlayerSettingSectionDefaults.ItemIconSize),
+          modifier = Modifier.size(PlayerSettingSectionDefaults.TrailingIconSize),
           tint = LocalContentColor.current,
         )
       }

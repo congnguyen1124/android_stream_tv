@@ -62,7 +62,7 @@ private object StreamTvTopBarDefaults {
   const val FirstNavigationItemIndex = 1
   const val ItemExpansionDurationMillis = 180
   const val OverlayFadeDurationMillis = 300
-  const val OverlayMidStop = 0.55f
+  const val OverlayMidStop = 0.85f
   const val OverlayMidAlpha = 0.45f
 }
 

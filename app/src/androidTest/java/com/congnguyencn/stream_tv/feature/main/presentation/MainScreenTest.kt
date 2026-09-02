@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
@@ -28,8 +29,45 @@ class MainScreenTest {
 
     composeRule.onNodeWithText("Home").assertIsDisplayed()
     composeRule.onNodeWithText("Search").assertDoesNotExist()
+    composeRule.onNodeWithText("Calendar").assertDoesNotExist()
     composeRule.onNodeWithText("Setting").assertDoesNotExist()
     composeRule.onNodeWithText("Profile").assertDoesNotExist()
+  }
+
+  @Test
+  fun calendarItemNavigatesWithoutTakingFocusOffTheTopBar() {
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput {
+        pressKey(Key.DirectionUp)
+        pressKey(Key.DirectionRight)
+        pressKey(Key.DirectionCenter)
+      }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag("calendar-focused-stack").assertIsDisplayed()
+    composeRule.onNodeWithText("Calendar").assertIsFocused()
+  }
+
+  @Test
+  fun calendarTopBarDownKeyHandsFocusToTheProgramSelector() {
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput {
+        pressKey(Key.DirectionUp)
+        pressKey(Key.DirectionRight)
+        pressKey(Key.DirectionCenter)
+      }
+    composeRule.waitUntil(timeoutMillis = 3_000) {
+      composeRule.onAllNodesWithTag("calendar-selected-program").fetchSemanticsNodes().isNotEmpty()
+    }
+
+    composeRule
+      .onNodeWithText("Calendar")
+      .performKeyInput { pressKey(Key.DirectionDown) }
+    composeRule.waitForIdle()
+
+    composeRule.onNodeWithTag("calendar-selected-program").assertIsFocused()
   }
 
   @Test

@@ -93,7 +93,7 @@ fun StreamTvTopBar(
   }
   val horizontalArrangement = rememberRightAlignedTopBarArrangement()
 
-  Box(
+  Surface(
     modifier = modifier
       .fillMaxWidth()
       .height(StreamTvDimensions.TopBarGradientHeight)

@@ -38,8 +38,8 @@ import coil3.compose.AsyncImage
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvSurface
 import com.congnguyencn.stream_tv.core.designsystem.component.lazyfocusedstack.LazyFocusedStack
 import com.congnguyencn.stream_tv.core.designsystem.component.lazyfocusedstack.LazyFocusedStackColumn
-import com.congnguyencn.stream_tv.core.designsystem.component.lazyfocusedstack.LazyFocusedStackItem
 import com.congnguyencn.stream_tv.core.designsystem.component.lazyfocusedstack.LazyFocusedStackDefaults
+import com.congnguyencn.stream_tv.core.designsystem.component.lazyfocusedstack.LazyFocusedStackItem
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.core.designsystem.tokens.StreamTvDimensions
@@ -67,16 +67,19 @@ internal fun CalendarScreen(
   modifier: Modifier = Modifier,
 ) {
   Box(
-    modifier = modifier.fillMaxSize()
+    modifier = modifier.fillMaxSize(),
   ) {
     when {
       uiState.isLoading -> CalendarMessage("Loading program guide…")
+
       uiState.errorMessage != null -> CalendarMessage(uiState.errorMessage)
+
       uiState.schedule != null -> CalendarGuide(
         schedule = uiState.schedule,
         contentFocusRequester = contentFocusRequester,
         topBarFocusRequester = topBarFocusRequester,
       )
+
       else -> CalendarMessage("No programs are available for this day")
     }
   }

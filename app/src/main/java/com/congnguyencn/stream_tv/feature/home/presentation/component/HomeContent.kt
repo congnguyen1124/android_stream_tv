@@ -229,6 +229,16 @@ private fun HomeSection(
       onItemClick = onItemClick,
     )
 
+    HomeSectionViewTypeUi.VideosPopular -> HomeContentRowSection(
+      sectionId = section.id,
+      title = section.title,
+      items = section.items.requireItemsOfType<VideoUiItem>(),
+      style = HomeContentRowStyle.PopularVideo,
+      sectionFocusRequester = sectionFocusRequester,
+      modifier = modifier,
+      onItemClick = onItemClick,
+    )
+
     HomeSectionViewTypeUi.ListSeries -> HomeContentRowSection(
       sectionId = section.id,
       title = section.title,
@@ -254,6 +264,16 @@ private fun HomeSection(
       title = section.title,
       items = section.items.requireItemsOfType<ShortUiItem>(),
       style = HomeContentRowStyle.Short,
+      sectionFocusRequester = sectionFocusRequester,
+      modifier = modifier,
+      onItemClick = onItemClick,
+    )
+
+    HomeSectionViewTypeUi.ShortPopular -> HomeContentRowSection(
+      sectionId = section.id,
+      title = section.title,
+      items = section.items.requireItemsOfType<ShortUiItem>(),
+      style = HomeContentRowStyle.PopularShort,
       sectionFocusRequester = sectionFocusRequester,
       modifier = modifier,
       onItemClick = onItemClick,

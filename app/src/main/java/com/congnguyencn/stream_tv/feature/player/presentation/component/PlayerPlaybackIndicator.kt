@@ -61,17 +61,11 @@ private object PlayerPlaybackIndicatorDefaults {
  * center glyph.
  */
 @Immutable
-internal data class PlayerPlaybackEffect(
-  val sequence: Int,
-  val glyph: PlayerPlaybackGlyph,
-)
+internal data class PlayerPlaybackEffect(val sequence: Int, val glyph: PlayerPlaybackGlyph)
 
 /** Shows one short play/pause acknowledgement for an explicit user click. */
 @Composable
-internal fun PlayerPlaybackIndicator(
-  effect: PlayerPlaybackEffect?,
-  modifier: Modifier = Modifier,
-) {
+internal fun PlayerPlaybackIndicator(effect: PlayerPlaybackEffect?, modifier: Modifier = Modifier) {
   val progress = remember { Animatable(1f) }
 
   LaunchedEffect(effect?.sequence) {
@@ -102,11 +96,7 @@ internal fun PlayerPlaybackIndicator(
 }
 
 @Composable
-private fun PlayerPlaybackEffectContent(
-  glyph: PlayerPlaybackGlyph,
-  progress: Float,
-  modifier: Modifier = Modifier,
-) {
+private fun PlayerPlaybackEffectContent(glyph: PlayerPlaybackGlyph, progress: Float, modifier: Modifier = Modifier) {
   val enterProgress = (progress / PlayerPlaybackIndicatorDefaults.EnterEnd).coerceIn(0f, 1f)
   val exitProgress = (
     (progress - PlayerPlaybackIndicatorDefaults.ExitStart) /

@@ -155,35 +155,28 @@ internal class CalendarDummyDataSource {
     ),
   )
 
-  private fun programs(
-    channelId: String,
-    entries: List<ProgramEntry>,
-  ): List<CalendarProgramData> = entries.mapIndexed { index, entry ->
-    CalendarProgramData(
-      programId = "$channelId-${index + 1}",
-      startTime = "$ScheduleDate ${entry.start.toScheduleTime()}",
-      stopTime = if (entry.stop == "24:00") {
-        "$NextDate 00:00:00:000"
-      } else {
-        "$ScheduleDate ${entry.stop.toScheduleTime()}"
-      },
-      title = entry.title,
-      description = "${entry.title} on StreamTV.",
-      thumbnailUrl = entry.thumbnailUrl,
-    )
-  }
+  private fun programs(channelId: String, entries: List<ProgramEntry>): List<CalendarProgramData> =
+    entries.mapIndexed { index, entry ->
+      CalendarProgramData(
+        programId = "$channelId-${index + 1}",
+        startTime = "$ScheduleDate ${entry.start.toScheduleTime()}",
+        stopTime = if (entry.stop == "24:00") {
+          "$NextDate 00:00:00:000"
+        } else {
+          "$ScheduleDate ${entry.stop.toScheduleTime()}"
+        },
+        title = entry.title,
+        description = "${entry.title} on StreamTV.",
+        thumbnailUrl = entry.thumbnailUrl,
+      )
+    }
 
   private fun entry(start: String, stop: String, title: String, thumbnailUrl: String): ProgramEntry =
     ProgramEntry(start, stop, title, thumbnailUrl)
 
   private fun String.toScheduleTime(): String = "$this:00:000"
 
-  private data class ProgramEntry(
-    val start: String,
-    val stop: String,
-    val title: String,
-    val thumbnailUrl: String,
-  )
+  private data class ProgramEntry(val start: String, val stop: String, val title: String, val thumbnailUrl: String)
 
   private companion object {
     const val ScheduleDate = "2026-09-02"

@@ -22,6 +22,12 @@ internal class HomeDummyDataSource {
       items = featuredVideos.reversed(),
     ),
     HomeSectionData(
+      id = "popular-videos",
+      title = "Popular videos",
+      viewType = HomeSectionViewTypeData.VideosPopular,
+      items = featuredVideos,
+    ),
+    HomeSectionData(
       id = "documentary-series",
       title = "Documentary series",
       viewType = HomeSectionViewTypeData.ListSeries,
@@ -44,6 +50,12 @@ internal class HomeDummyDataSource {
       title = "Fresh shorts",
       viewType = HomeSectionViewTypeData.Shorts,
       items = discoveryShorts.reversed(),
+    ),
+    HomeSectionData(
+      id = "popular-shorts",
+      title = "Popular shorts",
+      viewType = HomeSectionViewTypeData.ShortPopular,
+      items = discoveryShorts,
     ),
   )
 

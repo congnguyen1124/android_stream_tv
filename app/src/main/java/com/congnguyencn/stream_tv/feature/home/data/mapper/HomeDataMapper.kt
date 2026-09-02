@@ -79,7 +79,9 @@ private fun HomeSectionViewTypeData.toDomain(): HomeSectionViewType = when (this
   HomeSectionViewTypeData.Banner -> HomeSectionViewType.Banner
   HomeSectionViewTypeData.VerticalBanner -> HomeSectionViewType.VerticalBanner
   HomeSectionViewTypeData.Videos -> HomeSectionViewType.Videos
+  HomeSectionViewTypeData.VideosPopular -> HomeSectionViewType.VideosPopular
   HomeSectionViewTypeData.ListSeries -> HomeSectionViewType.ListSeries
   HomeSectionViewTypeData.Channels -> HomeSectionViewType.Channels
   HomeSectionViewTypeData.Shorts -> HomeSectionViewType.Shorts
+  HomeSectionViewTypeData.ShortPopular -> HomeSectionViewType.ShortPopular
 }

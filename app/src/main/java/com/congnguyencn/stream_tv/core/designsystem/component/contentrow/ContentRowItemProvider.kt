@@ -54,9 +54,12 @@ internal class ContentRowItemProvider(private val intervals: List<ContentRowInte
  * The duplicate cycle keeps the viewport populated while the last real item moves out and the
  * first item moves under the fixed selector. Smaller collections remain finite.
  */
-internal class LoopingContentRowItemProvider(private val source: ContentRowItemProvider) : LazyLayoutItemProvider {
+internal class LoopingContentRowItemProvider(
+  private val source: ContentRowItemProvider,
+  loopingEnabled: Boolean = true,
+) : LazyLayoutItemProvider {
   val isLoopingEnabled: Boolean =
-    source.itemCount > ContentRowDefaults.LoopingItemCountThreshold
+    loopingEnabled && source.itemCount > ContentRowDefaults.LoopingItemCountThreshold
 
   override val itemCount: Int = source.itemCount * if (isLoopingEnabled) 2 else 1
 

@@ -20,8 +20,10 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.feature.home.presentation.component.HomeContent
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionViewTypeUi
+import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.VideoUiItem
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -58,6 +60,39 @@ class HomeContentTest {
 
     composeRule
       .onNodeWithTag("home-content-row-trending")
+      .assertIsDisplayed()
+  }
+
+  @Test
+  fun popularVideoRowDisplaysItsRankArtwork() {
+    setHomeContent(
+      uiState = HomeUiState(isLoading = false, sections = listOf(popularVideoSection())),
+    )
+
+    composeRule
+      .onNodeWithTag("home-content-row-popular-videos-rank-1")
+      .assertIsDisplayed()
+
+    val rankBounds = composeRule
+      .onNodeWithTag("home-content-row-popular-videos-rank-1")
+      .fetchSemanticsNode()
+      .boundsInRoot
+    val cardBounds = composeRule
+      .onNodeWithTag("home-content-video-popular")
+      .fetchSemanticsNode()
+      .boundsInRoot
+    assertTrue(rankBounds.left < cardBounds.left)
+    assertTrue(rankBounds.top < cardBounds.top)
+  }
+
+  @Test
+  fun popularShortRowDisplaysItsRankArtwork() {
+    setHomeContent(
+      uiState = HomeUiState(isLoading = false, sections = listOf(popularShortSection())),
+    )
+
+    composeRule
+      .onNodeWithTag("home-content-row-popular-shorts-rank-1")
       .assertIsDisplayed()
   }
 
@@ -199,7 +234,33 @@ class HomeContentTest {
     items = listOf(video(id = "video-2", title = "Second wind")),
   )
 
+  private fun popularVideoSection() = HomeSectionUiItem(
+    id = "popular-videos",
+    title = "Popular videos",
+    viewType = HomeSectionViewTypeUi.VideosPopular,
+    items = listOf(video(id = "video-popular", title = "The last ascent")),
+  )
+
+  private fun popularShortSection() = HomeSectionUiItem(
+    id = "popular-shorts",
+    title = "Popular shorts",
+    viewType = HomeSectionViewTypeUi.ShortPopular,
+    items = listOf(short(id = "short-popular", title = "Wild encounter")),
+  )
+
   private fun video(id: String, title: String) = VideoUiItem(
+    id = id,
+    videoUrl = "",
+    trailerUrl = "",
+    thumbnailUrl = "https://example.com/$id.jpg",
+    vastUrl = "",
+    title = title,
+    description = "Description",
+    ageRestriction = "P",
+    logoUrl = "",
+  )
+
+  private fun short(id: String, title: String) = ShortUiItem(
     id = id,
     videoUrl = "",
     trailerUrl = "",

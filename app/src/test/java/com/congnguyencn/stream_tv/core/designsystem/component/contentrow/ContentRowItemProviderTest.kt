@@ -25,7 +25,15 @@ class ContentRowItemProviderTest {
     assertEquals(5, provider.itemCount)
   }
 
-  private fun loopingProvider(itemCount: Int): LoopingContentRowItemProvider {
+  @Test
+  fun `explicitly disabling looping keeps a large collection finite`() {
+    val provider = loopingProvider(itemCount = 8, loopingEnabled = false)
+
+    assertFalse(provider.isLoopingEnabled)
+    assertEquals(8, provider.itemCount)
+  }
+
+  private fun loopingProvider(itemCount: Int, loopingEnabled: Boolean = true): LoopingContentRowItemProvider {
     val source = ContentRowScopeImpl().apply {
       items(
         count = itemCount,
@@ -33,6 +41,9 @@ class ContentRowItemProviderTest {
         contentType = { "content" },
       ) { }
     }.build()
-    return LoopingContentRowItemProvider(source)
+    return LoopingContentRowItemProvider(
+      source = source,
+      loopingEnabled = loopingEnabled,
+    )
   }
 }

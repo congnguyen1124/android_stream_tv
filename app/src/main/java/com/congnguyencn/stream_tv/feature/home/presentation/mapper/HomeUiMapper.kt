@@ -83,7 +83,9 @@ private fun HomeSectionViewType.toUi(): HomeSectionViewTypeUi = when (this) {
   HomeSectionViewType.Banner -> HomeSectionViewTypeUi.Banner
   HomeSectionViewType.VerticalBanner -> HomeSectionViewTypeUi.VerticalBanner
   HomeSectionViewType.Videos -> HomeSectionViewTypeUi.Videos
+  HomeSectionViewType.VideosPopular -> HomeSectionViewTypeUi.VideosPopular
   HomeSectionViewType.ListSeries -> HomeSectionViewTypeUi.ListSeries
   HomeSectionViewType.Channels -> HomeSectionViewTypeUi.Channels
   HomeSectionViewType.Shorts -> HomeSectionViewTypeUi.Shorts
+  HomeSectionViewType.ShortPopular -> HomeSectionViewTypeUi.ShortPopular
 }

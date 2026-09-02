@@ -3,6 +3,7 @@ package com.congnguyencn.stream_tv.feature.home.presentation.component
 import com.congnguyencn.stream_tv.feature.home.presentation.HomeUiState
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.HomeSectionViewTypeUi
+import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
 import com.congnguyencn.stream_tv.feature.home.presentation.model.VideoUiItem
 
 /**
@@ -40,6 +41,20 @@ internal object HomePreviewData {
     ),
   )
 
+  val Shorts: List<ShortUiItem> = Videos.map { video ->
+    ShortUiItem(
+      id = video.id.replace("video", "short"),
+      videoUrl = video.videoUrl,
+      trailerUrl = video.trailerUrl,
+      thumbnailUrl = video.thumbnailUrl,
+      vastUrl = video.vastUrl,
+      title = video.title,
+      description = video.description,
+      ageRestriction = video.ageRestriction,
+      logoUrl = video.logoUrl,
+    )
+  }
+
   val BannerSection: HomeSectionUiItem = HomeSectionUiItem(
     id = "featured",
     title = "Featured today",
@@ -61,9 +76,29 @@ internal object HomePreviewData {
     items = Videos.asReversed(),
   )
 
+  val PopularVideosSection: HomeSectionUiItem = HomeSectionUiItem(
+    id = "popular-videos",
+    title = "Popular videos",
+    viewType = HomeSectionViewTypeUi.VideosPopular,
+    items = Videos,
+  )
+
+  val PopularShortsSection: HomeSectionUiItem = HomeSectionUiItem(
+    id = "popular-shorts",
+    title = "Popular shorts",
+    viewType = HomeSectionViewTypeUi.ShortPopular,
+    items = Shorts,
+  )
+
   val LoadedUiState: HomeUiState = HomeUiState(
     isLoading = false,
-    sections = listOf(BannerSection, VideosSection, ContinueWatchingSection),
+    sections = listOf(
+      BannerSection,
+      PopularVideosSection,
+      VideosSection,
+      PopularShortsSection,
+      ContinueWatchingSection,
+    ),
   )
 
   private fun video(id: String, title: String, description: String) = VideoUiItem(

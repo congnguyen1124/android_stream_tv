@@ -209,6 +209,48 @@ class ContentRowTest {
   }
 
   @Test
+  fun largeRowStopsAtLastItemWhenLoopingIsDisabled() {
+    lateinit var state: ContentRowState
+
+    composeRule.setContent {
+      val focusRequester = remember { FocusRequester() }
+      state = rememberContentRowState(initialSelectedIndex = 7)
+
+      StreamTvTheme {
+        StreamTvSurface {
+          ContentRow(
+            state = state,
+            loopingEnabled = false,
+            modifier = Modifier.width(720.dp),
+            selectedItemModifier = Modifier
+              .focusRequester(focusRequester)
+              .testTag("content-row-selected-item"),
+          ) {
+            items(count = 8) { index ->
+              Box(
+                modifier = Modifier
+                  .width(200.dp)
+                  .height(112.dp)
+                  .testTag("content-row-item-$index"),
+              )
+            }
+          }
+        }
+      }
+
+      LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    }
+
+    composeRule
+      .onNodeWithTag("content-row-selected-item")
+      .assertIsFocused()
+      .performKeyInput { pressKey(Key.DirectionRight) }
+    composeRule.waitForIdle()
+
+    assertEquals(7, state.selectedIndex)
+  }
+
+  @Test
   fun leftFromFirstItemUsesDefaultFocusSearch() {
     composeRule.setContent {
       val contentRowFocusRequester = remember { FocusRequester() }

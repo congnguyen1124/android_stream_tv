@@ -20,8 +20,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -221,6 +221,7 @@ private fun PlayerSection.isSettingSection(): Boolean =
 
 private fun compactSettingPanelHeight(section: PlayerSection, uiState: PlayerUiState) = when (section) {
   PlayerSection.Settings -> uiState.settings.items.size to PlayerSideSectionDefaults.CompactRootItemHeight
+
   is PlayerSection.SettingOptions ->
     (uiState.settings.item(section.category)?.options?.size ?: 0) to
       PlayerSideSectionDefaults.CompactOptionItemHeight

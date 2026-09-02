@@ -26,6 +26,9 @@ class ContentRowState internal constructor(initialSelectedIndex: Int) {
   internal var itemCount by mutableIntStateOf(0)
     private set
 
+  internal var isLoopingEnabled by mutableStateOf(false)
+    private set
+
   internal var animationOffsetPx by mutableFloatStateOf(0f)
     private set
 
@@ -41,18 +44,24 @@ class ContentRowState internal constructor(initialSelectedIndex: Int) {
   suspend fun scrollToItem(index: Int) {
     if (itemCount == 0) return
     Snapshot.withMutableSnapshot {
-      selectedIndex = normalizeContentRowIndex(index, itemCount)
+      selectedIndex = normalizeContentRowIndex(index, itemCount, isLoopingEnabled)
       animationOffsetPx = 0f
     }
   }
 
-  internal fun updateItemCount(newItemCount: Int) {
+  internal fun updateItemCount(newItemCount: Int, loopingEnabled: Boolean = isContentRowLoopingEnabled(newItemCount)) {
     require(newItemCount >= 0) { "ContentRow item count must be non-negative" }
-    if (itemCount == newItemCount) return
+    val newIsLoopingEnabled = loopingEnabled && isContentRowLoopingEnabled(newItemCount)
+    if (itemCount == newItemCount && isLoopingEnabled == newIsLoopingEnabled) return
 
     Snapshot.withMutableSnapshot {
       itemCount = newItemCount
-      selectedIndex = normalizeContentRowIndex(selectedIndex, newItemCount)
+      isLoopingEnabled = newIsLoopingEnabled
+      selectedIndex = normalizeContentRowIndex(
+        index = selectedIndex,
+        itemCount = newItemCount,
+        loopingEnabled = newIsLoopingEnabled,
+      )
       if (newItemCount == 0) {
         animationOffsetPx = 0f
         selectionBounds = ContentRowSelectionBounds.Empty
@@ -74,7 +83,7 @@ class ContentRowState internal constructor(initialSelectedIndex: Int) {
     val isAtStart = direction < 0 && selectedIndex == 0
     val isAtFiniteEnd = direction > 0 &&
       selectedIndex == itemCount - 1 &&
-      !isContentRowLoopingEnabled(itemCount)
+      !isLoopingEnabled
     return !isAtStart && !isAtFiniteEnd
   }
 
@@ -107,6 +116,7 @@ class ContentRowState internal constructor(initialSelectedIndex: Int) {
             currentIndex = selectedIndex,
             delta = normalizedDirection,
             itemCount = itemCount,
+            loopingEnabled = isLoopingEnabled,
           )
         }
         animationOffsetPx = 0f
@@ -135,12 +145,17 @@ internal data class ContentRowSelectionBounds(val left: Int, val top: Int, val w
   }
 }
 
-internal fun contentRowTargetIndex(currentIndex: Int, delta: Int, itemCount: Int): Int {
+internal fun contentRowTargetIndex(
+  currentIndex: Int,
+  delta: Int,
+  itemCount: Int,
+  loopingEnabled: Boolean = isContentRowLoopingEnabled(itemCount),
+): Int {
   if (itemCount <= 0) return 0
   return when {
     delta > 0 &&
       currentIndex >= itemCount - 1 &&
-      isContentRowLoopingEnabled(itemCount) -> 0
+      loopingEnabled -> 0
 
     delta > 0 -> (currentIndex + 1).coerceAtMost(itemCount - 1)
 
@@ -153,9 +168,9 @@ internal fun contentRowTargetIndex(currentIndex: Int, delta: Int, itemCount: Int
 internal fun isContentRowLoopingEnabled(itemCount: Int): Boolean =
   itemCount > ContentRowDefaults.LoopingItemCountThreshold
 
-private fun normalizeContentRowIndex(index: Int, itemCount: Int): Int = when {
+private fun normalizeContentRowIndex(index: Int, itemCount: Int, loopingEnabled: Boolean): Int = when {
   itemCount <= 0 -> 0
-  isContentRowLoopingEnabled(itemCount) -> index.floorMod(itemCount)
+  loopingEnabled -> index.floorMod(itemCount)
   else -> index.coerceIn(0, itemCount - 1)
 }
 

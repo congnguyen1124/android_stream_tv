@@ -1,6 +1,7 @@
 package com.congnguyencn.stream_tv.feature.home.presentation.component
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,12 +27,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
+import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvNetworkImage
 import com.congnguyencn.stream_tv.core.designsystem.component.contentrow.ContentRow
 import com.congnguyencn.stream_tv.core.designsystem.component.contentrow.itemsIndexed
@@ -44,18 +48,30 @@ import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
 
 private val ContentThumbnailShape = RoundedCornerShape(8.dp)
 private val FocusFramePadding = 2.dp
+private val RankedItemSpacing = 32.dp
+private val RankArtworkHeight = 103.dp
+private val RankArtworkHorizontalOffset = (-30).dp
+private val RankArtworkVerticalOffset = (-16).dp
 
 internal enum class HomeContentRowStyle(
   val cardWidth: Dp,
   val aspectRatio: Float,
   val detailHeight: Dp,
   val descriptionMaxLines: Int,
+  val isRanked: Boolean = false,
 ) {
   Video(
     cardWidth = 272.dp,
     aspectRatio = 16f / 9f,
     detailHeight = 52.dp,
     descriptionMaxLines = 1,
+  ),
+  PopularVideo(
+    cardWidth = 272.dp,
+    aspectRatio = 16f / 9f,
+    detailHeight = 52.dp,
+    descriptionMaxLines = 1,
+    isRanked = true,
   ),
   Series(
     cardWidth = 272.dp,
@@ -74,6 +90,13 @@ internal enum class HomeContentRowStyle(
     aspectRatio = 2f / 3f,
     detailHeight = 70.dp,
     descriptionMaxLines = 2,
+  ),
+  PopularShort(
+    cardWidth = 152.dp,
+    aspectRatio = 2f / 3f,
+    detailHeight = 70.dp,
+    descriptionMaxLines = 2,
+    isRanked = true,
   ),
   ;
 
@@ -113,7 +136,8 @@ internal fun HomeContentRowSection(
       modifier = Modifier
         .fillMaxWidth()
         .testTag("home-content-row-$sectionId"),
-      itemSpacing = 18.dp,
+      itemSpacing = if (style.isRanked) RankedItemSpacing else 18.dp,
+      loopingEnabled = !style.isRanked,
       selectedItemModifier = Modifier
         .focusRequester(sectionFocusRequester)
         .testTag("home-content-row-$sectionId-selected-item"),
@@ -136,6 +160,8 @@ internal fun HomeContentRowSection(
           item = item,
           style = style,
           isSelected = index == state.selectedIndex,
+          rank = (index + 1).takeIf { style.isRanked },
+          rankTestTag = "home-content-row-$sectionId-rank-${index + 1}",
           modifier = Modifier.testTag("home-content-${item.id}"),
         )
       }
@@ -167,6 +193,8 @@ private fun HomeContentCard(
   item: HomeContentUiItem,
   style: HomeContentRowStyle,
   isSelected: Boolean,
+  rank: Int?,
+  rankTestTag: String,
   modifier: Modifier = Modifier,
 ) {
   val titleColor by animateColorAsState(
@@ -180,34 +208,52 @@ private fun HomeContentCard(
     Box(
       modifier = Modifier
         .fillMaxWidth()
-        .aspectRatio(style.aspectRatio)
-        .clip(ContentThumbnailShape)
-        .background(StreamTvColors.Neutral90),
+        .aspectRatio(style.aspectRatio),
     ) {
-      StreamTvNetworkImage(
-        imageUrl = item.thumbnailUrl,
-        contentDescription = item.title,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop,
-      )
-
-      ContentBadge(
-        item = item,
+      Box(
         modifier = Modifier
-          .align(Alignment.BottomStart)
-          .padding(8.dp),
-      )
+          .matchParentSize()
+          .clip(ContentThumbnailShape)
+          .background(StreamTvColors.Neutral90),
+      ) {
+        StreamTvNetworkImage(
+          imageUrl = item.thumbnailUrl,
+          contentDescription = item.title,
+          modifier = Modifier.fillMaxSize(),
+          contentScale = ContentScale.Crop,
+        )
 
-      item.ageRestriction?.takeIf(String::isNotBlank)?.let { ageRestriction ->
-        Text(
-          text = ageRestriction,
+        ContentBadge(
+          item = item,
           modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(8.dp)
-            .background(StreamTvColors.TransparentBlack60, RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 3.dp),
-          color = StreamTvColors.Neutral10,
-          style = StreamTvTheme.typography.labelMedium,
+            .align(Alignment.BottomStart)
+            .padding(8.dp),
+        )
+
+        item.ageRestriction?.takeIf(String::isNotBlank)?.let { ageRestriction ->
+          Text(
+            text = ageRestriction,
+            modifier = Modifier
+              .align(Alignment.TopEnd)
+              .padding(8.dp)
+              .background(StreamTvColors.TransparentBlack60, RoundedCornerShape(4.dp))
+              .padding(horizontal = 6.dp, vertical = 3.dp),
+            color = StreamTvColors.Neutral10,
+            style = StreamTvTheme.typography.labelMedium,
+          )
+        }
+      }
+
+      rank?.let { position ->
+        HomePopularRank(
+          rank = position,
+          modifier = Modifier
+            .align(Alignment.TopStart)
+            .offset(
+              x = RankArtworkHorizontalOffset,
+              y = RankArtworkVerticalOffset,
+            )
+            .testTag(rankTestTag),
         )
       }
     }
@@ -235,6 +281,31 @@ private fun HomeContentCard(
       )
     }
   }
+}
+
+@Composable
+private fun HomePopularRank(rank: Int, modifier: Modifier = Modifier) {
+  val drawableResId = rankedDrawableRes(rank) ?: return
+
+  Image(
+    painter = painterResource(drawableResId),
+    contentDescription = "Rank $rank",
+    modifier = modifier.height(RankArtworkHeight),
+    contentScale = ContentScale.FillHeight,
+  )
+}
+
+private fun rankedDrawableRes(rank: Int): Int? = when (rank) {
+  1 -> R.drawable.img_ranked_1
+  2 -> R.drawable.img_ranked_2
+  3 -> R.drawable.img_ranked_3
+  4 -> R.drawable.img_ranked_4
+  5 -> R.drawable.img_ranked_5
+  6 -> R.drawable.img_ranked_6
+  7 -> R.drawable.img_ranked_7
+  8 -> R.drawable.img_ranked_8
+  9 -> R.drawable.img_ranked_9
+  else -> null
 }
 
 @Composable
@@ -275,6 +346,40 @@ private fun HomeContentRowSectionPreview() {
         title = "Trending now",
         items = HomePreviewData.Videos,
         style = HomeContentRowStyle.Video,
+        sectionFocusRequester = remember { FocusRequester() },
+        modifier = Modifier.padding(vertical = 24.dp),
+      )
+    }
+  }
+}
+
+@Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF0B0B0F)
+@Composable
+private fun HomePopularVideoRowSectionPreview() {
+  StreamTvTheme {
+    Box(modifier = Modifier.background(StreamTvColors.NeutralBlack)) {
+      HomeContentRowSection(
+        sectionId = "popular-videos",
+        title = "Popular videos",
+        items = HomePreviewData.Videos,
+        style = HomeContentRowStyle.PopularVideo,
+        sectionFocusRequester = remember { FocusRequester() },
+        modifier = Modifier.padding(vertical = 24.dp),
+      )
+    }
+  }
+}
+
+@Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF0B0B0F)
+@Composable
+private fun HomePopularShortRowSectionPreview() {
+  StreamTvTheme {
+    Box(modifier = Modifier.background(StreamTvColors.NeutralBlack)) {
+      HomeContentRowSection(
+        sectionId = "popular-shorts",
+        title = "Popular shorts",
+        items = HomePreviewData.Shorts,
+        style = HomeContentRowStyle.PopularShort,
         sectionFocusRequester = remember { FocusRequester() },
         modifier = Modifier.padding(vertical = 24.dp),
       )

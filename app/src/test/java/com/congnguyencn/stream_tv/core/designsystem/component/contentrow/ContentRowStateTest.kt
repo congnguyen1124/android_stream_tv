@@ -20,6 +20,19 @@ class ContentRowStateTest {
   }
 
   @Test
+  fun `disabled looping keeps a large collection at its last index`() {
+    assertEquals(
+      7,
+      contentRowTargetIndex(
+        currentIndex = 7,
+        delta = 1,
+        itemCount = 8,
+        loopingEnabled = false,
+      ),
+    )
+  }
+
+  @Test
   fun `moving backward from the first item stays at the first real index`() {
     assertEquals(0, contentRowTargetIndex(currentIndex = 0, delta = -1, itemCount = 10))
   }

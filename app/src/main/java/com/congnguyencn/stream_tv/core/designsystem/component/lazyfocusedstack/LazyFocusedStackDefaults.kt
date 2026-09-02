@@ -28,11 +28,7 @@ object LazyFocusedStackDefaults {
   internal const val BeyondBoundsMinuteCount = 120
 
   @Composable
-  fun SelectedItem(
-    isFocused: Boolean,
-    modifier: Modifier = Modifier,
-    shape: Shape = SelectedItemShape,
-  ) {
+  fun SelectedItem(isFocused: Boolean, modifier: Modifier = Modifier, shape: Shape = SelectedItemShape) {
     val borderColor by animateColorAsState(
       targetValue = if (isFocused) StreamTvColors.NeutralWhite else StreamTvColors.TransparentWhite20,
       label = "LazyFocusedStackSelectedItemBorder",

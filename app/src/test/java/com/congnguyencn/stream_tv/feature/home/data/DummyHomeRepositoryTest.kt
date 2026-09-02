@@ -72,8 +72,10 @@ class DummyHomeRepositoryTest {
       .associateBy { it.viewType }
 
     assertTrue(sectionsByType.getValue(HomeSectionViewType.Videos).items.size > 5)
+    assertTrue(sectionsByType.getValue(HomeSectionViewType.VideosPopular).items.size > 5)
     assertTrue(sectionsByType.getValue(HomeSectionViewType.Channels).items.size > 5)
     assertTrue(sectionsByType.getValue(HomeSectionViewType.Shorts).items.size > 5)
+    assertTrue(sectionsByType.getValue(HomeSectionViewType.ShortPopular).items.size > 5)
     assertTrue(sectionsByType.getValue(HomeSectionViewType.ListSeries).items.size <= 5)
   }
 

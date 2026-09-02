@@ -388,10 +388,12 @@ private fun LazyFocusedStackTimeRuler(
           state.verticalOffsetPx.roundToInt() - placeable.height / 2
         val y = when {
           minute == startMinute && markerY < 0 && state.verticalOffsetPx == 0f -> 0
+
           minute == endMinute &&
             state.verticalOffsetPx.roundToInt() <= minimumVerticalOffset &&
             markerY + placeable.height > constraints.maxHeight ->
             constraints.maxHeight - placeable.height
+
           else -> markerY
         }
         if (y < constraints.maxHeight && y + placeable.height > 0) {
@@ -452,8 +454,10 @@ private fun <C, T> rememberLazyFocusedStackMeasurePolicy(
         val logicalY = ((item.startMinute - startMinute) * minuteHeightPx).roundToInt()
         val itemHeight = max(
           1,
-          ((item.endMinute.coerceAtMost(endMinute) - item.startMinute.coerceAtLeast(startMinute)) *
-            minuteHeightPx).roundToInt() - verticalSpacingPx,
+          (
+            (item.endMinute.coerceAtMost(endMinute) - item.startMinute.coerceAtLeast(startMinute)) *
+              minuteHeightPx
+            ).roundToInt() - verticalSpacingPx,
         )
         val horizontalOffset = (-logicalX).toFloat().coerceIn(minHorizontalOffset, 0f)
         val verticalOffset = (-logicalY).toFloat().coerceIn(minVerticalOffset, 0f)
@@ -494,8 +498,10 @@ private fun <C, T> rememberLazyFocusedStackMeasurePolicy(
         val logicalY = ((item.startMinute - startMinute) * minuteHeightPx).roundToInt()
         val itemHeight = max(
           1,
-          ((item.endMinute.coerceAtMost(endMinute) - item.startMinute.coerceAtLeast(startMinute)) *
-            minuteHeightPx).roundToInt() - verticalSpacingPx,
+          (
+            (item.endMinute.coerceAtMost(endMinute) - item.startMinute.coerceAtLeast(startMinute)) *
+              minuteHeightPx
+            ).roundToInt() - verticalSpacingPx,
         )
         val screenX = logicalX + state.horizontalOffsetPx.roundToInt()
         val screenY = logicalY + state.verticalOffsetPx.roundToInt()
@@ -606,7 +612,11 @@ private fun DrawScope.drawLazyFocusedStackLines(
   repeat(columnCount + 1) { index ->
     val x = index * stepX + state.horizontalOffsetPx
     if (x in 0f..size.width) {
-      drawLine(gridColor, start = androidx.compose.ui.geometry.Offset(x, 0f), end = androidx.compose.ui.geometry.Offset(x, size.height))
+      drawLine(
+        gridColor,
+        start = androidx.compose.ui.geometry.Offset(x, 0f),
+        end = androidx.compose.ui.geometry.Offset(x, size.height),
+      )
     }
   }
   val firstHour = floor(startMinute / 60f).toInt()
@@ -614,7 +624,11 @@ private fun DrawScope.drawLazyFocusedStackLines(
   for (hour in firstHour..lastHour) {
     val y = (hour * 60 - startMinute) / 60f * hourHeightPx + state.verticalOffsetPx
     if (y in 0f..size.height) {
-      drawLine(gridColor, start = androidx.compose.ui.geometry.Offset(0f, y), end = androidx.compose.ui.geometry.Offset(size.width, y))
+      drawLine(
+        gridColor,
+        start = androidx.compose.ui.geometry.Offset(0f, y),
+        end = androidx.compose.ui.geometry.Offset(size.width, y),
+      )
     }
   }
 }

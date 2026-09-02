@@ -11,7 +11,9 @@ internal enum class HomeSectionViewTypeData {
   Banner,
   VerticalBanner,
   Videos,
+  VideosPopular,
   ListSeries,
   Channels,
   Shorts,
+  ShortPopular,
 }

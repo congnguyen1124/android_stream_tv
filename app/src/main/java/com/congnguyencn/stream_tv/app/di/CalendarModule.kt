@@ -24,10 +24,8 @@ internal object CalendarModule {
 
   @Provides
   @Singleton
-  fun provideCalendarRepository(
-    dataSource: CalendarDummyDataSource,
-    mapper: CalendarDataMapper,
-  ): CalendarRepository = DummyCalendarRepository(dataSource, mapper)
+  fun provideCalendarRepository(dataSource: CalendarDummyDataSource, mapper: CalendarDataMapper): CalendarRepository =
+    DummyCalendarRepository(dataSource, mapper)
 
   @Provides
   @Singleton

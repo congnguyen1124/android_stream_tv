@@ -17,14 +17,16 @@ enum class HomeSectionViewTypeUi {
   Banner,
   VerticalBanner,
   Videos,
+  VideosPopular,
   ListSeries,
   Channels,
   Shorts,
+  ShortPopular,
   ;
 
   internal fun accepts(item: HomeContentUiItem): Boolean = when (this) {
-    Banner, Videos -> item is VideoUiItem
-    VerticalBanner, Shorts -> item is ShortUiItem
+    Banner, Videos, VideosPopular -> item is VideoUiItem
+    VerticalBanner, Shorts, ShortPopular -> item is ShortUiItem
     ListSeries -> item is SeriesUiItem
     Channels -> item is ChannelUiItem
   }

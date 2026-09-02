@@ -39,7 +39,8 @@ import kotlinx.coroutines.launch
  * Items move underneath [selectedItem] while that overlay stays at the leading content edge.
  * Previous items slide out beyond that edge instead of reserving an empty card-sized slot.
  * Collections with more than five items append one duplicate cycle for a seamless forward loop;
- * smaller collections stop at their final item.
+ * smaller collections stop at their final item. Set [loopingEnabled] to false for ordered rows
+ * whose first and last positions have meaning, such as popularity rankings.
  * Item content must not add its own focus target.
  */
 @Composable
@@ -51,6 +52,7 @@ fun ContentRow(
   selectedItemContentPadding: Dp = ContentRowDefaults.SelectedItemContentPadding,
   verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
   enabled: Boolean = true,
+  loopingEnabled: Boolean = true,
   selectedItemModifier: Modifier = Modifier,
   onSelectedItemClick: (index: Int) -> Unit = {},
   selectedItem: @Composable (isFocused: Boolean) -> Unit = { isFocused ->
@@ -61,15 +63,21 @@ fun ContentRow(
   val itemProvider = remember(content) {
     ContentRowScopeImpl().apply(content).build()
   }
-  val loopingItemProvider = remember(itemProvider) {
-    LoopingContentRowItemProvider(itemProvider)
+  val loopingItemProvider = remember(itemProvider, loopingEnabled) {
+    LoopingContentRowItemProvider(
+      source = itemProvider,
+      loopingEnabled = loopingEnabled,
+    )
   }
   val interactionSource = remember { MutableInteractionSource() }
   val isFocused by interactionSource.collectIsFocusedAsState()
   val coroutineScope = rememberCoroutineScope()
 
   SideEffect {
-    state.updateItemCount(itemProvider.itemCount)
+    state.updateItemCount(
+      newItemCount = itemProvider.itemCount,
+      loopingEnabled = loopingEnabled,
+    )
   }
 
   Box(modifier = modifier.fillMaxWidth()) {

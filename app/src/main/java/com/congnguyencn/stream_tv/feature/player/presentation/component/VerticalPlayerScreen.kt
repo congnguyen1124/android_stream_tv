@@ -8,8 +8,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -58,12 +58,12 @@ import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
-import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
-import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerMetadataUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerPendingFocusTarget
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSection
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSideSection
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.rememberPlayerSectionNavigationState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerMetadataUiState
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.ui.StreamTvPlayerSurface
 
@@ -290,10 +290,7 @@ private fun VerticalPlayerAmbientBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun VerticalPlayerStageChrome(
-  uiState: PlayerUiState,
-  playbackEffect: PlayerPlaybackEffect?,
-) {
+private fun VerticalPlayerStageChrome(uiState: PlayerUiState, playbackEffect: PlayerPlaybackEffect?) {
   Box(modifier = Modifier.fillMaxSize()) {
     PlayerPlaybackIndicator(
       effect = playbackEffect,

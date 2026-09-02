@@ -1,10 +1,10 @@
 package com.congnguyencn.stream_tv.core.designsystem.component.lazyfocusedstack
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.focusable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -122,19 +122,17 @@ class LazyFocusedStackTest {
     composeRule.onNodeWithTag("right-focus-target").assertIsFocused()
   }
 
-  private fun testColumn(
-    key: String,
-    ranges: List<Pair<Int, Int>>,
-  ): LazyFocusedStackColumn<String, String> = LazyFocusedStackColumn(
-    key = key,
-    header = key,
-    items = ranges.mapIndexed { index, range ->
-      LazyFocusedStackItem(
-        key = "$key-$index",
-        startMinute = range.first,
-        endMinute = range.second,
-        value = "$key-$index",
-      )
-    },
-  )
+  private fun testColumn(key: String, ranges: List<Pair<Int, Int>>): LazyFocusedStackColumn<String, String> =
+    LazyFocusedStackColumn(
+      key = key,
+      header = key,
+      items = ranges.mapIndexed { index, range ->
+        LazyFocusedStackItem(
+          key = "$key-$index",
+          startMinute = range.first,
+          endMinute = range.second,
+          value = "$key-$index",
+        )
+      },
+    )
 }

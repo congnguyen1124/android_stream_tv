@@ -18,14 +18,16 @@ enum class HomeSectionViewType {
   Banner,
   VerticalBanner,
   Videos,
+  VideosPopular,
   ListSeries,
   Channels,
   Shorts,
+  ShortPopular,
   ;
 
   fun accepts(content: Content): Boolean = when (this) {
-    Banner, Videos -> content is Video
-    VerticalBanner, Shorts -> content is Short
+    Banner, Videos, VideosPopular -> content is Video
+    VerticalBanner, Shorts, ShortPopular -> content is Short
     ListSeries -> content is Series
     Channels -> content is Channel
   }

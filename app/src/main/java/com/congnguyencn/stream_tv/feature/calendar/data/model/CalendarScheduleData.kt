@@ -1,9 +1,6 @@
 package com.congnguyencn.stream_tv.feature.calendar.data.model
 
-internal data class CalendarDayData(
-  val date: String,
-  val channels: List<CalendarChannelData>,
-)
+internal data class CalendarDayData(val date: String, val channels: List<CalendarChannelData>)
 
 internal data class CalendarChannelData(
   val channelId: String,

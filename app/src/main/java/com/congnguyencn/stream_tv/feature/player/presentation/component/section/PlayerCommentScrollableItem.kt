@@ -370,8 +370,7 @@ private fun KeyEvent.handleCommentScrollKeyEvent(
   }
 }
 
-private fun TextLayoutResult.maxScrollLineIndex(): Int =
-  (lineCount - VisibleCommentLineCount).coerceAtLeast(0)
+private fun TextLayoutResult.maxScrollLineIndex(): Int = (lineCount - VisibleCommentLineCount).coerceAtLeast(0)
 
 private fun TextLayoutResult.lineTopPx(lineIndex: Int): Int =
   getLineTop(lineIndex.coerceIn(0, lineCount - 1)).roundToInt()

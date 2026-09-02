@@ -3,10 +3,7 @@ package com.congnguyencn.stream_tv.feature.calendar.presentation.model
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class CalendarDayUiModel(
-  val dateLabel: String,
-  val channels: List<CalendarChannelUiModel>,
-)
+data class CalendarDayUiModel(val dateLabel: String, val channels: List<CalendarChannelUiModel>)
 
 @Immutable
 data class CalendarChannelUiModel(

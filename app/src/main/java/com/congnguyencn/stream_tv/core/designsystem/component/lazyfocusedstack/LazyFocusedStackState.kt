@@ -56,9 +56,9 @@ class LazyFocusedStackState internal constructor(initialPosition: LazyFocusedSta
       layoutInfo = newLayoutInfo
       if (!isScrollInProgress) {
         newLayoutInfo.placements[selectedPosition]?.let { placement ->
-        horizontalOffsetPx = placement.horizontalOffsetPx
-        verticalOffsetPx = placement.verticalOffsetPx
-        selectionBounds = placement.selectionBounds
+          horizontalOffsetPx = placement.horizontalOffsetPx
+          verticalOffsetPx = placement.verticalOffsetPx
+          selectionBounds = placement.selectionBounds
         }
       }
     }
@@ -142,24 +142,17 @@ class LazyFocusedStackState internal constructor(initialPosition: LazyFocusedSta
 }
 
 @Composable
-fun rememberLazyFocusedStackState(
-  initialColumnIndex: Int = 0,
-  initialItemIndex: Int = 0,
-): LazyFocusedStackState = rememberSaveable(saver = LazyFocusedStackState.Saver) {
-  LazyFocusedStackState(
-    LazyFocusedStackPosition(
-      columnIndex = initialColumnIndex.coerceAtLeast(0),
-      itemIndex = initialItemIndex.coerceAtLeast(0),
-    ),
-  )
-}
+fun rememberLazyFocusedStackState(initialColumnIndex: Int = 0, initialItemIndex: Int = 0): LazyFocusedStackState =
+  rememberSaveable(saver = LazyFocusedStackState.Saver) {
+    LazyFocusedStackState(
+      LazyFocusedStackPosition(
+        columnIndex = initialColumnIndex.coerceAtLeast(0),
+        itemIndex = initialItemIndex.coerceAtLeast(0),
+      ),
+    )
+  }
 
-internal data class LazyFocusedStackSelectionBounds(
-  val left: Int,
-  val top: Int,
-  val width: Int,
-  val height: Int,
-) {
+internal data class LazyFocusedStackSelectionBounds(val left: Int, val top: Int, val width: Int, val height: Int) {
   fun lerp(other: LazyFocusedStackSelectionBounds, fraction: Float): LazyFocusedStackSelectionBounds =
     LazyFocusedStackSelectionBounds(
       left = lerp(left.toFloat(), other.left.toFloat(), fraction).roundToInt(),

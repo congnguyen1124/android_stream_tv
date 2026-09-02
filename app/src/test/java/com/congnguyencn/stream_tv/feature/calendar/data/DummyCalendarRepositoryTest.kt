@@ -20,11 +20,13 @@ class DummyCalendarRepositoryTest {
 
     assertEquals(7, schedule.channels.size)
     assertTrue(schedule.channels.any { channel -> channel.programs.isEmpty() })
-    assertTrue(schedule.channels.flatMap { channel -> channel.programs }.all { program ->
-      program.startMinute in 0 until 24 * 60 &&
-        program.endMinute in 1..24 * 60 &&
-        program.endMinute > program.startMinute
-    })
+    assertTrue(
+      schedule.channels.flatMap { channel -> channel.programs }.all { program ->
+        program.startMinute in 0 until 24 * 60 &&
+          program.endMinute in 1..24 * 60 &&
+          program.endMinute > program.startMinute
+      },
+    )
   }
 
   @Test

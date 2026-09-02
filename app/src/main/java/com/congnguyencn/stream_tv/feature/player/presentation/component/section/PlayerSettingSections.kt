@@ -33,8 +33,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Border
+import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Surface
@@ -84,11 +84,13 @@ internal fun PlayerSettingRootSection(
       .focusGroup(),
   ) {
     PlayerSettingSectionHeader(title = stringResource(R.string.player_settings))
-    Spacer(modifier = Modifier.size(12.dp))
+
     LazyColumn(
       modifier = Modifier.weight(1f),
       verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+      item { Spacer(modifier = Modifier.size(12.dp)) }
+
       items(
         items = settings.items,
         key = { item -> item.category.name },

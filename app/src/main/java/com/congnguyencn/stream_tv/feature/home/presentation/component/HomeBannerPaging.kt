@@ -71,11 +71,7 @@ internal fun handleBannerKeyEvent(
 
 @Composable
 @OptIn(ExperimentalCoroutinesApi::class)
-internal fun BannerAutoScrollEffect(
-  pagerState: PagerState,
-  hasLoopingEdges: Boolean,
-  autoScrollDurationMillis: Long,
-) {
+internal fun BannerAutoScrollEffect(pagerState: PagerState, hasLoopingEdges: Boolean, autoScrollDurationMillis: Long) {
   val scope = rememberCoroutineScope()
 
   LifecycleResumeEffect(

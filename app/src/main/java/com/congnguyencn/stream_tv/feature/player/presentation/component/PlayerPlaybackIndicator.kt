@@ -1,26 +1,20 @@
 package com.congnguyencn.stream_tv.feature.player.presentation.component
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -39,62 +33,54 @@ import androidx.tv.material3.Icon
 import com.congnguyencn.stream_tv.R
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
-import androidx.compose.foundation.shape.CircleShape
 
 private object PlayerPlaybackIndicatorDefaults {
   @Stable
-  val BadgeSize: Dp = 92.dp
+  val BadgeSize: Dp = 82.dp
 
   @Stable
-  val IconSize: Dp = 38.dp
+  val IconSize: Dp = 34.dp
 
   @Stable
-  val RingWidth: Dp = 2.dp
+  val RingWidth: Dp = 1.5.dp
 
-  /** How far past the badge the ripple travels before it is gone. */
-  const val RingMaxScale = 1.9f
-  const val BadgeEnterScale = 0.74f
-  const val PulseDurationMillis = 620
-  const val IdleFadeMillis = 200
-  const val IdleEnterScale = 0.85f
-
-  /** Progress at which the ripple has fully faded; the glyph outlives it to settle into the badge. */
-  const val RingFadeEnd = 0.85f
+  const val EffectDurationMillis = 560
+  const val RingMaxScale = 1.72f
+  const val BadgeInitialScale = 0.78f
+  const val BadgeSettleScale = 1.02f
+  const val BadgeExitScale = 1.24f
+  const val EnterEnd = 0.2f
+  const val ExitStart = 0.38f
 }
 
 /**
- * What the screen shows about playback state when the chrome is away.
+ * A playback effect requested by a user interaction.
  *
- * Two things in one composable because they are one gesture to the viewer: pressing play or pause
- * fires a ripple that carries the glyph outward, and if the result is a paused player the same glyph
- * stays behind as the resting badge. Splitting them produced two circles animating over each other.
- *
- * @param isIdleBadgeVisible Whether the resting badge should be shown at all — the screen suppresses
- *   it while the controller or a side section is up, since those already say the player is paused.
+ * [sequence] deliberately separates this effect from player state. Media callbacks, autoplay and
+ * buffering can update `isPlaying` without creating a new sequence and therefore never flash the
+ * center glyph.
  */
+@Immutable
+internal data class PlayerPlaybackEffect(
+  val sequence: Int,
+  val glyph: PlayerPlaybackGlyph,
+)
+
+/** Shows one short play/pause acknowledgement for an explicit user click. */
 @Composable
 internal fun PlayerPlaybackIndicator(
-  isPlaying: Boolean,
-  isIdleBadgeVisible: Boolean,
+  effect: PlayerPlaybackEffect?,
   modifier: Modifier = Modifier,
 ) {
-  val pulse = remember { Animatable(1f) }
-  // Sampled when the pulse starts rather than read live: a fast double-toggle would otherwise swap
-  // the glyph under a ripple that is already halfway out.
-  var pulsedIsPlaying by remember { mutableStateOf(isPlaying) }
-  var hasSeenInitialState by remember { mutableStateOf(false) }
+  val progress = remember { Animatable(1f) }
 
-  LaunchedEffect(isPlaying) {
-    if (!hasSeenInitialState) {
-      hasSeenInitialState = true
-      return@LaunchedEffect
-    }
-    pulsedIsPlaying = isPlaying
-    pulse.snapTo(0f)
-    pulse.animateTo(
+  LaunchedEffect(effect?.sequence) {
+    if (effect == null) return@LaunchedEffect
+    progress.snapTo(0f)
+    progress.animateTo(
       targetValue = 1f,
       animationSpec = tween(
-        durationMillis = PlayerPlaybackIndicatorDefaults.PulseDurationMillis,
+        durationMillis = PlayerPlaybackIndicatorDefaults.EffectDurationMillis,
         easing = LinearOutSlowInEasing,
       ),
     )
@@ -106,60 +92,71 @@ internal fun PlayerPlaybackIndicator(
     ),
     contentAlignment = Alignment.Center,
   ) {
-    val progress = pulse.value
-    if (progress < 1f) {
-      PlaybackPulseRing(progress = progress)
-      PlayerPlaybackBadge(
-        glyph = if (pulsedIsPlaying) PlayerPlaybackGlyph.Play else PlayerPlaybackGlyph.Pause,
-        modifier = Modifier
-          .scale(lerp(PlayerPlaybackIndicatorDefaults.BadgeEnterScale, 1f, progress))
-          .alpha(1f - progress),
+    if (effect != null && progress.value < 1f) {
+      PlayerPlaybackEffectContent(
+        glyph = effect.glyph,
+        progress = progress.value,
       )
-    }
-
-    AnimatedVisibility(
-      visible = isIdleBadgeVisible,
-      enter = fadeIn(animationSpec = tween(PlayerPlaybackIndicatorDefaults.IdleFadeMillis)) +
-        scaleIn(
-          animationSpec = tween(PlayerPlaybackIndicatorDefaults.IdleFadeMillis),
-          initialScale = PlayerPlaybackIndicatorDefaults.IdleEnterScale,
-        ),
-      exit = fadeOut(animationSpec = tween(PlayerPlaybackIndicatorDefaults.IdleFadeMillis)) +
-        scaleOut(
-          animationSpec = tween(PlayerPlaybackIndicatorDefaults.IdleFadeMillis),
-          targetScale = PlayerPlaybackIndicatorDefaults.IdleEnterScale,
-        ),
-    ) {
-      PlayerPlaybackBadge(glyph = PlayerPlaybackGlyph.Play)
     }
   }
 }
 
 @Composable
-private fun PlaybackPulseRing(progress: Float, modifier: Modifier = Modifier) {
-  val eased = FastOutSlowInEasing.transform(progress)
-  val ringAlpha = 1f - (progress / PlayerPlaybackIndicatorDefaults.RingFadeEnd).coerceAtMost(1f)
+private fun PlayerPlaybackEffectContent(
+  glyph: PlayerPlaybackGlyph,
+  progress: Float,
+  modifier: Modifier = Modifier,
+) {
+  val enterProgress = (progress / PlayerPlaybackIndicatorDefaults.EnterEnd).coerceIn(0f, 1f)
+  val exitProgress = (
+    (progress - PlayerPlaybackIndicatorDefaults.ExitStart) /
+      (1f - PlayerPlaybackIndicatorDefaults.ExitStart)
+    ).coerceIn(0f, 1f)
+  val enterEased = FastOutSlowInEasing.transform(enterProgress)
+  val exitEased = FastOutSlowInEasing.transform(exitProgress)
+  val badgeScale = if (progress <= PlayerPlaybackIndicatorDefaults.EnterEnd) {
+    lerp(
+      PlayerPlaybackIndicatorDefaults.BadgeInitialScale,
+      PlayerPlaybackIndicatorDefaults.BadgeSettleScale,
+      enterEased,
+    )
+  } else {
+    lerp(
+      PlayerPlaybackIndicatorDefaults.BadgeSettleScale,
+      PlayerPlaybackIndicatorDefaults.BadgeExitScale,
+      exitEased,
+    )
+  }
+  val badgeAlpha = enterEased * (1f - exitEased)
+  val ringProgress = ((progress - 0.08f) / 0.82f).coerceIn(0f, 1f)
 
-  Box(
-    modifier = modifier
-      .size(PlayerPlaybackIndicatorDefaults.BadgeSize)
-      .scale(lerp(1f, PlayerPlaybackIndicatorDefaults.RingMaxScale, eased))
-      .alpha(ringAlpha)
-      .border(
-        width = PlayerPlaybackIndicatorDefaults.RingWidth,
-        color = StreamTvColors.NeutralWhite,
-        shape = CircleShape,
-      ),
-  )
+  Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+      modifier = Modifier
+        .size(PlayerPlaybackIndicatorDefaults.BadgeSize)
+        .scale(
+          lerp(
+            0.96f,
+            PlayerPlaybackIndicatorDefaults.RingMaxScale,
+            FastOutSlowInEasing.transform(ringProgress),
+          ),
+        )
+        .alpha((1f - ringProgress) * badgeAlpha)
+        .border(
+          width = PlayerPlaybackIndicatorDefaults.RingWidth,
+          color = StreamTvColors.NeutralWhite,
+          shape = CircleShape,
+        ),
+    )
+    PlayerPlaybackBadge(
+      glyph = glyph,
+      modifier = Modifier
+        .scale(badgeScale)
+        .alpha(badgeAlpha),
+    )
+  }
 }
 
-/**
- * Which glyph a badge carries.
- *
- * Named after the glyph rather than the playback state because the two badges disagree about what
- * "playing" should draw: the ripple reports the state just entered, while the resting badge is an
- * invitation to resume. One boolean could not serve both without one of them being backwards.
- */
 internal enum class PlayerPlaybackGlyph {
   Play,
   Pause,
@@ -176,8 +173,6 @@ internal fun PlayerPlaybackBadge(glyph: PlayerPlaybackGlyph, modifier: Modifier 
     PlayerPlaybackGlyph.Play -> R.string.player_play
     PlayerPlaybackGlyph.Pause -> R.string.player_pause
   }
-  val icon: ImageVector = ImageVector.vectorResource(iconResId)
-  val contentDescription = stringResource(contentDescriptionResId)
 
   Box(
     modifier = modifier
@@ -188,8 +183,8 @@ internal fun PlayerPlaybackBadge(glyph: PlayerPlaybackGlyph, modifier: Modifier 
     contentAlignment = Alignment.Center,
   ) {
     Icon(
-      imageVector = icon,
-      contentDescription = contentDescription,
+      imageVector = ImageVector.vectorResource(iconResId),
+      contentDescription = stringResource(contentDescriptionResId),
       modifier = Modifier.size(PlayerPlaybackIndicatorDefaults.IconSize),
       tint = StreamTvColors.NeutralWhite,
     )
@@ -198,17 +193,7 @@ internal fun PlayerPlaybackBadge(glyph: PlayerPlaybackGlyph, modifier: Modifier 
 
 @Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF102838)
 @Composable
-private fun PlayerPlaybackIndicatorPausedPreview() {
-  StreamTvTheme {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-      PlayerPlaybackIndicator(isPlaying = false, isIdleBadgeVisible = true)
-    }
-  }
-}
-
-@Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF102838)
-@Composable
-private fun PlayerPlaybackPulseMidwayPreview() {
+private fun PlayerPlaybackPlayEffectPreview() {
   StreamTvTheme {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       Box(
@@ -217,8 +202,24 @@ private fun PlayerPlaybackPulseMidwayPreview() {
         ),
         contentAlignment = Alignment.Center,
       ) {
-        PlaybackPulseRing(progress = 0.45f)
-        PlayerPlaybackBadge(glyph = PlayerPlaybackGlyph.Pause)
+        PlayerPlaybackEffectContent(glyph = PlayerPlaybackGlyph.Play, progress = 0.18f)
+      }
+    }
+  }
+}
+
+@Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF102838)
+@Composable
+private fun PlayerPlaybackPauseEffectPreview() {
+  StreamTvTheme {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Box(
+        modifier = Modifier.size(
+          PlayerPlaybackIndicatorDefaults.BadgeSize * PlayerPlaybackIndicatorDefaults.RingMaxScale,
+        ),
+        contentAlignment = Alignment.Center,
+      ) {
+        PlayerPlaybackEffectContent(glyph = PlayerPlaybackGlyph.Pause, progress = 0.48f)
       }
     }
   }

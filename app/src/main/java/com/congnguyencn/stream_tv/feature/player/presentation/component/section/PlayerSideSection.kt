@@ -5,9 +5,13 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -45,6 +50,13 @@ import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettin
 private object PlayerSideSectionDefaults {
   val Shape = RoundedCornerShape(14.dp)
   val ContentPadding = PaddingValues(20.dp)
+  val CompactHeaderHeight = 24.dp
+  val CompactHeaderSpacing = 12.dp
+  val CompactRootItemHeight = 54.dp
+  val CompactOptionItemHeight = 42.dp
+  val CompactItemSpacing = 6.dp
+  val CompactMinimumHeight = 108.dp
+  val CompactMaximumHeight = 430.dp
 }
 
 /**
@@ -69,6 +81,7 @@ internal fun PlayerSideSection(
   containerColor: Color = StreamTvColors.TransparentBlack80,
   shape: Shape = PlayerSideSectionDefaults.Shape,
   contentPadding: PaddingValues = PlayerSideSectionDefaults.ContentPadding,
+  compactSettings: Boolean = false,
 ) {
   var selectedCommentId by remember(uiState.title) { mutableStateOf<Long?>(null) }
   var selectedReplyId by remember(uiState.title) { mutableStateOf<Long?>(null) }
@@ -124,69 +137,108 @@ internal fun PlayerSideSection(
 
   if (!navigationState.hasSectionInPlay) return
 
-  Surface(
-    modifier = modifier
-      .fillMaxSize()
-      .testTag("player-side-section"),
-    shape = shape,
-    colors = SurfaceDefaults.colors(containerColor = containerColor),
-  ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-      navigationState.sectionLayers.forEach { section ->
-        key(section) {
-          val isPanelSection = section == navigationState.panelSection
-          AnimatedPlayerSection(
-            modifier = Modifier
-              .fillMaxSize()
-              .graphicsLayer { alpha = if (isPanelSection) 1f else 0f }
-              .then(hiddenSectionSemantics(isPanelSection)),
-            isEntering = isPanelSection && navigationState.isPanelEntering,
-            isExiting = isPanelSection && navigationState.isPanelExiting,
-            onEnterAnimationFinished = navigationState::onSectionEnterFinished,
-            onExitAnimationFinished = {
-              navigationState.onSectionExitFinished()
-              if (navigationState.isAtBaseLevel) onRootDismissed()
-            },
-          ) {
-            PlayerSectionContent(
-              section = section,
-              uiState = uiState,
-              navigationState = navigationState,
-              selectedCommentId = selectedCommentId,
-              selectedReplyId = selectedReplyId,
-              restoredSettingCategory = restoredSettingCategory,
-              pendingFocusRequester = pendingFocusRequester,
-              dismissOnLeft = dismissOnLeft,
-              onCommentSelected = { commentId ->
-                selectedCommentId = commentId
-                selectedReplyId = null
-                pendingFocusRequester.requestFocus()
-                navigationState.openChild(PlayerSection.Replies(commentId))
-              },
-              onReplySelected = { commentId, replyId ->
-                selectedReplyId = replyId
-                pendingFocusRequester.requestFocus()
-                navigationState.openChild(PlayerSection.ReplyDetail(commentId, replyId))
-              },
-              onSettingCategorySelected = { category ->
-                restoredSettingCategory = category
-                pendingFocusRequester.requestFocus()
-                navigationState.openChild(PlayerSection.SettingOptions(category))
-              },
-              onQualitySelected = onQualitySelected,
-              onSubtitleSelected = onSubtitleSelected,
-              onAudioSelected = onAudioSelected,
-              onCommentLikeToggle = onCommentLikeToggle,
-              onBack = dismissTopSection,
+  val compactPanelHeight = navigationState.panelSection
+    ?.takeIf { compactSettings && it.isSettingSection() }
+    ?.let { section -> compactSettingPanelHeight(section = section, uiState = uiState) }
+
+  Box(modifier = modifier.fillMaxSize()) {
+    Surface(
+      modifier = Modifier
+        .align(Alignment.BottomEnd)
+        .fillMaxWidth()
+        .then(
+          if (compactPanelHeight != null) {
+            Modifier.height(compactPanelHeight)
+          } else {
+            Modifier.fillMaxSize()
+          },
+        )
+        .testTag("player-side-section"),
+      shape = shape,
+      colors = SurfaceDefaults.colors(containerColor = containerColor),
+    ) {
+      Box(modifier = Modifier.fillMaxSize()) {
+        navigationState.sectionLayers.forEach { section ->
+          key(section) {
+            val isPanelSection = section == navigationState.panelSection
+            AnimatedPlayerSection(
               modifier = Modifier
                 .fillMaxSize()
-                .padding(contentPadding),
-            )
+                .graphicsLayer { alpha = if (isPanelSection) 1f else 0f }
+                .then(hiddenSectionSemantics(isPanelSection)),
+              isEntering = isPanelSection && navigationState.isPanelEntering,
+              isExiting = isPanelSection && navigationState.isPanelExiting,
+              onEnterAnimationFinished = navigationState::onSectionEnterFinished,
+              onExitAnimationFinished = {
+                navigationState.onSectionExitFinished()
+                if (navigationState.isAtBaseLevel) onRootDismissed()
+              },
+            ) {
+              PlayerSectionContent(
+                section = section,
+                uiState = uiState,
+                navigationState = navigationState,
+                selectedCommentId = selectedCommentId,
+                selectedReplyId = selectedReplyId,
+                restoredSettingCategory = restoredSettingCategory,
+                pendingFocusRequester = pendingFocusRequester,
+                dismissOnLeft = dismissOnLeft,
+                onCommentSelected = { commentId ->
+                  selectedCommentId = commentId
+                  selectedReplyId = null
+                  pendingFocusRequester.requestFocus()
+                  navigationState.openChild(PlayerSection.Replies(commentId))
+                },
+                onReplySelected = { commentId, replyId ->
+                  selectedReplyId = replyId
+                  pendingFocusRequester.requestFocus()
+                  navigationState.openChild(PlayerSection.ReplyDetail(commentId, replyId))
+                },
+                onSettingCategorySelected = { category ->
+                  restoredSettingCategory = category
+                  pendingFocusRequester.requestFocus()
+                  navigationState.openChild(PlayerSection.SettingOptions(category))
+                },
+                onQualitySelected = onQualitySelected,
+                onSubtitleSelected = onSubtitleSelected,
+                onAudioSelected = onAudioSelected,
+                onCommentLikeToggle = onCommentLikeToggle,
+                onBack = dismissTopSection,
+                modifier = Modifier
+                  .fillMaxSize()
+                  .padding(contentPadding),
+              )
+            }
           }
         }
       }
     }
   }
+}
+
+private fun PlayerSection.isSettingSection(): Boolean =
+  this == PlayerSection.Settings || this is PlayerSection.SettingOptions
+
+private fun compactSettingPanelHeight(section: PlayerSection, uiState: PlayerUiState) = when (section) {
+  PlayerSection.Settings -> uiState.settings.items.size to PlayerSideSectionDefaults.CompactRootItemHeight
+  is PlayerSection.SettingOptions ->
+    (uiState.settings.item(section.category)?.options?.size ?: 0) to
+      PlayerSideSectionDefaults.CompactOptionItemHeight
+
+  else -> 0 to 0.dp
+}.let { (itemCount, itemHeight) ->
+  val listHeight = itemHeight * itemCount +
+    PlayerSideSectionDefaults.CompactItemSpacing * (itemCount - 1).coerceAtLeast(0)
+  (
+    PlayerSideSectionDefaults.ContentPadding.calculateTopPadding() +
+      PlayerSideSectionDefaults.CompactHeaderHeight +
+      PlayerSideSectionDefaults.CompactHeaderSpacing +
+      listHeight +
+      PlayerSideSectionDefaults.ContentPadding.calculateBottomPadding()
+    ).coerceIn(
+    PlayerSideSectionDefaults.CompactMinimumHeight,
+    PlayerSideSectionDefaults.CompactMaximumHeight,
+  )
 }
 
 @Composable
@@ -366,6 +418,46 @@ private fun PlayerSideSectionPortraitPreview() {
           shape = RectangleShape,
           contentPadding = PaddingValues(0.dp),
           modifier = Modifier.fillMaxSize(),
+        )
+      }
+    }
+  }
+}
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerSideSectionCompactSettingsPreview() {
+  val navigationState = remember {
+    PlayerSectionNavigationState().apply {
+      openRoot(PlayerSection.Settings)
+      onSectionEnterFinished()
+    }
+  }
+  val pendingFocusRequester = remember { FocusRequester() }
+
+  StreamTvTheme {
+    Surface(
+      modifier = Modifier.fillMaxSize(),
+      colors = SurfaceDefaults.colors(containerColor = StreamTvColors.NeutralBlack),
+    ) {
+      Box(modifier = Modifier.fillMaxSize()) {
+        PlayerPendingFocusTarget(focusRequester = pendingFocusRequester)
+        PlayerSideSection(
+          uiState = playerControllerPreviewUiState(),
+          navigationState = navigationState,
+          pendingFocusRequester = pendingFocusRequester,
+          dismissOnLeft = false,
+          onQualitySelected = {},
+          onSubtitleSelected = {},
+          onAudioSelected = {},
+          onCommentLikeToggle = {},
+          onRootDismissed = {},
+          compactSettings = true,
+          modifier = Modifier
+            .align(Alignment.CenterEnd)
+            .padding(top = 30.dp, end = 30.dp, bottom = 30.dp)
+            .width(315.dp)
+            .fillMaxHeight(),
         )
       }
     }

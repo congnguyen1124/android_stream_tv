@@ -29,7 +29,7 @@ import com.congnguyencn.stream_tv.feature.main.presentation.navigation.MainTopBa
 
 private object MainScreenDefaults {
   const val ScreenOverlayAnimationDurationMillis = 160
-  const val ScreenOverlayAlpha = 0.42f
+  const val ScreenOverlayAlpha = 0.75f
   const val ScreenOverlayZIndex = 5f
   const val TopBarZIndex = 10f
 }

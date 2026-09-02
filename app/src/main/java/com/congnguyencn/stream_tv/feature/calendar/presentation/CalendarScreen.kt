@@ -67,13 +67,7 @@ internal fun CalendarScreen(
   modifier: Modifier = Modifier,
 ) {
   Box(
-    modifier = modifier
-      .fillMaxSize()
-      .background(
-        Brush.verticalGradient(
-          colors = listOf(Color(0xFF0B1721), Color(0xFF020407)),
-        ),
-      ),
+    modifier = modifier.fillMaxSize()
   ) {
     when {
       uiState.isLoading -> CalendarMessage("Loading program guide…")

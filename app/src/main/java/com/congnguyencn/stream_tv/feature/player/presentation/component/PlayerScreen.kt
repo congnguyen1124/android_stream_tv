@@ -85,6 +85,8 @@ internal fun PlayerScreen(
   }
   var isControllerVisible by remember { mutableStateOf(false) }
   var controllerInteractionKey by remember { mutableIntStateOf(0) }
+  var playbackEffectSequence by remember { mutableIntStateOf(0) }
+  var playbackEffect by remember { mutableStateOf<PlayerPlaybackEffect?>(null) }
 
   val showController = {
     if (!isControllerVisible && sectionNavigationState.isAtBaseLevel) {
@@ -94,6 +96,14 @@ internal fun PlayerScreen(
     }
     controllerInteractionKey++
     isControllerVisible = true
+  }
+  val togglePlaybackFromUser = {
+    playbackEffectSequence++
+    playbackEffect = PlayerPlaybackEffect(
+      sequence = playbackEffectSequence,
+      glyph = if (uiState.isPlaying) PlayerPlaybackGlyph.Pause else PlayerPlaybackGlyph.Play,
+    )
+    onTogglePlayPause()
   }
   val openSection: (PlayerSection, PlayerControllerFocusTarget) -> Unit = { section, restoreTarget ->
     if (sectionNavigationState.isAtBaseLevel) {
@@ -172,7 +182,7 @@ internal fun PlayerScreen(
       onKeyDown = { key ->
         when (key) {
           Key.MediaPlayPause -> {
-            onTogglePlayPause()
+            togglePlaybackFromUser()
             showController()
             true
           }
@@ -216,7 +226,7 @@ internal fun PlayerScreen(
             controllerInteractionKey++
           },
           onInteraction = { controllerInteractionKey++ },
-          onTogglePlayPause = onTogglePlayPause,
+          onTogglePlayPause = togglePlaybackFromUser,
           onSeekForward = onSeekForward,
           onSeekBack = onSeekBack,
           onTitleClick = {
@@ -233,14 +243,8 @@ internal fun PlayerScreen(
         )
       }
 
-      // Composed unconditionally so it survives a buffering spell: leaving the composition would
-      // reset the pulse's memory of the last playback state and swallow the next toggle.
       PlayerPlaybackIndicator(
-        isPlaying = uiState.isPlaying,
-        isIdleBadgeVisible = !uiState.isPlaying &&
-          !uiState.isBuffering &&
-          !isControllerVisible &&
-          !sectionNavigationState.hasSectionInPlay,
+        effect = playbackEffect,
         modifier = Modifier.align(Alignment.Center),
       )
       if (uiState.isBuffering) {
@@ -257,6 +261,7 @@ internal fun PlayerScreen(
         onAudioSelected = onAudioSelected,
         onCommentLikeToggle = onCommentLikeToggle,
         onRootDismissed = { showController() },
+        compactSettings = true,
         modifier = Modifier
           .align(Alignment.CenterEnd)
           .padding(

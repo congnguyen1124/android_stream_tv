@@ -15,23 +15,10 @@ class PlayerPlaybackIndicatorTest {
   val composeRule = createComposeRule()
 
   @Test
-  fun aPausedPlayerRestsUnderTheBadge() {
+  fun noUserInteractionShowsNoBadge() {
     composeRule.setContent {
       StreamTvTheme {
-        PlayerPlaybackIndicator(isPlaying = false, isIdleBadgeVisible = true)
-      }
-    }
-
-    composeRule
-      .onNodeWithTag("player-playback-badge")
-      .assertIsDisplayed()
-  }
-
-  @Test
-  fun aPlayingPlayerShowsNothingUntilSomethingChanges() {
-    composeRule.setContent {
-      StreamTvTheme {
-        PlayerPlaybackIndicator(isPlaying = true, isIdleBadgeVisible = false)
+        PlayerPlaybackIndicator(effect = null)
       }
     }
 
@@ -41,22 +28,38 @@ class PlayerPlaybackIndicatorTest {
   }
 
   @Test
-  fun togglingPlaybackPulsesTheBadge() {
-    var isPlaying by mutableStateOf(true)
+  fun aUserPlaybackInteractionShowsTheBadge() {
+    var effect by mutableStateOf<PlayerPlaybackEffect?>(null)
     composeRule.setContent {
       StreamTvTheme {
-        PlayerPlaybackIndicator(isPlaying = isPlaying, isIdleBadgeVisible = false)
+        PlayerPlaybackIndicator(effect = effect)
       }
     }
-    composeRule.onNodeWithTag("player-playback-badge").assertDoesNotExist()
-
     composeRule.mainClock.autoAdvance = false
-    isPlaying = false
+    effect = PlayerPlaybackEffect(sequence = 1, glyph = PlayerPlaybackGlyph.Play)
     composeRule.mainClock.advanceTimeByFrame()
-    composeRule.mainClock.advanceTimeBy(milliseconds = 120L)
+    composeRule.mainClock.advanceTimeBy(milliseconds = 96L)
 
     composeRule
       .onNodeWithTag("player-playback-badge")
       .assertIsDisplayed()
+  }
+
+  @Test
+  fun effectLeavesAfterTheAcknowledgementAnimation() {
+    var effect by mutableStateOf<PlayerPlaybackEffect?>(null)
+    composeRule.setContent {
+      StreamTvTheme {
+        PlayerPlaybackIndicator(effect = effect)
+      }
+    }
+    composeRule.mainClock.autoAdvance = false
+    effect = PlayerPlaybackEffect(sequence = 1, glyph = PlayerPlaybackGlyph.Pause)
+    composeRule.mainClock.advanceTimeByFrame()
+    composeRule.mainClock.advanceTimeBy(milliseconds = 700L)
+
+    composeRule
+      .onNodeWithTag("player-playback-badge")
+      .assertDoesNotExist()
   }
 }

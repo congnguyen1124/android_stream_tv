@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,6 +36,7 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -238,6 +240,8 @@ internal fun VerticalPlayerScreen(
         onCommentLikeToggle = onCommentLikeToggle,
         onRootDismissed = { playerFocusRequester.requestFocus() },
         containerColor = StreamTvColors.Transparent,
+        shape = RectangleShape,
+        contentPadding = PaddingValues(0.dp),
         modifier = Modifier
           .align(Alignment.CenterEnd)
           .width(sideWidth)

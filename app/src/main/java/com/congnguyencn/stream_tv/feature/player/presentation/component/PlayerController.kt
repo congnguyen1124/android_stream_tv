@@ -3,6 +3,7 @@ package com.congnguyencn.stream_tv.feature.player.presentation.component
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -160,6 +161,7 @@ internal fun PlayerController(
           ),
         ),
       )
+      .focusGroup()
       .testTag("player-controller"),
   ) {
     Column(
@@ -226,6 +228,7 @@ internal fun PlayerController(
             .focusRequester(focusRequesters.getValue(PlayerControllerFocusTarget.Progress))
             .focusProperties {
               up = focusRequesters.getValue(uiState.lastActionFocusTarget())
+              down = FocusRequester.Cancel
             },
         )
       } else {
@@ -270,8 +273,10 @@ private fun ControllerTitleAndActions(
         .height(PlayerControllerDefaults.TitleHeight)
         .focusRequester(titleRequester)
         .focusProperties {
+          left = FocusRequester.Cancel
+          up = FocusRequester.Cancel
           right = likeRequester
-          if (uiState.isSeekable) down = progressRequester
+          down = if (uiState.isSeekable) progressRequester else FocusRequester.Cancel
         }
         .onFocusChanged { focusState ->
           if (focusState.hasFocus) onFocusTargetChanged(PlayerControllerFocusTarget.Title)

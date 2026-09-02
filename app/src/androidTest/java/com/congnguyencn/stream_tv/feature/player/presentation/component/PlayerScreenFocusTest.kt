@@ -90,6 +90,51 @@ class PlayerScreenFocusTest {
   }
 
   @Test
+  fun horizontalControllerKeepsFocusAtItsLeftBoundary() {
+    setHorizontalPlayer()
+
+    composeRule.onNodeWithTag("player-input-target")
+      .assertIsFocused()
+      .performKeyInput { pressKey(Key.DirectionCenter) }
+    settleFocusTransition()
+
+    composeRule.onNodeWithTag("player-seek-control")
+      .assertIsFocused()
+      .performKeyInput {
+        pressKey(Key.DirectionUp)
+        pressKey(Key.DirectionLeft)
+        pressKey(Key.DirectionLeft)
+        pressKey(Key.DirectionLeft)
+        pressKey(Key.DirectionLeft)
+      }
+    composeRule.onNodeWithTag("player-controller-title")
+      .assertIsFocused()
+      .performKeyInput { pressKey(Key.DirectionLeft) }
+
+    composeRule.onNodeWithTag("player-controller-title").assertIsFocused()
+  }
+
+  @Test
+  fun horizontalControllerCanBeFocusedAgainAfterReturningToPlayer() {
+    setHorizontalPlayer(screenUiState = uiState.copy(isPlaying = true))
+
+    composeRule.onNodeWithTag("player-input-target")
+      .assertIsFocused()
+      .performKeyInput { pressKey(Key.DirectionCenter) }
+    settleFocusTransition()
+    composeRule.onNodeWithTag("player-seek-control").assertIsFocused()
+
+    composeRule.mainClock.advanceTimeBy(5_200)
+    settleFocusTransition()
+    composeRule.onNodeWithTag("player-input-target")
+      .assertIsFocused()
+      .performKeyInput { pressKey(Key.DirectionCenter) }
+    settleFocusTransition()
+
+    composeRule.onNodeWithTag("player-seek-control").assertIsFocused()
+  }
+
+  @Test
   fun verticalLeftPopsChildrenThenReturnsToThePortraitPlayer() {
     setVerticalPlayer()
 
@@ -150,12 +195,12 @@ class PlayerScreenFocusTest {
     composeRule.onNodeWithTag("vertical-player-input-target").assertIsFocused()
   }
 
-  private fun setHorizontalPlayer() {
+  private fun setHorizontalPlayer(screenUiState: PlayerUiState = uiState) {
     composeRule.mainClock.autoAdvance = false
     composeRule.setContent {
       StreamTvTheme {
         PlayerScreen(
-          uiState = uiState,
+          uiState = screenUiState,
           playerManager = FakeStreamTvPlayerManager,
           onTogglePlayPause = {},
           onSeekForward = {},

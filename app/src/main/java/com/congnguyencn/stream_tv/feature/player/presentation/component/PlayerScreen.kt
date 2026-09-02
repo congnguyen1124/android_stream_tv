@@ -87,6 +87,11 @@ internal fun PlayerScreen(
   var controllerInteractionKey by remember { mutableIntStateOf(0) }
 
   val showController = {
+    if (!isControllerVisible && sectionNavigationState.isAtBaseLevel) {
+      // Move focus away from the full-screen player before the controller subtree enters. This
+      // prevents a reveal key from leaving focus owned by PlayerRoute for one extra frame.
+      pendingFocusRequester.requestFocus()
+    }
     controllerInteractionKey++
     isControllerVisible = true
   }

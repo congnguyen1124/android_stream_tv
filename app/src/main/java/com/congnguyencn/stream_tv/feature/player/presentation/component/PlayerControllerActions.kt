@@ -191,9 +191,10 @@ private fun PlayerControllerActionButton(
         .fillMaxSize()
         .focusRequester(focusRequester)
         .focusProperties {
-          left?.let { requester -> this.left = requester }
-          right?.let { requester -> this.right = requester }
-          down?.let { requester -> this.down = requester }
+          this.left = left ?: FocusRequester.Cancel
+          this.right = right ?: FocusRequester.Cancel
+          this.up = FocusRequester.Cancel
+          this.down = down ?: FocusRequester.Cancel
         }
         .onFocusChanged { focusState ->
           isFocused = focusState.hasFocus

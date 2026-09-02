@@ -27,7 +27,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
@@ -156,7 +159,10 @@ internal fun PlayerSectionHeader(title: String, modifier: Modifier = Modifier) {
     text = title,
     modifier = modifier,
     color = StreamTvColors.NeutralWhite,
-    style = StreamTvTheme.typography.headlineLarge,
+    style = StreamTvTheme.typography.headlineLarge.copy(
+      fontSize = 24.sp,
+      lineHeight = 30.sp,
+    ),
   )
 }
 
@@ -188,12 +194,15 @@ private fun PlayerSettingRootItem(
       Column(modifier = Modifier.weight(1f)) {
         Text(
           text = stringResource(item.category.titleResId()),
-          style = StreamTvTheme.typography.bodyLarge,
+          style = StreamTvTheme.typography.bodyLarge.copy(lineHeight = 20.sp),
         )
         Text(
           text = item.selectedLabel,
           color = LocalContentColor.current.copy(alpha = 0.68f),
-          style = StreamTvTheme.typography.labelMedium,
+          style = StreamTvTheme.typography.labelMedium.copy(
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+          ),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -229,7 +238,7 @@ private fun PlayerSettingOptionItem(
       Text(
         text = option.label,
         modifier = Modifier.weight(1f),
-        style = StreamTvTheme.typography.bodyLarge,
+        style = StreamTvTheme.typography.bodyLarge.copy(lineHeight = 20.sp),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -278,4 +287,47 @@ private fun PlayerSettingCategory.iconResId(): Int = when (this) {
   PlayerSettingCategory.Quality -> R.drawable.ic_hd
   PlayerSettingCategory.Subtitles -> R.drawable.ic_subtitles
   PlayerSettingCategory.Audio -> R.drawable.ic_audio
+}
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerSettingRootSectionPreview() {
+  StreamTvTheme {
+    PlayerSettingRootSection(
+      settings = PlayerSettingsUiState(
+        items = listOf(
+          PlayerSettingUiItem(
+            category = PlayerSettingCategory.Quality,
+            selectedLabel = "1080p",
+            options = listOf(
+              PlayerSettingOptionUiItem(id = "1080", label = "1080p", isSelected = true),
+            ),
+          ),
+          PlayerSettingUiItem(
+            category = PlayerSettingCategory.Subtitles,
+            selectedLabel = "English",
+            options = listOf(
+              PlayerSettingOptionUiItem(id = "en", label = "English", isSelected = true),
+            ),
+          ),
+          PlayerSettingUiItem(
+            category = PlayerSettingCategory.Audio,
+            selectedLabel = "Original",
+            options = listOf(
+              PlayerSettingOptionUiItem(id = "original", label = "Original", isSelected = true),
+            ),
+          ),
+        ),
+      ),
+      restoredCategory = PlayerSettingCategory.Quality,
+      isFocusEnabled = false,
+      focusRequester = FocusRequester.Default,
+      onCategorySelected = {},
+      onBack = {},
+      dismissOnLeft = true,
+      modifier = Modifier
+        .width(360.dp)
+        .padding(20.dp),
+    )
+  }
 }

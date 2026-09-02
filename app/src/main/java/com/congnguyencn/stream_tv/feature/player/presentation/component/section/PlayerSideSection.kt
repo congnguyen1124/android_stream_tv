@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +21,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -28,16 +31,20 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
+import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
+import com.congnguyencn.stream_tv.feature.player.presentation.component.playerControllerPreviewUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettingCategory
 
 private object PlayerSideSectionDefaults {
   val Shape = RoundedCornerShape(14.dp)
-  val ContentPadding = 24.dp
+  val ContentPadding = PaddingValues(20.dp)
 }
 
 /**
@@ -60,6 +67,8 @@ internal fun PlayerSideSection(
   onRootDismissed: () -> Unit,
   modifier: Modifier = Modifier,
   containerColor: Color = StreamTvColors.TransparentBlack80,
+  shape: Shape = PlayerSideSectionDefaults.Shape,
+  contentPadding: PaddingValues = PlayerSideSectionDefaults.ContentPadding,
 ) {
   var selectedCommentId by remember(uiState.title) { mutableStateOf<Long?>(null) }
   var selectedReplyId by remember(uiState.title) { mutableStateOf<Long?>(null) }
@@ -119,7 +128,7 @@ internal fun PlayerSideSection(
     modifier = modifier
       .fillMaxSize()
       .testTag("player-side-section"),
-    shape = PlayerSideSectionDefaults.Shape,
+    shape = shape,
     colors = SurfaceDefaults.colors(containerColor = containerColor),
   ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -171,7 +180,7 @@ internal fun PlayerSideSection(
               onBack = dismissTopSection,
               modifier = Modifier
                 .fillMaxSize()
-                .padding(PlayerSideSectionDefaults.ContentPadding),
+                .padding(contentPadding),
             )
           }
         }
@@ -324,3 +333,41 @@ internal fun PlayerPendingFocusTarget(focusRequester: FocusRequester, modifier: 
 
 private fun hiddenSectionSemantics(isPanelSection: Boolean): Modifier =
   if (isPanelSection) Modifier else Modifier.clearAndSetSemantics { }
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerSideSectionPortraitPreview() {
+  val navigationState = remember {
+    PlayerSectionNavigationState().apply {
+      openRoot(PlayerSection.Metadata)
+      onSectionEnterFinished()
+    }
+  }
+  val pendingFocusRequester = remember { FocusRequester() }
+
+  StreamTvTheme {
+    Surface(
+      modifier = Modifier.size(width = 420.dp, height = 680.dp),
+      colors = SurfaceDefaults.colors(containerColor = StreamTvColors.NeutralBlack),
+    ) {
+      Box(modifier = Modifier.fillMaxSize()) {
+        PlayerPendingFocusTarget(focusRequester = pendingFocusRequester)
+        PlayerSideSection(
+          uiState = playerControllerPreviewUiState(),
+          navigationState = navigationState,
+          pendingFocusRequester = pendingFocusRequester,
+          dismissOnLeft = true,
+          onQualitySelected = {},
+          onSubtitleSelected = {},
+          onAudioSelected = {},
+          onCommentLikeToggle = {},
+          onRootDismissed = {},
+          containerColor = StreamTvColors.Transparent,
+          shape = RectangleShape,
+          contentPadding = PaddingValues(0.dp),
+          modifier = Modifier.fillMaxSize(),
+        )
+      }
+    }
+  }
+}

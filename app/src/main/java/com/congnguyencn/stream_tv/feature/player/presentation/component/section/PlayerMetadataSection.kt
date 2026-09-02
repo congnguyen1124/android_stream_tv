@@ -29,7 +29,10 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
@@ -95,7 +98,10 @@ internal fun PlayerMetadataSection(
         Text(
           text = metadata.collectionTitle,
           color = StreamTvColors.Neutral20,
-          style = StreamTvTheme.typography.labelMedium,
+          style = StreamTvTheme.typography.labelMedium.copy(
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+          ),
         )
       }
       item { Spacer(modifier = Modifier.height(6.dp)) }
@@ -103,16 +109,22 @@ internal fun PlayerMetadataSection(
         Text(
           text = title,
           modifier = Modifier.fillMaxWidth(),
-          style = StreamTvTheme.typography.headlineLarge,
+          style = StreamTvTheme.typography.headlineLarge.copy(
+            fontSize = 24.sp,
+            lineHeight = 30.sp,
+          ),
         )
       }
-      item { Spacer(modifier = Modifier.height(16.dp)) }
+      item { Spacer(modifier = Modifier.height(12.dp)) }
       item(contentType = "Description") {
         Text(
           text = metadata.description,
           modifier = Modifier.fillMaxWidth(),
           textAlign = TextAlign.Justify,
-          style = StreamTvTheme.typography.bodyLarge,
+          style = StreamTvTheme.typography.bodyLarge.copy(
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+          ),
         )
       }
       item { Spacer(modifier = Modifier.height(12.dp)) }
@@ -121,10 +133,13 @@ internal fun PlayerMetadataSection(
           text = metadata.longDescription,
           modifier = Modifier.fillMaxWidth(),
           textAlign = TextAlign.Justify,
-          style = StreamTvTheme.typography.bodyLarge,
+          style = StreamTvTheme.typography.bodyLarge.copy(
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+          ),
         )
       }
-      item { Spacer(modifier = Modifier.height(20.dp)) }
+      item { Spacer(modifier = Modifier.height(12.dp)) }
       item(contentType = "MetadataTable") {
         PlayerMetadataTable(
           metadata = metadata,
@@ -208,6 +223,36 @@ private fun MetadataRatingRow(rating: String) {
         .border(1.dp, StreamTvColors.TransparentWhite20, RoundedCornerShape(6.dp))
         .padding(horizontal = 8.dp, vertical = 2.dp),
       style = StreamTvTheme.typography.labelMedium,
+    )
+  }
+}
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerMetadataSectionPreview() {
+  StreamTvTheme {
+    PlayerMetadataSection(
+      title = "Tokyo: Tradition in Motion",
+      metadata = PlayerMetadataUiState(
+        description = "A quiet journey through the living traditions of Asakusa.",
+        longDescription = "Craft, ceremony, and everyday life meet in a changing city.",
+        collectionTitle = "StreamTV Originals",
+        seasonTitle = "Featured Stories",
+        releaseYear = "2026",
+        genres = "Culture, Documentary",
+        directors = "Kenji Mori",
+        producers = "Olivia Reed",
+        writers = "Emma Clark",
+        cast = "Aiko Tanaka",
+        ageRestriction = "P",
+      ),
+      isFocusEnabled = false,
+      focusRequester = FocusRequester.Default,
+      onBack = {},
+      dismissOnLeft = true,
+      modifier = Modifier
+        .width(360.dp)
+        .padding(20.dp),
     )
   }
 }

@@ -5,10 +5,6 @@
     <string name="top_bar_calendar">Calendar</string>
     <string name="top_bar_setting">Setting</string>
     <string name="top_bar_profile">Profile</string>
-    <string name="search_title">Search content</string>
-    <string name="search_description">Discover movies, shows, and stories you will love.</string>
-    <string name="search_primary_action">Open search</string>
-    <string name="search_ready_message">Search is ready</string>
     <string name="setting_title">StreamTV settings</string>
     <string name="setting_description">Fine-tune the viewing experience for your device.</string>
     <string name="setting_primary_action">Open settings</string>

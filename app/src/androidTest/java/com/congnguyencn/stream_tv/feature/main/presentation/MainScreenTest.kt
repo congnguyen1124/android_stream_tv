@@ -112,11 +112,11 @@ class MainScreenTest {
     composeRule.waitForIdle()
 
     composeRule
-      .onNodeWithText("Open search")
+      .onNodeWithTag("search-query")
       .assertIsDisplayed()
       .assertIsNotFocused()
     composeRule
-      .onNodeWithText("Search")
+      .onNodeWithTag("stream-tv-top-bar-item-search")
       .assertIsFocused()
   }
 
@@ -132,12 +132,12 @@ class MainScreenTest {
     composeRule.waitForIdle()
 
     composeRule
-      .onNodeWithText("Search")
+      .onNodeWithTag("stream-tv-top-bar-item-search")
       .performKeyInput { pressKey(Key.DirectionDown) }
     composeRule.waitForIdle()
 
     composeRule
-      .onNodeWithText("Open search")
+      .onNodeWithTag("search-query")
       .assertIsFocused()
   }
 

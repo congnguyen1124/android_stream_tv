@@ -30,13 +30,13 @@ internal object MainTopBarItems {
 
   val Calendar = StreamTvTopBarItem(
     id = "calendar",
-    iconResId = R.drawable.ic_guide,
+    iconResId = R.drawable.ic_calendar,
     titleResId = R.string.top_bar_calendar,
   )
 
   val Setting = StreamTvTopBarItem(
     id = "setting",
-    iconResId = R.drawable.ic_settings,
+    iconResId = R.drawable.ic_setting,
     titleResId = R.string.top_bar_setting,
   )
 

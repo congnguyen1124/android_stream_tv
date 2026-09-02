@@ -30,7 +30,7 @@ include(":app")
 // step is needed while developing both side by side.
 // A clone without the sibling checkout must instead run `./gradlew :stream-player:publishToMavenLocal`
 // in stream_player and add `mavenLocal()` above — see docs/player-integration/player-integration.md.
-val streamPlayerDir = file("../stream_player")
+val streamPlayerDir = file("../android_stream_player")
 require(streamPlayerDir.isDirectory) {
   "Expected the stream_player project at ${streamPlayerDir.absolutePath}. " +
     "Clone it next to this repository, or switch to the mavenLocal route documented in " +

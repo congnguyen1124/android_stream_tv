@@ -48,7 +48,7 @@ import com.congnguyencn.stream_tv.feature.home.presentation.model.ShortUiItem
 
 private val ContentThumbnailShape = RoundedCornerShape(8.dp)
 private val FocusFramePadding = 2.dp
-private val RankedItemSpacing = 32.dp
+private val RankedItemSpacing = 72.dp
 private val RankArtworkHeight = 103.dp
 private val RankArtworkHorizontalOffset = (-30).dp
 private val RankArtworkVerticalOffset = (-16).dp
@@ -217,17 +217,17 @@ private fun HomeContentCard(
           .background(StreamTvColors.Neutral90),
       ) {
         StreamTvNetworkImage(
+          modifier = Modifier.fillMaxSize(),
           imageUrl = item.thumbnailUrl,
           contentDescription = item.title,
-          modifier = Modifier.fillMaxSize(),
           contentScale = ContentScale.Crop,
         )
 
         ContentBadge(
-          item = item,
           modifier = Modifier
             .align(Alignment.BottomStart)
             .padding(8.dp),
+          item = item,
         )
 
         item.ageRestriction?.takeIf(String::isNotBlank)?.let { ageRestriction ->

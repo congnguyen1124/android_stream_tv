@@ -7,10 +7,10 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/../stream_player" name="stream_player">
+              <build path="$PROJECT_DIR$/../android_stream_player" name="stream_player">
                 <projects>
-                  <project path="$PROJECT_DIR$/../stream_player" />
-                  <project path="$PROJECT_DIR$/../stream_player/stream-player" />
+                  <project path="$PROJECT_DIR$/../android_stream_player" />
+                  <project path="$PROJECT_DIR$/../android_stream_player/stream-player" />
                 </projects>
               </build>
             </builds>
@@ -20,10 +20,10 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
+            <option value="$PROJECT_DIR$/../android_stream_player" />
+            <option value="$PROJECT_DIR$/../android_stream_player/stream-player" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/../stream_player" />
-            <option value="$PROJECT_DIR$/../stream_player/stream-player" />
           </set>
         </option>
       </GradleProjectSettings>

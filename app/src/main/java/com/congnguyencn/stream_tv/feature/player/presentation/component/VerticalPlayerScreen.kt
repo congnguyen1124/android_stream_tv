@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -106,6 +107,17 @@ internal fun VerticalPlayerScreen(
   val pendingFocusRequester = remember { FocusRequester() }
   val playerInteractionSource = remember { MutableInteractionSource() }
   val sectionNavigationState = rememberPlayerSectionNavigationState()
+  var playbackEffectSequence by remember { mutableIntStateOf(0) }
+  var playbackEffect by remember { mutableStateOf<PlayerPlaybackEffect?>(null) }
+
+  val togglePlaybackFromUser = {
+    playbackEffectSequence++
+    playbackEffect = PlayerPlaybackEffect(
+      sequence = playbackEffectSequence,
+      glyph = if (uiState.isPlaying) PlayerPlaybackGlyph.Pause else PlayerPlaybackGlyph.Play,
+    )
+    onTogglePlayPause()
+  }
 
   val openSection: (PlayerSection) -> Unit = { section ->
     if (sectionNavigationState.isAtBaseLevel) {
@@ -165,7 +177,7 @@ internal fun VerticalPlayerScreen(
         .testTag("vertical-player-stage"),
     ) {
       VerticalPlayerFocusableSurface(
-        onClick = onTogglePlayPause,
+        onClick = togglePlaybackFromUser,
         interactionSource = playerInteractionSource,
         modifier = Modifier
           .fillMaxSize()
@@ -176,7 +188,7 @@ internal fun VerticalPlayerScreen(
 
             when (event.key) {
               Key.MediaPlayPause -> {
-                onTogglePlayPause()
+                togglePlaybackFromUser()
                 true
               }
 
@@ -197,7 +209,7 @@ internal fun VerticalPlayerScreen(
         )
 
         if (uiState.error == null) {
-          VerticalPlayerStageChrome(uiState = uiState)
+          VerticalPlayerStageChrome(uiState = uiState, playbackEffect = playbackEffect)
         }
       }
     }
@@ -278,11 +290,13 @@ private fun VerticalPlayerAmbientBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun VerticalPlayerStageChrome(uiState: PlayerUiState) {
+private fun VerticalPlayerStageChrome(
+  uiState: PlayerUiState,
+  playbackEffect: PlayerPlaybackEffect?,
+) {
   Box(modifier = Modifier.fillMaxSize()) {
     PlayerPlaybackIndicator(
-      isPlaying = uiState.isPlaying,
-      isIdleBadgeVisible = !uiState.isPlaying && !uiState.isBuffering,
+      effect = playbackEffect,
       modifier = Modifier.align(Alignment.Center),
     )
     if (uiState.isBuffering) {

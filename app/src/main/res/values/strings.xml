@@ -2,6 +2,7 @@
     <string name="app_name">StreamTV</string>
     <string name="top_bar_search">Search</string>
     <string name="top_bar_home">Home</string>
+    <string name="top_bar_calendar">Calendar</string>
     <string name="top_bar_setting">Setting</string>
     <string name="top_bar_profile">Profile</string>
     <string name="search_title">Search content</string>

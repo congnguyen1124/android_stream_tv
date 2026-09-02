@@ -90,7 +90,11 @@ internal fun PlayerMetadataSection(
     scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
   ) {
     LazyColumn(
-      modifier = Modifier.fillMaxSize(),
+      // Keep text and the metadata card clear of the section's clipped focus/container edge while
+      // preserving the panel's existing outer size.
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 4.dp, vertical = 3.dp),
       state = listState,
       horizontalAlignment = Alignment.Start,
     ) {

@@ -1,5 +1,6 @@
 package com.congnguyencn.stream_tv.feature.player.presentation.component.section
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxScope
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.Border
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.Surface
@@ -46,8 +49,10 @@ import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettin
 
 private object PlayerSettingSectionDefaults {
   val ItemShape = RoundedCornerShape(8.dp)
-  val ItemIconSize = 24.dp
-  val TrailingIconSize = 16.dp
+  val RootItemHeight = 54.dp
+  val OptionItemHeight = 42.dp
+  val ItemIconSize = 20.dp
+  val TrailingIconSize = 14.dp
 }
 
 @Composable
@@ -78,11 +83,11 @@ internal fun PlayerSettingRootSection(
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft)
       .focusGroup(),
   ) {
-    PlayerSectionHeader(title = stringResource(R.string.player_settings))
-    Spacer(modifier = Modifier.size(16.dp))
+    PlayerSettingSectionHeader(title = stringResource(R.string.player_settings))
+    Spacer(modifier = Modifier.size(12.dp))
     LazyColumn(
       modifier = Modifier.weight(1f),
-      verticalArrangement = Arrangement.spacedBy(4.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
       items(
         items = settings.items,
@@ -128,11 +133,11 @@ internal fun PlayerSettingOptionsSection(
       .handlePlayerSectionExit(onBack = onBack, dismissOnLeft = dismissOnLeft)
       .focusGroup(),
   ) {
-    PlayerSectionHeader(title = stringResource(item.category.titleResId()))
-    Spacer(modifier = Modifier.size(20.dp))
+    PlayerSettingSectionHeader(title = stringResource(item.category.titleResId()))
+    Spacer(modifier = Modifier.size(12.dp))
     LazyColumn(
       modifier = Modifier.weight(1f),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
       itemsIndexed(
         items = item.options,
@@ -151,6 +156,21 @@ internal fun PlayerSettingOptionsSection(
       }
     }
   }
+}
+
+@Composable
+private fun PlayerSettingSectionHeader(title: String, modifier: Modifier = Modifier) {
+  Text(
+    text = title,
+    modifier = modifier,
+    color = StreamTvColors.NeutralWhite,
+    style = StreamTvTheme.typography.headlineLarge.copy(
+      fontSize = 18.sp,
+      lineHeight = 24.sp,
+    ),
+    maxLines = 1,
+    overflow = TextOverflow.Ellipsis,
+  )
 }
 
 @Composable
@@ -177,11 +197,12 @@ private fun PlayerSettingRootItem(
     onClick = onClick,
     modifier = modifier
       .fillMaxWidth()
+      .height(PlayerSettingSectionDefaults.RootItemHeight)
       .focusProperties { canFocus = isFocusEnabled }
       .testTag("player-setting-${item.category.name.lowercase()}"),
   ) {
     Row(
-      modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+      modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Icon(
@@ -194,14 +215,17 @@ private fun PlayerSettingRootItem(
       Column(modifier = Modifier.weight(1f)) {
         Text(
           text = stringResource(item.category.titleResId()),
-          style = StreamTvTheme.typography.bodyLarge.copy(lineHeight = 20.sp),
+          style = StreamTvTheme.typography.bodyLarge.copy(
+            fontSize = 14.sp,
+            lineHeight = 18.sp,
+          ),
         )
         Text(
           text = item.selectedLabel,
           color = LocalContentColor.current.copy(alpha = 0.68f),
           style = StreamTvTheme.typography.labelMedium.copy(
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
           ),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -228,17 +252,21 @@ private fun PlayerSettingOptionItem(
     onClick = onClick,
     modifier = modifier
       .fillMaxWidth()
+      .height(PlayerSettingSectionDefaults.OptionItemHeight)
       .focusProperties { canFocus = isFocusEnabled }
       .testTag("player-setting-option-${option.id}"),
   ) {
     Row(
-      modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+      modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
         text = option.label,
         modifier = Modifier.weight(1f),
-        style = StreamTvTheme.typography.bodyLarge.copy(lineHeight = 20.sp),
+        style = StreamTvTheme.typography.bodyLarge.copy(
+          fontSize = 14.sp,
+          lineHeight = 18.sp,
+        ),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -265,12 +293,28 @@ private fun PlayerSettingSurface(
     modifier = modifier,
     shape = ClickableSurfaceDefaults.shape(shape = PlayerSettingSectionDefaults.ItemShape),
     scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+    border = ClickableSurfaceDefaults.border(
+      border = Border(
+        border = BorderStroke(1.dp, StreamTvColors.TransparentWhite20),
+        shape = PlayerSettingSectionDefaults.ItemShape,
+      ),
+      focusedBorder = Border(
+        border = BorderStroke(1.5.dp, StreamTvColors.NeutralWhite),
+        shape = PlayerSettingSectionDefaults.ItemShape,
+        inset = 1.dp,
+      ),
+      pressedBorder = Border(
+        border = BorderStroke(1.5.dp, StreamTvColors.Primary60),
+        shape = PlayerSettingSectionDefaults.ItemShape,
+        inset = 1.dp,
+      ),
+    ),
     colors = ClickableSurfaceDefaults.colors(
       containerColor = StreamTvColors.Transparent,
       contentColor = StreamTvColors.Neutral10,
-      focusedContainerColor = StreamTvColors.NeutralWhite,
-      focusedContentColor = StreamTvColors.NeutralBlack,
-      pressedContainerColor = StreamTvColors.Primary60,
+      focusedContainerColor = StreamTvColors.TransparentWhite10,
+      focusedContentColor = StreamTvColors.NeutralWhite,
+      pressedContainerColor = StreamTvColors.TransparentWhite20,
       pressedContentColor = StreamTvColors.NeutralWhite,
     ),
     content = content,
@@ -327,6 +371,34 @@ private fun PlayerSettingRootSectionPreview() {
       dismissOnLeft = true,
       modifier = Modifier
         .width(360.dp)
+        .padding(20.dp),
+    )
+  }
+}
+
+@Preview(device = Devices.TV_720p, showBackground = true, backgroundColor = 0xFF171717)
+@Composable
+private fun PlayerSettingOptionsSectionPreview() {
+  StreamTvTheme {
+    PlayerSettingOptionsSection(
+      item = PlayerSettingUiItem(
+        category = PlayerSettingCategory.Quality,
+        selectedLabel = "1080p",
+        options = listOf(
+          PlayerSettingOptionUiItem(id = "auto", label = "Auto", isSelected = false),
+          PlayerSettingOptionUiItem(id = "1080", label = "1080p", isSelected = true),
+          PlayerSettingOptionUiItem(id = "720", label = "720p", isSelected = false),
+          PlayerSettingOptionUiItem(id = "480", label = "480p", isSelected = false),
+        ),
+      ),
+      isFocusEnabled = false,
+      focusRequester = FocusRequester.Default,
+      onOptionSelected = {},
+      onBack = {},
+      dismissOnLeft = true,
+      modifier = Modifier
+        .width(315.dp)
+        .height(250.dp)
         .padding(20.dp),
     )
   }

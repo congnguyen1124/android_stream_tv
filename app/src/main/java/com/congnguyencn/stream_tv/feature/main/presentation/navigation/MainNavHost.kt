@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.congnguyencn.stream_tv.feature.calendar.presentation.navigation.calendarScreen
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomePlayerTarget
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomeRoute
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.homeScreen
@@ -55,6 +56,12 @@ internal fun MainNavHost(
     searchScreen(
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+    )
+    calendarScreen(
+      contentFocusRequester = contentFocusRequester,
+      topBarFocusRequester = topBarFocusRequester,
+      isTopBarFocused = isTopBarFocused,
+      onTopBarOverlayVisibilityChange = onTopBarOverlayVisibilityChange,
     )
     settingScreen(
       contentFocusRequester = contentFocusRequester,

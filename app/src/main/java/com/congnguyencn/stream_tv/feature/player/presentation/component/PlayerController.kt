@@ -12,10 +12,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -31,7 +29,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,9 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.LocalContentColor
-import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
@@ -57,45 +51,51 @@ import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettin
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 
-internal enum class PlayerControllerFocusTarget {
-  Title,
-  LikeButton,
-  SaveButton,
-  CommentButton,
-  SettingButton,
-  Progress,
-}
-
 private object PlayerControllerDefaults {
+  /**
+   * How long after the controller appears a click is ignored.
+   *
+   * The key press that reveals the controller is still travelling: without this guard its KeyUp
+   * lands on whichever control just took focus and immediately triggers it.
+   */
   const val ActivationGuardMillis = 120L
 
-  /** How long after the last seek the frame strip stays up before the title row comes back. */
+  /** How long after the last seek the frame strip stays up before the title comes back. */
   const val ScrubIdleMillis = 1_600L
-  const val GradientStartStop = 0.36f
   const val ChromeFadeMillis = 180
+  const val TopScrimStop = 0.42f
+  const val BottomScrimStop = 0.52f
 
   @Stable
   val HorizontalPadding: Dp = 54.dp
 
   @Stable
-  val BottomPadding: Dp = 52.dp
+  val TopPadding: Dp = 44.dp
 
   @Stable
-  val ContentSpacing: Dp = 10.dp
+  val BottomPadding: Dp = 34.dp
 
   @Stable
-  val TitleHorizontalOffset: Dp = (-10).dp
+  val TitleWidth: Dp = 760.dp
 
   @Stable
-  val TitleWidth: Dp = 380.dp
-
-  @Stable
-  val TitleHeight: Dp = 72.dp
+  val SeekBarToControlsSpacing: Dp = 4.dp
 }
 
-/** Full-screen controller chrome with the same focus targets as the reference TV player. */
+/**
+ * Full-screen controller chrome.
+ *
+ * Laid out top-and-bottom rather than as one bottom stack: the title block sits in the upper-left
+ * where nothing else competes with it, and everything interactive collects along the bottom edge —
+ * seek bar first, then the control row. That ordering is what makes the vertical D-pad axis mean
+ * something, because Up from any control is always "go scrub" and there is nothing below the row.
+ *
+ * @param focusTarget The control to focus when this subtree appears. Survives the controller being
+ *   destroyed while a section is open, so closing a section returns focus to the button that opened
+ *   it.
+ */
 @Composable
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList")
 internal fun PlayerController(
   uiState: PlayerUiState,
   focusTarget: PlayerControllerFocusTarget,
@@ -105,7 +105,7 @@ internal fun PlayerController(
   onTogglePlayPause: () -> Unit,
   onSeekForward: () -> Unit,
   onSeekBack: () -> Unit,
-  onTitleClick: () -> Unit,
+  onDescriptionClick: () -> Unit,
   onLikeClick: () -> Unit,
   onSaveClick: () -> Unit,
   onCommentClick: () -> Unit,
@@ -116,7 +116,15 @@ internal fun PlayerController(
   var isSeekBarFocused by remember { mutableStateOf(false) }
   var seekKey by remember { mutableIntStateOf(0) }
   var isScrubbing by remember { mutableStateOf(false) }
-  val resolvedFocusTarget = focusTarget.takeIf { target -> uiState.isTargetAvailable(target) }
+  val controlRowRequester = remember { FocusRequester() }
+  // The control to come back to when the viewer moves down off the seek bar.
+  //
+  // Tracked here rather than through `saveFocusedChild` / `restoreFocusedChild`: those store the
+  // saved child on the group's focus node, and it did not survive focus leaving the group by an
+  // explicit `FocusRequester` jump — the restore always reported nothing saved. This is the same
+  // information, held where it cannot be cleared underneath us.
+  var lastControlTarget by remember { mutableStateOf(uiState.defaultControllerFocusTarget()) }
+  val resolvedFocusTarget = focusTarget.takeIf(uiState::isControllerTargetAvailable)
     ?: uiState.defaultControllerFocusTarget()
 
   LaunchedEffect(Unit) {
@@ -124,17 +132,22 @@ internal fun PlayerController(
     isActivationEnabled = true
   }
 
-  LaunchedEffect(resolvedFocusTarget, uiState.isSeekable, uiState.settings.isAvailable) {
-    // Let the key event that revealed the controller finish before moving focus. Without this
-    // second frame, a center KeyUp can land on Title and open Metadata immediately.
+  // Placed once per appearance, not on every change of the live target. Keying this on the target
+  // made it re-fire each time focus moved inside the row — every move updates the target, which
+  // re-ran the effect, which re-requested focus — and that fought the row's restorer into a loop
+  // that also kept resetting the auto-hide timer.
+  val entryFocusTarget = remember { resolvedFocusTarget }
+  LaunchedEffect(Unit) {
+    // Two frames, not one: the first lets this subtree finish entering, the second lets the reveal
+    // key's KeyUp drain. Requesting focus earlier lands it on a control that is still measuring.
     withFrameMillis { }
     withFrameMillis { }
-    focusRequesters[resolvedFocusTarget]?.requestFocus()
+    focusRequesters[entryFocusTarget]?.requestFocus()
   }
 
-  // The frame strip stands in for the title row while the viewer scrubs and stands down once they
-  // stop. Showing it the whole time the seek bar merely holds focus would hide the title for no
-  // reason, since the seek bar is where focus lands by default.
+  // The frame strip stands in for the title while the viewer scrubs and stands down once they stop.
+  // Showing it for as long as the seek bar merely holds focus would hide the title for no reason,
+  // since the seek bar is one Up press away from every control.
   LaunchedEffect(seekKey) {
     if (seekKey == 0) return@LaunchedEffect
     isScrubbing = true
@@ -143,10 +156,10 @@ internal fun PlayerController(
   }
 
   val isFramePreviewVisible = isScrubbing && isSeekBarFocused && uiState.details.seekPreview.isAvailable
-  val chromeAlpha by animateFloatAsState(
+  val titleAlpha by animateFloatAsState(
     targetValue = if (isFramePreviewVisible) 0f else 1f,
     animationSpec = tween(durationMillis = PlayerControllerDefaults.ChromeFadeMillis),
-    label = "PlayerControllerChromeAlpha",
+    label = "PlayerControllerTitleAlpha",
   )
 
   Box(
@@ -155,8 +168,9 @@ internal fun PlayerController(
       .background(
         Brush.verticalGradient(
           colorStops = arrayOf(
-            0f to StreamTvColors.Transparent,
-            PlayerControllerDefaults.GradientStartStop to StreamTvColors.Transparent,
+            0f to StreamTvColors.TransparentBlack60,
+            PlayerControllerDefaults.TopScrimStop to StreamTvColors.Transparent,
+            PlayerControllerDefaults.BottomScrimStop to StreamTvColors.Transparent,
             1f to StreamTvColors.TransparentBlack80,
           ),
         ),
@@ -164,6 +178,19 @@ internal fun PlayerController(
       .focusGroup()
       .testTag("player-controller"),
   ) {
+    PlayerControllerTitleBlock(
+      uiState = uiState,
+      modifier = Modifier
+        .align(Alignment.TopStart)
+        .padding(
+          start = PlayerControllerDefaults.HorizontalPadding,
+          top = PlayerControllerDefaults.TopPadding,
+          end = PlayerControllerDefaults.HorizontalPadding,
+        )
+        .width(PlayerControllerDefaults.TitleWidth)
+        .alpha(titleAlpha),
+    )
+
     Column(
       modifier = Modifier
         .align(Alignment.BottomCenter)
@@ -173,29 +200,13 @@ internal fun PlayerController(
           end = PlayerControllerDefaults.HorizontalPadding,
           bottom = PlayerControllerDefaults.BottomPadding,
         ),
-      verticalArrangement = Arrangement.spacedBy(PlayerControllerDefaults.ContentSpacing),
+      verticalArrangement = Arrangement.spacedBy(PlayerControllerDefaults.SeekBarToControlsSpacing),
     ) {
-      Box(modifier = Modifier.fillMaxWidth()) {
-        ControllerTitleAndActions(
-          uiState = uiState,
-          focusRequesters = focusRequesters,
-          onFocusTargetChanged = onFocusTargetChanged,
-          onInteraction = onInteraction,
-          onTitleClick = { if (isActivationEnabled) onTitleClick() },
-          onLikeClick = { if (isActivationEnabled) onLikeClick() },
-          onSaveClick = { if (isActivationEnabled) onSaveClick() },
-          onCommentClick = { if (isActivationEnabled) onCommentClick() },
-          onSettingsClick = { if (isActivationEnabled) onSettingsClick() },
-          modifier = Modifier.alpha(chromeAlpha),
-        )
-
-        PlayerSeekPreviewLane(
-          seekPreview = uiState.details.seekPreview,
-          progressFraction = uiState.progressFraction,
-          isVisible = isFramePreviewVisible,
-          modifier = Modifier.align(Alignment.BottomStart),
-        )
-      }
+      PlayerSeekPreviewLane(
+        seekPreview = uiState.details.seekPreview,
+        progressFraction = uiState.progressFraction,
+        isVisible = isFramePreviewVisible,
+      )
 
       if (uiState.isSeekable) {
         PlayerSeekBar(
@@ -224,167 +235,112 @@ internal fun PlayerController(
               isScrubbing = false
             }
           },
+          onMoveDown = { focusRequesters.getValue(lastControlTarget).requestFocus() },
           modifier = Modifier
             .focusRequester(focusRequesters.getValue(PlayerControllerFocusTarget.Progress))
-            .focusProperties {
-              up = focusRequesters.getValue(uiState.lastActionFocusTarget())
-              down = FocusRequester.Cancel
-            },
+            .focusProperties { up = FocusRequester.Cancel },
         )
       } else {
-        PlayerTimeLabel(position = uiState.position, duration = uiState.duration)
+        PlayerLiveTimeRow(uiState = uiState)
       }
+
+      PlayerControlRow(
+        uiState = uiState,
+        focusRequesters = focusRequesters,
+        focusRowRequester = controlRowRequester,
+        onMoveUp = if (uiState.isSeekable) {
+          { focusRequesters.getValue(PlayerControllerFocusTarget.Progress).requestFocus() }
+        } else {
+          null
+        },
+        onFocusTargetChanged = { target ->
+          lastControlTarget = target
+          onFocusTargetChanged(target)
+        },
+        onTogglePlayPause = {
+          if (isActivationEnabled) {
+            onInteraction()
+            onTogglePlayPause()
+          }
+        },
+        onSeekForward = {
+          onInteraction()
+          seekKey++
+          onSeekForward()
+        },
+        onSeekBack = {
+          onInteraction()
+          seekKey++
+          onSeekBack()
+        },
+        onDescriptionClick = { if (isActivationEnabled) onDescriptionClick() },
+        onLikeClick = {
+          onInteraction()
+          if (isActivationEnabled) onLikeClick()
+        },
+        onSaveClick = {
+          onInteraction()
+          if (isActivationEnabled) onSaveClick()
+        },
+        onCommentClick = { if (isActivationEnabled) onCommentClick() },
+        onSettingsClick = { if (isActivationEnabled) onSettingsClick() },
+      )
     }
   }
 }
 
+/**
+ * Title, then collection and release line. Not focusable.
+ *
+ * The metadata section is reached from the Description pill in the control row instead, which keeps
+ * the whole interactive surface on one horizontal band along the bottom.
+ */
 @Composable
-@Suppress("LongParameterList")
-private fun ControllerTitleAndActions(
-  uiState: PlayerUiState,
-  focusRequesters: Map<PlayerControllerFocusTarget, FocusRequester>,
-  onFocusTargetChanged: (PlayerControllerFocusTarget) -> Unit,
-  onInteraction: () -> Unit,
-  onTitleClick: () -> Unit,
-  onLikeClick: () -> Unit,
-  onSaveClick: () -> Unit,
-  onCommentClick: () -> Unit,
-  onSettingsClick: () -> Unit,
-  modifier: Modifier = Modifier,
-) {
-  val progressRequester = focusRequesters.getValue(PlayerControllerFocusTarget.Progress)
-  val titleRequester = focusRequesters.getValue(PlayerControllerFocusTarget.Title)
-  val likeRequester = focusRequesters.getValue(PlayerControllerFocusTarget.LikeButton)
-
-  Row(
-    modifier = modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.SpaceBetween,
-    verticalAlignment = Alignment.Bottom,
-  ) {
-    PlayerTitleButton(
-      uiState = uiState,
-      onClick = {
-        onInteraction()
-        onTitleClick()
-      },
-      modifier = Modifier
-        .offset(x = PlayerControllerDefaults.TitleHorizontalOffset)
-        .width(PlayerControllerDefaults.TitleWidth)
-        .height(PlayerControllerDefaults.TitleHeight)
-        .focusRequester(titleRequester)
-        .focusProperties {
-          left = FocusRequester.Cancel
-          up = FocusRequester.Cancel
-          right = likeRequester
-          down = if (uiState.isSeekable) progressRequester else FocusRequester.Cancel
-        }
-        .onFocusChanged { focusState ->
-          if (focusState.hasFocus) onFocusTargetChanged(PlayerControllerFocusTarget.Title)
-        }
-        .testTag("player-controller-title"),
-    )
-
-    PlayerControllerActions(
-      uiState = uiState,
-      focusRequesters = focusRequesters,
-      onFocusTargetChanged = onFocusTargetChanged,
-      onLikeClick = {
-        onInteraction()
-        onLikeClick()
-      },
-      onSaveClick = {
-        onInteraction()
-        onSaveClick()
-      },
-      onCommentClick = {
-        onInteraction()
-        onCommentClick()
-      },
-      onSettingsClick = {
-        onInteraction()
-        onSettingsClick()
-      },
-    )
-  }
-}
-
-@Composable
-private fun PlayerTitleButton(uiState: PlayerUiState, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PlayerControllerTitleBlock(uiState: PlayerUiState, modifier: Modifier = Modifier) {
   val subtitle = listOf(
     uiState.details.metadata.collectionTitle,
     uiState.details.metadata.releaseYear,
   ).filter(String::isNotBlank).joinToString(separator = " • ")
 
-  Surface(
-    onClick = onClick,
-    modifier = modifier,
-    shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
-    scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-    colors = ClickableSurfaceDefaults.colors(
-      containerColor = StreamTvColors.TransparentWhite10,
-      contentColor = StreamTvColors.NeutralWhite,
-      focusedContainerColor = StreamTvColors.NeutralWhite,
-      focusedContentColor = StreamTvColors.NeutralBlack,
-      pressedContainerColor = StreamTvColors.Primary30,
-      pressedContentColor = StreamTvColors.NeutralBlack,
-    ),
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 16.dp, vertical = 14.dp),
-      verticalArrangement = Arrangement.Center,
-    ) {
-      Row(verticalAlignment = Alignment.CenterVertically) {
-        if (!uiState.isSeekable) {
-          PlayerLiveBadge()
-          Spacer(modifier = Modifier.width(8.dp))
-        }
-        Text(
-          text = uiState.title,
-          color = LocalContentColor.current,
-          style = StreamTvTheme.typography.headlineLarge.copy(
-            fontSize = 22.sp,
-            lineHeight = 26.sp,
-          ),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+  Column(modifier = modifier.testTag("player-controller-title")) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      if (!uiState.isSeekable) {
+        PlayerLiveBadge()
+        Spacer(modifier = Modifier.width(10.dp))
       }
-      if (subtitle.isNotBlank()) {
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-          text = subtitle,
-          color = LocalContentColor.current.copy(alpha = 0.72f),
-          style = StreamTvTheme.typography.labelMedium.copy(
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
-          ),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-      }
+      Text(
+        text = uiState.title,
+        color = StreamTvColors.NeutralWhite,
+        style = StreamTvTheme.typography.headlineLarge.copy(fontSize = 30.sp, lineHeight = 38.sp),
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    if (subtitle.isNotBlank()) {
+      Spacer(modifier = Modifier.height(6.dp))
+      Text(
+        text = subtitle,
+        color = StreamTvColors.Neutral20,
+        style = StreamTvTheme.typography.labelMedium.copy(fontSize = 14.sp),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
     }
   }
 }
 
-private fun PlayerUiState.isTargetAvailable(target: PlayerControllerFocusTarget): Boolean = when (target) {
-  PlayerControllerFocusTarget.SettingButton -> settings.isAvailable
-
-  PlayerControllerFocusTarget.Progress -> isSeekable
-
-  PlayerControllerFocusTarget.Title,
-  PlayerControllerFocusTarget.LikeButton,
-  PlayerControllerFocusTarget.SaveButton,
-  PlayerControllerFocusTarget.CommentButton,
-  -> true
+/** Stands in for the seek bar on a live stream, which has no duration to scrub through. */
+@Composable
+private fun PlayerLiveTimeRow(uiState: PlayerUiState, modifier: Modifier = Modifier) {
+  Box(
+    modifier = modifier
+      .fillMaxWidth()
+      .height(PlayerSeekBarDefaults.ControlHeight),
+    contentAlignment = Alignment.CenterStart,
+  ) {
+    PlayerTimeLabel(position = uiState.position, duration = uiState.duration)
+  }
 }
-
-private fun PlayerUiState.defaultControllerFocusTarget(): PlayerControllerFocusTarget =
-  if (isSeekable) PlayerControllerFocusTarget.Progress else PlayerControllerFocusTarget.Title
-
-private fun PlayerUiState.lastActionFocusTarget(): PlayerControllerFocusTarget =
-  if (settings.isAvailable) PlayerControllerFocusTarget.SettingButton else PlayerControllerFocusTarget.CommentButton
 
 @Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF102838)
 @Composable
@@ -395,14 +351,39 @@ private fun PlayerControllerPreview() {
   StreamTvTheme {
     PlayerController(
       uiState = playerControllerPreviewUiState(),
-      focusTarget = PlayerControllerFocusTarget.SettingButton,
+      focusTarget = PlayerControllerFocusTarget.PlayPause,
       focusRequesters = requesters,
       onFocusTargetChanged = {},
       onInteraction = {},
       onTogglePlayPause = {},
       onSeekForward = {},
       onSeekBack = {},
-      onTitleClick = {},
+      onDescriptionClick = {},
+      onLikeClick = {},
+      onSaveClick = {},
+      onCommentClick = {},
+      onSettingsClick = {},
+    )
+  }
+}
+
+@Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF102838)
+@Composable
+private fun PlayerControllerLivePreview() {
+  val requesters = remember {
+    PlayerControllerFocusTarget.entries.associateWith { FocusRequester() }
+  }
+  StreamTvTheme {
+    PlayerController(
+      uiState = playerControllerPreviewUiState().copy(duration = kotlin.time.Duration.ZERO),
+      focusTarget = PlayerControllerFocusTarget.PlayPause,
+      focusRequesters = requesters,
+      onFocusTargetChanged = {},
+      onInteraction = {},
+      onTogglePlayPause = {},
+      onSeekForward = {},
+      onSeekBack = {},
+      onDescriptionClick = {},
       onLikeClick = {},
       onSaveClick = {},
       onCommentClick = {},
@@ -413,15 +394,15 @@ private fun PlayerControllerPreview() {
 
 /** Shared by the previews of every piece the controller is assembled from. */
 internal fun playerControllerPreviewUiState(): PlayerUiState = PlayerUiState.Initial.copy(
-  title = "A New Era of Sports",
+  title = "Relaxing Music with Soft Rain Sounds - Deep Sleep Instantly In 10 Minutes",
   isPlaying = true,
   position = 91.seconds,
   duration = 1_970.seconds,
   bufferedPosition = 154.seconds,
   details = PlayerDetailsUiState.Empty.copy(
     metadata = PlayerMetadataUiState.Empty.copy(
-      collectionTitle = "Sports documentary",
-      releaseYear = "1 hour ago",
+      collectionTitle = "Peaceful Rainfall Music",
+      releaseYear = "1 year ago",
     ),
     seekPreview = PlayerSeekPreviewUiState(frameUrls = List(size = 8) { "" }),
   ),

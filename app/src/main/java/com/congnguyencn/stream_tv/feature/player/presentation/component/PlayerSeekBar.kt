@@ -71,6 +71,7 @@ internal fun PlayerSeekBar(
   onTogglePlayPause: () -> Unit,
   onSeekForward: () -> Unit,
   onSeekBack: () -> Unit,
+  onMoveDown: () -> Unit,
   onFocusChanged: (isFocused: Boolean) -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -90,6 +91,9 @@ internal fun PlayerSeekBar(
           Key.DirectionLeft, Key.MediaRewind -> onSeekBack()
           Key.DirectionRight, Key.MediaFastForward -> onSeekForward()
           Key.MediaPlayPause -> onTogglePlayPause()
+          // Handled here rather than through `focusProperties.down`, because restoring the row's
+          // saved child needs a call, not a target.
+          Key.DirectionDown -> onMoveDown()
           else -> return@onPreviewKeyEvent false
         }
         true
@@ -107,12 +111,8 @@ internal fun PlayerSeekBar(
       modifier = Modifier.fillMaxSize(),
       verticalArrangement = Arrangement.Center,
     ) {
-      PlayerSeekTrack(
-        progressFraction = uiState.progressFraction,
-        bufferedFraction = uiState.bufferedFraction,
-        isFocused = isFocused,
-        modifier = Modifier.fillMaxWidth(),
-      )
+      // Elapsed and total sit above the track: below it they collide with the control row, and the
+      // reference layout reads the same way — time first, then the bar it describes.
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -120,6 +120,12 @@ internal fun PlayerSeekBar(
         PlayerSeekTimeLabel(text = uiState.position.coerceAtMost(uiState.duration).toClockString())
         PlayerSeekTimeLabel(text = uiState.duration.toClockString())
       }
+      PlayerSeekTrack(
+        progressFraction = uiState.progressFraction,
+        bufferedFraction = uiState.bufferedFraction,
+        isFocused = isFocused,
+        modifier = Modifier.fillMaxWidth(),
+      )
     }
   }
 }
@@ -176,6 +182,7 @@ private fun PlayerSeekBarPreview() {
         onTogglePlayPause = {},
         onSeekForward = {},
         onSeekBack = {},
+        onMoveDown = {},
         onFocusChanged = {},
       )
     }

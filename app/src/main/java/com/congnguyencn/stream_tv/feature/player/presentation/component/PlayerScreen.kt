@@ -15,12 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -40,6 +40,7 @@ import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerPendingFocusTarget
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSection
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSideSection
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.awaitPlayerSectionFrame
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.rememberPlayerSectionNavigationState
 import com.congnguyencn.streamplayer.StreamTvPlayerManager
 import com.congnguyencn.streamplayer.ui.StreamTvPlayerSurface
@@ -53,10 +54,16 @@ private object PlayerScreenDefaults {
   val SideSectionVerticalPadding = 30.dp
 }
 
-/** Landscape playback with controller and retained section focus behavior from the reference app. */
+/**
+ * Landscape playback.
+ *
+ * Focus ownership runs through one value — [PlayerFocusableGroup] — instead of a set of booleans
+ * each `LaunchedEffect` interpreted for itself. Every gate below reads that one value, so "who owns
+ * the D-pad right now" has exactly one answer and the answer cannot contradict itself.
+ */
 @OptIn(UnstableApi::class)
 @Composable
-@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod", "CognitiveComplexMethod")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 internal fun PlayerScreen(
   uiState: PlayerUiState,
   playerManager: StreamTvPlayerManager,
@@ -75,35 +82,32 @@ internal fun PlayerScreen(
 ) {
   val playerFocusRequester = remember { FocusRequester() }
   val pendingFocusRequester = remember { FocusRequester() }
+  val errorRetryFocusRequester = remember { FocusRequester() }
   val playerInteractionSource = remember { MutableInteractionSource() }
   val sectionNavigationState = rememberPlayerSectionNavigationState()
   val controllerFocusRequesters = remember {
     PlayerControllerFocusTarget.entries.associateWith { FocusRequester() }
   }
-  var controllerFocusTarget by remember {
-    mutableStateOf(PlayerControllerFocusTarget.Progress)
-  }
+  var controllerFocusTarget by remember { mutableStateOf(PlayerControllerFocusTarget.PlayPause) }
   var isControllerVisible by remember { mutableStateOf(false) }
   var controllerInteractionKey by remember { mutableIntStateOf(0) }
-  var playbackEffectSequence by remember { mutableIntStateOf(0) }
-  var playbackEffect by remember { mutableStateOf<PlayerPlaybackEffect?>(null) }
+
+  val focusableGroup by remember(sectionNavigationState) {
+    derivedStateOf {
+      resolvePlayerFocusableGroup(
+        hasError = uiState.error != null,
+        isControllerVisible = isControllerVisible,
+        navigationState = sectionNavigationState,
+      )
+    }
+  }
 
   val showController = {
-    if (!isControllerVisible && sectionNavigationState.isAtBaseLevel) {
-      // Move focus away from the full-screen player before the controller subtree enters. This
-      // prevents a reveal key from leaving focus owned by PlayerRoute for one extra frame.
-      pendingFocusRequester.requestFocus()
-    }
+    // No parking here: the surface stops being focusable the moment the group flips to Controller,
+    // so it releases focus on its own. Parking as well raced the controller's entry focus request
+    // and the anchor won, which left the controller on screen with nothing focused.
     controllerInteractionKey++
     isControllerVisible = true
-  }
-  val togglePlaybackFromUser = {
-    playbackEffectSequence++
-    playbackEffect = PlayerPlaybackEffect(
-      sequence = playbackEffectSequence,
-      glyph = if (uiState.isPlaying) PlayerPlaybackGlyph.Pause else PlayerPlaybackGlyph.Play,
-    )
-    onTogglePlayPause()
   }
   val openSection: (PlayerSection, PlayerControllerFocusTarget) -> Unit = { section, restoreTarget ->
     if (sectionNavigationState.isAtBaseLevel) {
@@ -114,35 +118,26 @@ internal fun PlayerScreen(
     }
   }
 
-  LaunchedEffect(
-    isControllerVisible,
-    sectionNavigationState.hasSectionInPlay,
-    sectionNavigationState.shouldParkFocus,
-    uiState.error,
-  ) {
-    if (uiState.error != null) return@LaunchedEffect
-    withFrameMillis { }
-    when {
-      sectionNavigationState.shouldParkFocus -> pendingFocusRequester.requestFocus()
-      sectionNavigationState.hasSectionInPlay -> Unit
-      isControllerVisible -> Unit
-      else -> playerFocusRequester.requestFocus()
+  // The one place focus is handed out. Controller and Section own focusable subtrees that claim it
+  // as they enter; everything else is an anchor this effect points at directly. Letting the error
+  // panel request focus for itself raced this decision and left nothing focusable when it lost.
+  LaunchedEffect(focusableGroup, uiState.error?.isRetryable) {
+    awaitPlayerSectionFrame()
+    when (focusableGroup) {
+      PlayerFocusableGroup.Surface -> playerFocusRequester.requestFocus()
+      PlayerFocusableGroup.Parked -> pendingFocusRequester.requestFocus()
+
+      PlayerFocusableGroup.Error ->
+        if (uiState.error?.isRetryable == true) errorRetryFocusRequester.requestFocus()
+
+      PlayerFocusableGroup.Controller,
+      PlayerFocusableGroup.Section,
+      -> Unit
     }
   }
 
-  LaunchedEffect(
-    isControllerVisible,
-    sectionNavigationState.hasSectionInPlay,
-    uiState.isPlaying,
-    uiState.error,
-    controllerInteractionKey,
-  ) {
-    if (
-      isControllerVisible &&
-      !sectionNavigationState.hasSectionInPlay &&
-      uiState.isPlaying &&
-      uiState.error == null
-    ) {
+  LaunchedEffect(focusableGroup, uiState.isPlaying, controllerInteractionKey) {
+    if (focusableGroup == PlayerFocusableGroup.Controller && uiState.isPlaying) {
       delay(PlayerScreenDefaults.ControllerAutoHideMillis.milliseconds)
       isControllerVisible = false
     }
@@ -156,7 +151,7 @@ internal fun PlayerScreen(
   }
 
   BackHandler(enabled = !sectionNavigationState.hasSectionInPlay) {
-    if (isControllerVisible && uiState.error == null) {
+    if (focusableGroup == PlayerFocusableGroup.Controller) {
       isControllerVisible = false
     } else {
       onExitPlayer()
@@ -176,13 +171,13 @@ internal fun PlayerScreen(
     )
 
     PlayerInputTarget(
-      isFocusEnabled = !isControllerVisible && !sectionNavigationState.hasSectionInPlay,
+      isFocusEnabled = focusableGroup == PlayerFocusableGroup.Surface,
       focusRequester = playerFocusRequester,
       interactionSource = playerInteractionSource,
       onKeyDown = { key ->
         when (key) {
           Key.MediaPlayPause -> {
-            togglePlaybackFromUser()
+            onTogglePlayPause()
             showController()
             true
           }
@@ -212,7 +207,7 @@ internal fun PlayerScreen(
 
     if (uiState.error == null) {
       AnimatedVisibility(
-        visible = isControllerVisible && !sectionNavigationState.hasSectionInPlay,
+        visible = focusableGroup == PlayerFocusableGroup.Controller,
         modifier = Modifier.fillMaxSize(),
         enter = expandVertically { fullHeight -> fullHeight },
         exit = shrinkVertically { fullHeight -> fullHeight },
@@ -226,27 +221,23 @@ internal fun PlayerScreen(
             controllerInteractionKey++
           },
           onInteraction = { controllerInteractionKey++ },
-          onTogglePlayPause = togglePlaybackFromUser,
+          onTogglePlayPause = onTogglePlayPause,
           onSeekForward = onSeekForward,
           onSeekBack = onSeekBack,
-          onTitleClick = {
-            openSection(PlayerSection.Metadata, PlayerControllerFocusTarget.Title)
+          onDescriptionClick = {
+            openSection(PlayerSection.Metadata, PlayerControllerFocusTarget.Description)
           },
           onLikeClick = onToggleLike,
           onSaveClick = onToggleSaved,
           onCommentClick = {
-            openSection(PlayerSection.Comments, PlayerControllerFocusTarget.CommentButton)
+            openSection(PlayerSection.Comments, PlayerControllerFocusTarget.Comment)
           },
           onSettingsClick = {
-            openSection(PlayerSection.Settings, PlayerControllerFocusTarget.SettingButton)
+            openSection(PlayerSection.Settings, PlayerControllerFocusTarget.Settings)
           },
         )
       }
 
-      PlayerPlaybackIndicator(
-        effect = playbackEffect,
-        modifier = Modifier.align(Alignment.Center),
-      )
       if (uiState.isBuffering) {
         PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
       }
@@ -276,6 +267,7 @@ internal fun PlayerScreen(
       PlayerErrorPanel(
         error = uiState.error,
         onRetry = onRetry.takeIf { uiState.error.isRetryable },
+        retryFocusRequester = errorRetryFocusRequester,
         modifier = Modifier.fillMaxSize(),
       )
     }

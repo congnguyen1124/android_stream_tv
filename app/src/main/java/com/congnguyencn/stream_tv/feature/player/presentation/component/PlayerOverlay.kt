@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -121,15 +119,17 @@ internal fun PlayerLiveBadge(modifier: Modifier = Modifier) {
  *
  * @param onRetry Null when the library classified the failure as not worth retrying, in which case
  *   no button is offered rather than one that is guaranteed to fail again.
+ * @param retryFocusRequester Owned by the screen, not by this panel. The screen hands focus to
+ *   exactly one group at a time, and a panel that requested focus for itself raced that decision —
+ *   it fired before the button was attached and left nothing on screen focusable at all.
  */
 @Composable
-internal fun PlayerErrorPanel(error: PlayerErrorUiItem, onRetry: (() -> Unit)?, modifier: Modifier = Modifier) {
-  val retryFocusRequester = remember { FocusRequester() }
-
-  LaunchedEffect(onRetry) {
-    if (onRetry != null) retryFocusRequester.requestFocus()
-  }
-
+internal fun PlayerErrorPanel(
+  error: PlayerErrorUiItem,
+  onRetry: (() -> Unit)?,
+  retryFocusRequester: FocusRequester,
+  modifier: Modifier = Modifier,
+) {
   Column(
     modifier = modifier
       .fillMaxSize()

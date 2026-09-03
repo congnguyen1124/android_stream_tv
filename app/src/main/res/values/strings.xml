@@ -53,6 +53,9 @@
     <string name="home_banner_featured_label">STREAMTV FEATURED</string>
     <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>
+    <string name="player_description">Description</string>
+    <string name="player_rewind">Rewind</string>
+    <string name="player_forward">Forward</string>
     <string name="player_retry">Try again</string>
     <string name="player_live_badge">LIVE</string>
     <string name="player_settings">Settings</string>

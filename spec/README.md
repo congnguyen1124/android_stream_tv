@@ -8,6 +8,8 @@ loading behavior, and navigation described here.
 Read this file before a feature specification:
 
 - [Home](home.md)
+- [Landscape player](player.md)
+- [Portrait player](vertical-player.md)
 - [Search](search.md)
 - [Calendar](calendar.md)
 - [Setting](setting.md)

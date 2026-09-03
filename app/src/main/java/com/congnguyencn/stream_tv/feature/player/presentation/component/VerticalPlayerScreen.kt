@@ -61,6 +61,7 @@ import com.congnguyencn.stream_tv.feature.player.presentation.PlayerUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerPendingFocusTarget
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSection
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.PlayerSideSection
+import com.congnguyencn.stream_tv.feature.player.presentation.component.section.awaitPlayerSectionFrame
 import com.congnguyencn.stream_tv.feature.player.presentation.component.section.rememberPlayerSectionNavigationState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerDetailsUiState
 import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerMetadataUiState
@@ -105,19 +106,9 @@ internal fun VerticalPlayerScreen(
   val playerFocusRequester = remember { FocusRequester() }
   val interactionFocusRequester = remember { FocusRequester() }
   val pendingFocusRequester = remember { FocusRequester() }
+  val errorRetryFocusRequester = remember { FocusRequester() }
   val playerInteractionSource = remember { MutableInteractionSource() }
   val sectionNavigationState = rememberPlayerSectionNavigationState()
-  var playbackEffectSequence by remember { mutableIntStateOf(0) }
-  var playbackEffect by remember { mutableStateOf<PlayerPlaybackEffect?>(null) }
-
-  val togglePlaybackFromUser = {
-    playbackEffectSequence++
-    playbackEffect = PlayerPlaybackEffect(
-      sequence = playbackEffectSequence,
-      glyph = if (uiState.isPlaying) PlayerPlaybackGlyph.Pause else PlayerPlaybackGlyph.Play,
-    )
-    onTogglePlayPause()
-  }
 
   val openSection: (PlayerSection) -> Unit = { section ->
     if (sectionNavigationState.isAtBaseLevel) {
@@ -144,8 +135,11 @@ internal fun VerticalPlayerScreen(
     }
   }
 
-  LaunchedEffect(uiState.error) {
-    if (uiState.error != null) sectionNavigationState.reset()
+  LaunchedEffect(uiState.error?.isRetryable) {
+    val error = uiState.error ?: return@LaunchedEffect
+    sectionNavigationState.reset()
+    awaitPlayerSectionFrame()
+    if (error.isRetryable) errorRetryFocusRequester.requestFocus()
   }
 
   BackHandler(enabled = !sectionNavigationState.hasSectionInPlay, onBack = onExitPlayer)
@@ -177,7 +171,7 @@ internal fun VerticalPlayerScreen(
         .testTag("vertical-player-stage"),
     ) {
       VerticalPlayerFocusableSurface(
-        onClick = togglePlaybackFromUser,
+        onClick = onTogglePlayPause,
         interactionSource = playerInteractionSource,
         modifier = Modifier
           .fillMaxSize()
@@ -188,7 +182,7 @@ internal fun VerticalPlayerScreen(
 
             when (event.key) {
               Key.MediaPlayPause -> {
-                togglePlaybackFromUser()
+                onTogglePlayPause()
                 true
               }
 
@@ -209,7 +203,7 @@ internal fun VerticalPlayerScreen(
         )
 
         if (uiState.error == null) {
-          VerticalPlayerStageChrome(uiState = uiState, playbackEffect = playbackEffect)
+          VerticalPlayerStageChrome(uiState = uiState)
         }
       }
     }
@@ -267,6 +261,7 @@ internal fun VerticalPlayerScreen(
       PlayerErrorPanel(
         error = uiState.error,
         onRetry = onRetry.takeIf { uiState.error.isRetryable },
+        retryFocusRequester = errorRetryFocusRequester,
         modifier = Modifier.fillMaxSize(),
       )
     }
@@ -290,12 +285,13 @@ private fun VerticalPlayerAmbientBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun VerticalPlayerStageChrome(uiState: PlayerUiState, playbackEffect: PlayerPlaybackEffect?) {
+private fun VerticalPlayerStageChrome(uiState: PlayerUiState) {
   Box(modifier = Modifier.fillMaxSize()) {
-    PlayerPlaybackIndicator(
-      effect = playbackEffect,
-      modifier = Modifier.align(Alignment.Center),
-    )
+    // Paused state, not an acknowledgement flash: with no control row on this surface the glyph is
+    // the only thing telling a paused short apart from a stalled one.
+    if (!uiState.isPlaying && !uiState.isBuffering) {
+      PlayerPausedBadge(modifier = Modifier.align(Alignment.Center))
+    }
     if (uiState.isBuffering) {
       PlayerBufferingIndicator(modifier = Modifier.align(Alignment.Center))
     }
@@ -483,10 +479,15 @@ private fun VerticalPlayerActionButton(
   onClick: () -> Unit,
   testTag: String,
 ) {
-  PlayerRoundIconButton(
+  // Tracked here rather than read from Surface: Surface keeps reporting itself focused after a
+  // FocusRequester moves focus away, which leaves the button painted as if it still had the D-pad.
+  var isFocused by remember { mutableStateOf(false) }
+
+  PlayerIconButton(
     iconResId = iconResId,
     contentDescription = contentDescription,
     onClick = onClick,
+    isFocused = isFocused,
     modifier = Modifier
       .size(VerticalPlayerScreenDefaults.ActionButtonSize)
       .focusRequester(focusRequester)
@@ -495,6 +496,7 @@ private fun VerticalPlayerActionButton(
         right?.let { requester -> this.right = requester }
         this.up = up
       }
+      .onFocusChanged { focusState -> isFocused = focusState.isFocused }
       .onPreviewKeyEvent { event ->
         if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionLeft && onMoveToPlayer != null) {
           onMoveToPlayer()

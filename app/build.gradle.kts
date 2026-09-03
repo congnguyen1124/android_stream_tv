@@ -29,6 +29,8 @@ android {
     }
   }
   buildFeatures {
+    // Settings reports the running app version, which it reads from BuildConfig.
+    buildConfig = true
     compose = true
   }
   compileOptions {

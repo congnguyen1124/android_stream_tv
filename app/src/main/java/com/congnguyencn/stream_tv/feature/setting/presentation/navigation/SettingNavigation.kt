@@ -7,11 +7,16 @@ import com.congnguyencn.stream_tv.feature.setting.presentation.SettingScreen
 
 const val SettingRoute = "setting"
 
-fun NavGraphBuilder.settingScreen(contentFocusRequester: FocusRequester, topBarFocusRequester: FocusRequester) {
+fun NavGraphBuilder.settingScreen(
+  contentFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
+  onOpenSignIn: () -> Unit,
+) {
   composable(route = SettingRoute) {
     SettingScreen(
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+      onOpenSignIn = onOpenSignIn,
     )
   }
 }

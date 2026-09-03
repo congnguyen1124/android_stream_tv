@@ -6,6 +6,8 @@
 
 ## Compose TV UI
 
+- Treat `spec/` as the framework-neutral product contract for every screen. Read the matching spec before implementation or porting.
+- Add `spec/<screen>.md` in the same change as every new screen. Update the matching spec whenever an existing screen's UI, behavior, focus, navigation, state, or data contract changes. Screen work is incomplete until the spec describes the shipped behavior.
 - Every new or materially changed UI composable must include a deterministic `@Preview` using an appropriate TV device. Preview code must not require a real player, network access, or runtime-only dependency.
 - Keep focus navigation explicit and deterministic. Park focus before replacing or animating a focused subtree, disable focus for retained hidden layers, and restore the previously selected row when a child section closes.
 - A destination under `MainScreen` claims focus only when the top bar is not holding it. Selecting a top bar item leaves focus on that item; opening the app and returning from playback leave focus nowhere, so the content takes it. See `docs/adr/2026-09-02-shell-focus-ownership.md`.

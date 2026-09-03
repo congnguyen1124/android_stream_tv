@@ -258,6 +258,7 @@ private fun DestinationItem(
     modifier = Modifier
       .onFocusChanged { isFocused = it.isFocused }
       .focusRequester(focusRequester)
+      .testTag("stream-tv-top-bar-item-${item.id}")
       .focusProperties { down = contentFocusRequester },
     selected = selected,
     border = SelectableSurfaceDefaults.border(),
@@ -322,6 +323,7 @@ private fun ProfileItem(
     modifier = Modifier
       .padding(start = 10.dp)
       .focusRequester(focusRequester)
+      .testTag("stream-tv-top-bar-item-${item.id}")
       .focusProperties { down = contentFocusRequester },
     selected = selected,
     colors = SelectableSurfaceDefaults.colors(

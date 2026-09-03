@@ -41,6 +41,8 @@ import kotlinx.coroutines.launch
  * Collections with more than five items append one duplicate cycle for a seamless forward loop;
  * smaller collections stop at their final item. Set [loopingEnabled] to false for ordered rows
  * whose first and last positions have meaning, such as popularity rankings.
+ * [startEdgeFocusRequester] controls where Left may leave item zero; use [FocusRequester.Cancel]
+ * when the row is the leading horizontal destination and must retain focus at that boundary.
  * Item content must not add its own focus target.
  */
 @Composable
@@ -53,6 +55,7 @@ fun ContentRow(
   verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
   enabled: Boolean = true,
   loopingEnabled: Boolean = true,
+  startEdgeFocusRequester: FocusRequester = FocusRequester.Default,
   selectedItemModifier: Modifier = Modifier,
   onSelectedItemClick: (index: Int) -> Unit = {},
   selectedItem: @Composable (isFocused: Boolean) -> Unit = { isFocused ->
@@ -109,7 +112,7 @@ fun ContentRow(
               onSelectedItemClick = onSelectedItemClick,
             )
           }
-          .focusProperties { left = FocusRequester.Default }
+          .focusProperties { left = startEdgeFocusRequester }
           .focusable(
             enabled = enabled,
             interactionSource = interactionSource,

@@ -12,6 +12,7 @@ import com.congnguyencn.stream_tv.feature.home.presentation.navigation.homeScree
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.playerTarget
 import com.congnguyencn.stream_tv.feature.profile.presentation.navigation.profileScreen
 import com.congnguyencn.stream_tv.feature.search.presentation.navigation.searchScreen
+import com.congnguyencn.stream_tv.feature.search.presentation.model.SearchContentTypeUi
 import com.congnguyencn.stream_tv.feature.setting.presentation.navigation.settingScreen
 
 /**
@@ -56,6 +57,15 @@ internal fun MainNavHost(
     searchScreen(
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+      onItemClick = { item ->
+        when (item.type) {
+          SearchContentTypeUi.Video ->
+            onOpenPlayer(item.videoUrl, item.title, item.description, item.ageRestriction)
+
+          SearchContentTypeUi.Short ->
+            onOpenVerticalPlayer(item.videoUrl, item.title, item.description, item.ageRestriction)
+        }
+      },
     )
     calendarScreen(
       contentFocusRequester = contentFocusRequester,

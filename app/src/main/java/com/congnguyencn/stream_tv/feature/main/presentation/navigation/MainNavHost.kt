@@ -30,6 +30,7 @@ internal fun MainNavHost(
   onTopBarOverlayVisibilityChange: (Boolean) -> Unit,
   onOpenPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
   onOpenVerticalPlayer: (videoUrl: String, title: String, description: String, ageRestriction: String?) -> Unit,
+  onOpenSignIn: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
   NavHost(
@@ -76,6 +77,7 @@ internal fun MainNavHost(
     settingScreen(
       contentFocusRequester = contentFocusRequester,
       topBarFocusRequester = topBarFocusRequester,
+      onOpenSignIn = onOpenSignIn,
     )
     profileScreen(
       contentFocusRequester = contentFocusRequester,

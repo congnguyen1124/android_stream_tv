@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +27,8 @@ import com.congnguyencn.stream_tv.core.designsystem.component.StreamTvTopBar
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomeRoute
 import com.congnguyencn.stream_tv.feature.main.presentation.navigation.MainNavHost
 import com.congnguyencn.stream_tv.feature.main.presentation.navigation.MainTopBarItems
+import com.congnguyencn.stream_tv.feature.profile.presentation.navigation.ProfileRoute
+import kotlinx.coroutines.android.awaitFrame
 
 private object MainScreenDefaults {
   const val ScreenOverlayAnimationDurationMillis = 160
@@ -51,9 +54,26 @@ internal fun MainScreen(
   val topBarFocusRequester = remember { FocusRequester() }
   var isTopBarFocused by remember { mutableStateOf(false) }
   var isTopBarOverlayVisible by remember { mutableStateOf(false) }
+  var routeAwaitingContentFocus by remember { mutableStateOf<String?>(null) }
   val currentBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = currentBackStackEntry?.destination?.route
   val selectedItemId = MainTopBarItems.itemFor(currentRoute)?.id
+
+  // A destination can hand the viewer to another destination — Settings does it for sign-in. Focus
+  // was in content when they asked, and the shell's rule is that a destination may claim focus when
+  // the top bar does not own it, so focus goes to the arriving screen's entry target rather than
+  // back up to the bar. Landing on the bar would also be ambiguous: it restores focus to whichever
+  // item it considers selected, which during a route change is not yet the one being opened.
+  //
+  // The frame wait is what makes the request safe: the target only exists once the new destination
+  // has composed.
+  LaunchedEffect(routeAwaitingContentFocus, currentRoute) {
+    val pendingRoute = routeAwaitingContentFocus ?: return@LaunchedEffect
+    if (pendingRoute != currentRoute) return@LaunchedEffect
+    awaitFrame()
+    contentFocusRequester.requestFocus()
+    routeAwaitingContentFocus = null
+  }
 
   Box(modifier = modifier.fillMaxSize()) {
     MainNavHost(
@@ -64,6 +84,16 @@ internal fun MainScreen(
       onTopBarOverlayVisibilityChange = { isVisible -> isTopBarOverlayVisible = isVisible },
       onOpenPlayer = onOpenPlayer,
       onOpenVerticalPlayer = onOpenVerticalPlayer,
+      onOpenSignIn = {
+        routeAwaitingContentFocus = ProfileRoute
+        navController.navigate(ProfileRoute) {
+          launchSingleTop = true
+          restoreState = true
+          popUpTo(HomeRoute) {
+            saveState = true
+          }
+        }
+      },
       modifier = Modifier.fillMaxSize(),
     )
 

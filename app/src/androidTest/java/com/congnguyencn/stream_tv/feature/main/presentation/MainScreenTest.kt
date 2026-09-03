@@ -1,6 +1,8 @@
 package com.congnguyencn.stream_tv.feature.main.presentation
 
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
@@ -156,5 +158,42 @@ class MainScreenTest {
 
     assertTrue(bannerBounds.top <= topBarBounds.top)
     assertTrue(bannerBounds.bottom > topBarBounds.bottom)
+  }
+
+  @Test
+  fun settingSignInActionOpensProfileWithFocusOnItsSignInButton() {
+    composeRule
+      .onNodeWithTag("home-banner-carousel")
+      .performKeyInput {
+        pressKey(Key.DirectionUp)
+        pressKey(Key.DirectionRight)
+        pressKey(Key.DirectionRight)
+        pressKey(Key.DirectionCenter)
+      }
+    composeRule.waitForIdle()
+
+    composeRule
+      .onNodeWithTag("stream-tv-top-bar-item-setting")
+      .performKeyInput { pressKey(Key.DirectionDown) }
+    composeRule.waitForIdle()
+    composeRule
+      .onNodeWithTag("setting-item-ManageSubscription")
+      .performKeyInput { pressKey(Key.DirectionRight) }
+    composeRule.waitForIdle()
+    composeRule
+      .onNodeWithTag("setting-detail-action")
+      .performKeyInput { pressKey(Key.DirectionCenter) }
+
+    // Focus was in content when the viewer asked to sign in, so it belongs on the arriving
+    // screen's own control — not back on the top bar, and never nowhere.
+    composeRule.waitUntil(timeoutMillis = 3_000) {
+      composeRule.onAllNodesWithTag("profile-sign-in").fetchSemanticsNodes().isNotEmpty()
+    }
+    composeRule.waitUntil(timeoutMillis = 3_000) {
+      composeRule
+        .onAllNodesWithTag("profile-phone-sign-in")
+        .fetchSemanticsNodes()
+        .any { node -> node.config.getOrNull(SemanticsProperties.Focused) == true }
+    }
   }
 }

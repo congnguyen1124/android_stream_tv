@@ -10,6 +10,7 @@ Read this file before a feature specification:
 - [Home](home.md)
 - [Search](search.md)
 - [Calendar](calendar.md)
+- [Setting](setting.md)
 - [Profile](profile.md)
 
 ## Interpretation

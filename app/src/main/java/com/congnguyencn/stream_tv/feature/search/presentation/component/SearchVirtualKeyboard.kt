@@ -1,7 +1,6 @@
 package com.congnguyencn.stream_tv.feature.search.presentation.component
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -33,13 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Surface
@@ -48,9 +50,9 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 
 private const val KeyboardColumns = 7
-private val KeyboardKeyGap = 7.dp
-private val MinimumKeySize = 32.dp
-private val MaximumKeySize = 52.dp
+private val KeyboardKeyGap = 8.dp
+private val MinimumKeySize = 24.dp
+private val MaximumKeySize = 60.dp
 private val LetterKeys = ('a'..'z').map(Char::toString)
 private val SymbolKeys = listOf(
   "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -72,9 +74,9 @@ internal fun SearchVirtualKeyboard(
   onSearch: () -> Unit,
   firstKeyFocusRequester: FocusRequester,
   searchKeyFocusRequester: FocusRequester,
-  searchFieldFocusRequester: FocusRequester,
+  topBarFocusRequester: FocusRequester,
   leftExitFocusRequester: FocusRequester,
-  resultFocusRequester: FocusRequester,
+  onMoveToResults: () -> Boolean,
   modifier: Modifier = Modifier,
 ) {
   var uppercase by remember { mutableStateOf(false) }
@@ -123,14 +125,13 @@ internal fun SearchVirtualKeyboard(
                 .fillMaxWidth()
                 .height(keySize)
                 .testTag("search-key-$base")
+                .focusProperties {
+                  if (index < KeyboardColumns) up = topBarFocusRequester
+                  if (index == 0) left = leftExitFocusRequester
+                }
                 .then(
                   if (index == 0) {
-                    Modifier
-                      .focusRequester(firstKeyFocusRequester)
-                      .focusProperties {
-                        up = searchFieldFocusRequester
-                        left = leftExitFocusRequester
-                      }
+                    Modifier.focusRequester(firstKeyFocusRequester)
                   } else {
                     Modifier
                   },
@@ -149,7 +150,8 @@ internal fun SearchVirtualKeyboard(
             onClick = { symbolMode = !symbolMode },
             modifier = Modifier
               .fillMaxWidth()
-              .height(functionKeyHeight),
+              .height(functionKeyHeight)
+              .focusProperties { up = topBarFocusRequester },
             isFunction = true,
           ) {
             Text(
@@ -195,7 +197,8 @@ internal fun SearchVirtualKeyboard(
           onClick = { onKey(" ") },
           modifier = Modifier
             .height(keySize)
-            .weight(1f),
+            .weight(1f)
+            .moveToResultsOnDown(onMoveToResults),
           isFunction = true,
         ) {
           Text(text = "Space", style = StreamTvTheme.typography.labelMedium)
@@ -204,7 +207,8 @@ internal fun SearchVirtualKeyboard(
           onClick = onCursorLeft,
           modifier = Modifier
             .height(keySize)
-            .width(keySize),
+            .width(keySize)
+            .moveToResultsOnDown(onMoveToResults),
           isFunction = true,
         ) {
           Icon(
@@ -217,7 +221,8 @@ internal fun SearchVirtualKeyboard(
           onClick = onCursorRight,
           modifier = Modifier
             .height(keySize)
-            .width(keySize),
+            .width(keySize)
+            .moveToResultsOnDown(onMoveToResults),
           isFunction = true,
         ) {
           Icon(
@@ -230,7 +235,8 @@ internal fun SearchVirtualKeyboard(
           onClick = onClear,
           modifier = Modifier
             .height(keySize)
-            .width(keySize * 1.35f),
+            .width(keySize * 1.35f)
+            .moveToResultsOnDown(onMoveToResults),
           isFunction = true,
         ) {
           Text(text = "Clear", style = StreamTvTheme.typography.labelMedium)
@@ -239,10 +245,10 @@ internal fun SearchVirtualKeyboard(
           onClick = onSearch,
           modifier = Modifier
             .height(keySize)
-            .width(keySize * 1.6f)
+            .width(keySize * 2.75f)
             .testTag("search-key-search")
             .focusRequester(searchKeyFocusRequester)
-            .focusProperties { down = resultFocusRequester },
+            .moveToResultsOnDown(onMoveToResults),
           selected = true,
         ) {
           Row(
@@ -254,7 +260,11 @@ internal fun SearchVirtualKeyboard(
               contentDescription = null,
               modifier = Modifier.size(17.dp),
             )
-            Text(text = "Search", style = StreamTvTheme.typography.labelMedium)
+            Text(
+              text = "Search",
+              style = StreamTvTheme.typography.labelMedium,
+              maxLines = 1,
+            )
           }
         }
       }
@@ -275,25 +285,23 @@ private fun SearchKeyboardKey(
     isFunction -> StreamTvColors.TransparentWhite10
     else -> StreamTvColors.Neutral100
   }
-  val contentColor = if (selected) StreamTvColors.NeutralWhite else StreamTvColors.Neutral10
+  val contentColor = when {
+    selected -> StreamTvColors.NeutralWhite
+    isFunction -> StreamTvColors.Neutral10
+    else -> StreamTvColors.Neutral20
+  }
 
   Surface(
     onClick = onClick,
     modifier = modifier,
-    shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
+    shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
     scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-    border = ClickableSurfaceDefaults.border(
-      focusedBorder = Border(
-        border = BorderStroke(2.dp, StreamTvColors.NeutralWhite),
-        shape = RoundedCornerShape(8.dp),
-      ),
-    ),
     colors = ClickableSurfaceDefaults.colors(
       containerColor = containerColor,
       contentColor = contentColor,
-      focusedContainerColor = StreamTvColors.NeutralWhite,
+      focusedContainerColor = StreamTvColors.Primary30,
       focusedContentColor = StreamTvColors.NeutralBlack,
-      pressedContainerColor = StreamTvColors.Primary60,
+      pressedContainerColor = StreamTvColors.Primary50,
       pressedContentColor = StreamTvColors.NeutralWhite,
     ),
   ) {
@@ -304,6 +312,14 @@ private fun SearchKeyboardKey(
       content()
     }
   }
+}
+
+private fun Modifier.moveToResultsOnDown(
+  onMoveToResults: () -> Boolean,
+): Modifier = onPreviewKeyEvent { event ->
+  if (event.key != Key.DirectionDown) return@onPreviewKeyEvent false
+  if (event.type == KeyEventType.KeyDown) onMoveToResults()
+  true
 }
 
 @Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF010810)
@@ -319,9 +335,9 @@ private fun SearchVirtualKeyboardPreview() {
       onSearch = {},
       firstKeyFocusRequester = remember { FocusRequester() },
       searchKeyFocusRequester = remember { FocusRequester() },
-      searchFieldFocusRequester = remember { FocusRequester() },
+      topBarFocusRequester = remember { FocusRequester() },
       leftExitFocusRequester = remember { FocusRequester() },
-      resultFocusRequester = remember { FocusRequester() },
+      onMoveToResults = { true },
       modifier = Modifier
         .width(650.dp)
         .height(300.dp),

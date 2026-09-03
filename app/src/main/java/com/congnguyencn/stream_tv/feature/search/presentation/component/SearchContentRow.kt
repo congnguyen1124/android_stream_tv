@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,14 +56,14 @@ private enum class SearchContentRowStyle(
   val detailHeight: Dp,
 ) {
   Video(
-    cardWidth = 260.dp,
+    cardWidth = 190.dp,
     aspectRatio = 16f / 9f,
-    detailHeight = 54.dp,
+    detailHeight = 46.dp,
   ),
   Short(
-    cardWidth = 142.dp,
+    cardWidth = 112.dp,
     aspectRatio = 2f / 3f,
-    detailHeight = 64.dp,
+    detailHeight = 54.dp,
   ),
   ;
 
@@ -72,6 +78,7 @@ internal fun SearchContentRow(
   modifier: Modifier = Modifier,
   upFocusRequester: FocusRequester? = null,
   downFocusRequester: FocusRequester? = null,
+  onNavigateUp: (() -> Boolean)? = null,
   onItemClick: (SearchContentUiItem) -> Unit = {},
 ) {
   if (section.items.isEmpty()) return
@@ -98,12 +105,25 @@ internal fun SearchContentRow(
         .fillMaxWidth()
         .testTag("search-content-row-${section.id}"),
       itemSpacing = 16.dp,
+      contentPadding = PaddingValues(0.dp),
+      startEdgeFocusRequester = FocusRequester.Cancel,
       selectedItemModifier = Modifier
         .focusRequester(focusRequester)
         .focusProperties {
           upFocusRequester?.let { up = it }
           downFocusRequester?.let { down = it }
         }
+        .then(
+          if (onNavigateUp != null) {
+            Modifier.onPreviewKeyEvent { event ->
+              if (event.key != Key.DirectionUp) return@onPreviewKeyEvent false
+              if (event.type == KeyEventType.KeyDown) onNavigateUp()
+              true
+            }
+          } else {
+            Modifier
+          },
+        )
         .testTag("search-content-row-${section.id}-selection"),
       selectedItem = { isFocused ->
         SearchContentFocusFrame(

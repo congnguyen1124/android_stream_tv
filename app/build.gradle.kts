@@ -63,6 +63,7 @@ dependencies {
   implementation(libs.lottie.compose)
   implementation(libs.material)
   implementation(libs.stream.player)
+  implementation(libs.zxing.core)
 
   coreLibraryDesugaring(libs.desugar.jdk.libs)
 

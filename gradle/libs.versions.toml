@@ -24,6 +24,7 @@ palette = "1.0.0"
 spotless = "8.9.0"
 streamPlayer = "0.1.0"
 tvMaterial = "1.1.0"
+zxingCore = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +58,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 # Substituted by the composite build declared in settings.gradle.kts; the version is only a
 # fallback for the mavenLocal route.
 stream-player = { module = "com.congnguyencn:stream-player", version.ref = "streamPlayer" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxingCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

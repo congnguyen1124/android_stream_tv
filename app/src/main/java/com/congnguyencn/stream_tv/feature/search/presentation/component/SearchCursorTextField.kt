@@ -92,7 +92,7 @@ internal fun SearchCursorTextField(
           Text(
             text = text.substring(0, safeCursor),
             color = StreamTvColors.NeutralWhite,
-            style = StreamTvTheme.typography.bodyLarge,
+            style = StreamTvTheme.typography.labelMedium,
             maxLines = 1,
             softWrap = false,
           )

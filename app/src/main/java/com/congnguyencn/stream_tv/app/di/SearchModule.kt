@@ -15,8 +15,7 @@ import javax.inject.Singleton
 internal object SearchModule {
   @Provides
   @Singleton
-  fun provideSearchRepository(homeRepository: HomeRepository): SearchRepository =
-    DummySearchRepository(homeRepository)
+  fun provideSearchRepository(homeRepository: HomeRepository): SearchRepository = DummySearchRepository(homeRepository)
 
   @Provides
   @Singleton

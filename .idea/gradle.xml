@@ -7,10 +7,9 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/../android_stream_player" name="stream_player">
+              <build path="$PROJECT_DIR$/../android_stream_player" name="android_stream_player">
                 <projects>
                   <project path="$PROJECT_DIR$/../android_stream_player" />
-                  <project path="$PROJECT_DIR$/../android_stream_player/stream-player" />
                 </projects>
               </build>
             </builds>
@@ -21,7 +20,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/../android_stream_player" />
-            <option value="$PROJECT_DIR$/../android_stream_player/stream-player" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
           </set>

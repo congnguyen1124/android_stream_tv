@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
  * plus every possible next D-pad target are composed ahead of time.
  */
 @Composable
+@Suppress("LongMethod")
 fun <C, T> LazyFocusedStack(
   columns: List<LazyFocusedStackColumn<C, T>>,
   modifier: Modifier = Modifier,

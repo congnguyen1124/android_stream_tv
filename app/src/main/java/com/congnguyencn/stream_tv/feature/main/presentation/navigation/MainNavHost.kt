@@ -11,8 +11,8 @@ import com.congnguyencn.stream_tv.feature.home.presentation.navigation.HomeRoute
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.homeScreen
 import com.congnguyencn.stream_tv.feature.home.presentation.navigation.playerTarget
 import com.congnguyencn.stream_tv.feature.profile.presentation.navigation.profileScreen
-import com.congnguyencn.stream_tv.feature.search.presentation.navigation.searchScreen
 import com.congnguyencn.stream_tv.feature.search.presentation.model.SearchContentTypeUi
+import com.congnguyencn.stream_tv.feature.search.presentation.navigation.searchScreen
 import com.congnguyencn.stream_tv.feature.setting.presentation.navigation.settingScreen
 
 /**

@@ -18,9 +18,7 @@ import kotlinx.coroutines.sync.withLock
  * editing and immutable UI state. The catalog is cached after the first read because keyboard input
  * can request suggestions frequently.
  */
-internal class DummySearchRepository(
-  private val homeRepository: HomeRepository,
-) : SearchRepository {
+internal class DummySearchRepository(private val homeRepository: HomeRepository) : SearchRepository {
   private val catalogMutex = Mutex()
 
   @Volatile
@@ -111,10 +109,7 @@ internal class DummySearchRepository(
   }
 }
 
-private data class SearchCatalog(
-  val videos: List<SearchContent>,
-  val shorts: List<SearchContent>,
-) {
+private data class SearchCatalog(val videos: List<SearchContent>, val shorts: List<SearchContent>) {
   val all: List<SearchContent>
     get() = videos + shorts
 

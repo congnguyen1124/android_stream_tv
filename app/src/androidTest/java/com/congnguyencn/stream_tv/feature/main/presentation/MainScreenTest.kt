@@ -136,8 +136,10 @@ class MainScreenTest {
       .performKeyInput { pressKey(Key.DirectionDown) }
     composeRule.waitForIdle()
 
+    // Down lands in the search workspace, not on the query field: the field is a caret display the
+    // virtual keyboard writes into, so the first suggestion is where a remote can actually act.
     composeRule
-      .onNodeWithTag("search-query")
+      .onNodeWithTag("search-suggestion-0")
       .assertIsFocused()
   }
 

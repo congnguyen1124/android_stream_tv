@@ -21,53 +21,50 @@ class SearchViewModelTest {
   val mainDispatcherRule = MainDispatcherRule()
 
   @Test
-  fun `keyboard editing inserts and deletes at the caret`() =
-    runTest(mainDispatcherRule.testDispatcher) {
-      val viewModel = createViewModel()
-      advanceUntilIdle()
+  fun `keyboard editing inserts and deletes at the caret`() = runTest(mainDispatcherRule.testDispatcher) {
+    val viewModel = createViewModel()
+    advanceUntilIdle()
 
-      viewModel.onKeyInput("c")
-      viewModel.onKeyInput("a")
-      viewModel.onKeyInput("t")
-      viewModel.onCursorLeft()
-      viewModel.onKeyInput("r")
-      viewModel.onBackspace()
+    viewModel.onKeyInput("c")
+    viewModel.onKeyInput("a")
+    viewModel.onKeyInput("t")
+    viewModel.onCursorLeft()
+    viewModel.onKeyInput("r")
+    viewModel.onBackspace()
 
-      assertEquals("cat", viewModel.uiState.value.query)
-      assertEquals(2, viewModel.uiState.value.cursorPosition)
-    }
-
-  @Test
-  fun `submitting a query closes keyboard and publishes mapped results`() =
-    runTest(mainDispatcherRule.testDispatcher) {
-      val repository = FakeSearchRepository()
-      val viewModel = SearchViewModel(repository, SearchUiMapper())
-      advanceUntilIdle()
-
-      "tiger".forEach { character -> viewModel.onKeyInput(character.toString()) }
-      viewModel.submitSearch()
-      advanceUntilIdle()
-
-      val state = viewModel.uiState.value
-      assertFalse(state.isKeyboardVisible)
-      assertFalse(state.isSearching)
-      assertEquals("tiger", state.submittedQuery)
-      assertEquals("Videos", state.sections.single().title)
-      assertEquals("Realm of the tiger", state.sections.single().items.single().title)
-      assertEquals("tiger", repository.lastQuery)
-    }
+    assertEquals("cat", viewModel.uiState.value.query)
+    assertEquals(2, viewModel.uiState.value.cursorPosition)
+  }
 
   @Test
-  fun `blank query does not dismiss the keyboard`() =
-    runTest(mainDispatcherRule.testDispatcher) {
-      val viewModel = createViewModel()
-      advanceUntilIdle()
+  fun `submitting a query closes keyboard and publishes mapped results`() = runTest(mainDispatcherRule.testDispatcher) {
+    val repository = FakeSearchRepository()
+    val viewModel = SearchViewModel(repository, SearchUiMapper())
+    advanceUntilIdle()
 
-      viewModel.submitSearch()
+    "tiger".forEach { character -> viewModel.onKeyInput(character.toString()) }
+    viewModel.submitSearch()
+    advanceUntilIdle()
 
-      assertTrue(viewModel.uiState.value.isKeyboardVisible)
-      assertEquals(null, viewModel.uiState.value.submittedQuery)
-    }
+    val state = viewModel.uiState.value
+    assertFalse(state.isKeyboardVisible)
+    assertFalse(state.isSearching)
+    assertEquals("tiger", state.submittedQuery)
+    assertEquals("Videos", state.sections.single().title)
+    assertEquals("Realm of the tiger", state.sections.single().items.single().title)
+    assertEquals("tiger", repository.lastQuery)
+  }
+
+  @Test
+  fun `blank query does not dismiss the keyboard`() = runTest(mainDispatcherRule.testDispatcher) {
+    val viewModel = createViewModel()
+    advanceUntilIdle()
+
+    viewModel.submitSearch()
+
+    assertTrue(viewModel.uiState.value.isKeyboardVisible)
+    assertEquals(null, viewModel.uiState.value.submittedQuery)
+  }
 
   private fun createViewModel() = SearchViewModel(
     repository = FakeSearchRepository(),

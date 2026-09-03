@@ -91,11 +91,7 @@ internal fun SearchSuggestions(
 }
 
 @Composable
-private fun SearchSuggestionItem(
-  suggestion: String,
-  onClick: () -> Unit,
-  modifier: Modifier = Modifier,
-) {
+private fun SearchSuggestionItem(suggestion: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
   var isFocused by remember { mutableStateOf(false) }
   val indicatorColor by animateColorAsState(
     targetValue = if (isFocused) StreamTvColors.Primary40 else StreamTvColors.Transparent,
@@ -157,10 +153,7 @@ private fun SearchSuggestionItem(
   }
 }
 
-private fun Modifier.moveFocusOnDpad(
-  key: Key,
-  onMove: () -> Boolean,
-): Modifier = onPreviewKeyEvent { event ->
+private fun Modifier.moveFocusOnDpad(key: Key, onMove: () -> Boolean): Modifier = onPreviewKeyEvent { event ->
   if (event.key != key) return@onPreviewKeyEvent false
   if (event.type == KeyEventType.KeyDown) onMove()
   true

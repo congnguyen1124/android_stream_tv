@@ -50,11 +50,7 @@ import com.congnguyencn.stream_tv.feature.search.presentation.model.SearchSectio
 private val SearchCardShape = RoundedCornerShape(8.dp)
 private val SearchFocusShape = RoundedCornerShape(10.dp)
 
-private enum class SearchContentRowStyle(
-  val cardWidth: Dp,
-  val aspectRatio: Float,
-  val detailHeight: Dp,
-) {
+private enum class SearchContentRowStyle(val cardWidth: Dp, val aspectRatio: Float, val detailHeight: Dp) {
   Video(
     cardWidth = 190.dp,
     aspectRatio = 16f / 9f,
@@ -152,11 +148,7 @@ internal fun SearchContentRow(
 }
 
 @Composable
-private fun SearchContentFocusFrame(
-  style: SearchContentRowStyle,
-  isFocused: Boolean,
-  modifier: Modifier = Modifier,
-) {
+private fun SearchContentFocusFrame(style: SearchContentRowStyle, isFocused: Boolean, modifier: Modifier = Modifier) {
   val borderColor by animateColorAsState(
     targetValue = if (isFocused) StreamTvColors.NeutralWhite else StreamTvColors.Transparent,
     label = "SearchContentFocusBorder",

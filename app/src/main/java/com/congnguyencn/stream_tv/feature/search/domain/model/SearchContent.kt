@@ -15,11 +15,7 @@ enum class SearchContentType {
   Short,
 }
 
-data class SearchSection(
-  val id: String,
-  val type: SearchContentType,
-  val items: List<SearchContent>,
-) {
+data class SearchSection(val id: String, val type: SearchContentType, val items: List<SearchContent>) {
   init {
     require(items.all { item -> item.type == type }) {
       "Search section $id contains an item incompatible with $type"

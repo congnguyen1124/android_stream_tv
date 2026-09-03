@@ -50,7 +50,7 @@ import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvColors
 import com.congnguyencn.stream_tv.core.designsystem.theme.StreamTvTheme
 
 private const val KeyboardColumns = 7
-private val KeyboardKeyGap = 8.dp
+private val KeyboardKeyGap = 4.dp
 private val MinimumKeySize = 24.dp
 private val MaximumKeySize = 60.dp
 private val LetterKeys = ('a'..'z').map(Char::toString)
@@ -314,9 +314,7 @@ private fun SearchKeyboardKey(
   }
 }
 
-private fun Modifier.moveToResultsOnDown(
-  onMoveToResults: () -> Boolean,
-): Modifier = onPreviewKeyEvent { event ->
+private fun Modifier.moveToResultsOnDown(onMoveToResults: () -> Boolean): Modifier = onPreviewKeyEvent { event ->
   if (event.key != Key.DirectionDown) return@onPreviewKeyEvent false
   if (event.type == KeyEventType.KeyDown) onMoveToResults()
   true

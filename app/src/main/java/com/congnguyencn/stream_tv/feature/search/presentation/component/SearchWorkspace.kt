@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -66,6 +67,8 @@ internal fun SearchWorkspace(
         showCaret = showCaret,
       )
 
+      Spacer(modifier = Modifier.height(8.dp))
+
       AnimatedVisibility(
         visible = keyboardVisibilityState.targetState,
         enter = searchWorkspaceEnterTransition(),
@@ -110,19 +113,17 @@ internal fun SearchWorkspace(
   }
 }
 
-private fun searchWorkspaceEnterTransition() =
-  fadeIn(tween(SearchUiDefaults.KeyboardAnimationDurationMillis)) +
-    expandVertically(
-      animationSpec = tween(SearchUiDefaults.KeyboardAnimationDurationMillis),
-      expandFrom = Alignment.Top,
-    )
+private fun searchWorkspaceEnterTransition() = fadeIn(tween(SearchUiDefaults.KeyboardAnimationDurationMillis)) +
+  expandVertically(
+    animationSpec = tween(SearchUiDefaults.KeyboardAnimationDurationMillis),
+    expandFrom = Alignment.Top,
+  )
 
-private fun searchWorkspaceExitTransition() =
-  fadeOut(tween(SearchUiDefaults.KeyboardAnimationDurationMillis)) +
-    shrinkVertically(
-      animationSpec = tween(SearchUiDefaults.KeyboardAnimationDurationMillis),
-      shrinkTowards = Alignment.Top,
-    )
+private fun searchWorkspaceExitTransition() = fadeOut(tween(SearchUiDefaults.KeyboardAnimationDurationMillis)) +
+  shrinkVertically(
+    animationSpec = tween(SearchUiDefaults.KeyboardAnimationDurationMillis),
+    shrinkTowards = Alignment.Top,
+  )
 
 @Preview(device = Devices.TV_1080p, showBackground = true, backgroundColor = 0xFF010810)
 @Composable

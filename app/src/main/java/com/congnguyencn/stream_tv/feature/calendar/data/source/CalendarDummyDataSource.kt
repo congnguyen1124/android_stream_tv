@@ -5,6 +5,7 @@ import com.congnguyencn.stream_tv.feature.calendar.data.model.CalendarDayData
 import com.congnguyencn.stream_tv.feature.calendar.data.model.CalendarProgramData
 import java.util.Locale
 
+@Suppress("LongMethod", "StringLiteralDuplication")
 internal class CalendarDummyDataSource {
   fun getSchedule(): CalendarDayData = CalendarDayData(
     date = ScheduleDate,

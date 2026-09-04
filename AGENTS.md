@@ -17,6 +17,9 @@
 - The portrait player surface uses an inset white focus border. The border softens after focus is held and restarts its animation after a center press.
 - Long comments and replies must expose a D-pad scroll viewport with a visible focus-aware scrollbar. Up and Down scroll content until a boundary, then release the key so focus can move.
 - Reuse StreamTV design tokens and icons. Do not introduce OttClouds names or dependencies into this project.
+- Read `updateReadme.md` before re-capturing any image or GIF in `README.md`. It maps each source
+  file to the captures that must be re-run, and records which dummy item each demo uses. Update it in
+  the same change whenever a capture, a screen, or a navigation path changes.
 
 ## Architecture
 

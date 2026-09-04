@@ -66,12 +66,15 @@ Entry focus is the stage.
 
 | From | Up | Down | Left | Right | Select |
 |---|---|---|---|---|---|
-| Stage | — | — | — | Title block | Toggle playback |
+| Stage | — | — | — | Like | Toggle playback |
 | Title block | — | Like | Stage | — | Open metadata |
 | Like | Title block | — | Stage | Comment | Toggle like |
 | Comment | Title block | — | Like | Save | Open comments |
 | Save | Title block | — | Comment | Settings | Toggle save |
 | Settings | Title block | — | Save | — | Open settings |
+
+Right from the stage enters the panel at the **first action**, not at the title block: the action row
+is what a viewer reaches for, and the title block is one step Up from there.
 
 Left from the title block and from the first action must return to the stage. Left from a later action
 moves within the row. This asymmetry is deliberate: the stage is the only thing to the left of the
@@ -115,7 +118,8 @@ entered from. On the landscape player they are not.
 2. Selecting on the stage pauses playback and shows the static play glyph centred on the stage; the
    glyph stays until playback resumes.
 3. Buffering shows the buffering indicator instead of the play glyph.
-4. Pressing right from the stage focuses the title block and tints the panel.
+4. Pressing right from the stage focuses the first action and tints the panel; pressing up from it
+   focuses the title block.
 5. Pressing down from the title block focuses the first action; pressing left from it returns to the
    stage.
 6. Pressing left from a later action moves within the action row rather than to the stage.

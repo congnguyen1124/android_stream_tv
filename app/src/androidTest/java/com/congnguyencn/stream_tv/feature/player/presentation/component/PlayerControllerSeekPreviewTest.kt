@@ -94,7 +94,7 @@ class PlayerControllerSeekPreviewTest {
         onTogglePlayPause = {},
         onSeekForward = {},
         onSeekBack = {},
-        onTitleClick = {},
+        onDescriptionClick = {},
         onLikeClick = {},
         onSaveClick = {},
         onCommentClick = {},

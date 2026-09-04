@@ -42,6 +42,40 @@ Four layers, back to front:
 
 An error replaces layers 3 and 4 entirely.
 
+### Side-section sizing
+
+Metadata and comments fill the panel's height: they hold arbitrarily long content and their own
+scrolling is the point.
+
+The settings sections instead sit in a panel **only as tall as the rows it holds**, anchored to the
+bottom trailing corner beneath the settings control that opened it. Settings is a short menu, and a
+full-height panel for two rows reads as broken rather than spacious.
+
+That height must be measured from the rows themselves, not computed from a copy of their metrics. A
+computed height is a second definition of the layout that has to agree with the first, and cannot
+survive a platform font scale, which grows text but not a fixed dimension. When the two disagree the
+list overflows its own viewport and silently scrolls, which shows up as the wrong gap under the
+header and, on a stream offering more than one category, a clipped row.
+
+A retained parent stays composed beneath its child, so it must not contribute to that measurement:
+only the section actually on screen may size the panel. Otherwise the panel keeps the height of the
+deepest section ever opened, and returning from a long option list leaves a short menu adrift in a
+tall panel.
+
+Every row label is centred against its row. Text sitting high in a fixed-height row is the visible
+symptom of a line box whose extra leading all falls below the glyphs.
+
+### Settings row appearance
+
+A settings row follows the same focus language as every other list in the product: focus is an opaque
+white row with dark content, and a row carries a caption at the same size as the other sections'
+headers rather than a smaller one of its own.
+
+Only the row holding the **current value** is outlined and tinted. Outlining every row stacks a
+column of boxes that competes with the focused row for attention, and leaves focus reading as one
+more border among many rather than as the single thing the D-pad is pointing at. An unselected,
+unfocused row is plain text on the panel.
+
 ### Controller
 
 The controller occupies the top and bottom edges and leaves the middle of the picture clear.
@@ -211,6 +245,13 @@ resuming a still-errored player does nothing.
 11. Leaving playback idle for five seconds while playing hides the controller; pausing keeps it up.
 12. A retryable failure shows the message with a focused retry control; a non-retryable one shows the
     message alone.
+13. The settings panel is exactly as tall as its rows, with equal padding above the header and below
+    the last row, and no row clipped or scrolled out of view.
+14. Opening a settings category and pressing back returns the panel to the height of the category
+    list it came from, not the height of the options it was showing.
+15. A settings row under focus is an opaque white row with dark content; the row holding the current
+    value is tinted and outlined; every other row is plain text with no box of its own.
+16. A settings header renders at the same size as the metadata and comments headers.
 
 ## Known deviation
 

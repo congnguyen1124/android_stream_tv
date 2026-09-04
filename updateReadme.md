@@ -265,3 +265,4 @@ PY
 | Panel Settings chỉ có một dòng | Đúng như thiết kế — stream này không có phụ đề/audio thay thế, và Settings không hiện category rỗng | Bấm `CENTER` thêm một lần để vào danh sách Quality |
 | GIF quá nặng (>3 MB) | `duration` dài, hoặc nền là video đang chạy nên mọi frame đều khác nhau | Rút ngắn `duration`, bớt `steps` |
 | Emulator không tải được stream dù ping được | TLS của emulator hỏng sau khi chạy lâu | `adb reboot`, chờ boot xong rồi chụp lại |
+| `am start` báo lỗi, không capture nào chạy được | `connectedDebugAndroidTest` gỡ app sau khi chạy xong | `./gradlew :app:installDebug` rồi chụp lại |

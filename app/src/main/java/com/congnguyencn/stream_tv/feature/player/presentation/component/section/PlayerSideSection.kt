@@ -8,10 +8,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,12 +51,6 @@ import com.congnguyencn.stream_tv.feature.player.presentation.model.PlayerSettin
 private object PlayerSideSectionDefaults {
   val Shape = RoundedCornerShape(14.dp)
   val ContentPadding = PaddingValues(20.dp)
-  val CompactHeaderHeight = 24.dp
-  val CompactHeaderSpacing = 12.dp
-  val CompactRootItemHeight = 54.dp
-  val CompactOptionItemHeight = 42.dp
-  val CompactItemSpacing = 6.dp
-  val CompactMinimumHeight = 108.dp
   val CompactMaximumHeight = 430.dp
 }
 
@@ -137,9 +132,8 @@ internal fun PlayerSideSection(
 
   if (!navigationState.hasSectionInPlay) return
 
-  val compactPanelHeight = navigationState.panelSection
-    ?.takeIf { compactSettings && it.isSettingSection() }
-    ?.let { section -> compactSettingPanelHeight(section = section, uiState = uiState) }
+  val isCompactPanel = compactSettings && navigationState.panelSection?.isSettingSection() == true
+  val sectionSizeModifier = if (isCompactPanel) Modifier.fillMaxWidth() else Modifier.fillMaxSize()
 
   Box(modifier = modifier.fillMaxSize()) {
     Surface(
@@ -147,8 +141,10 @@ internal fun PlayerSideSection(
         .align(Alignment.BottomEnd)
         .fillMaxWidth()
         .then(
-          if (compactPanelHeight != null) {
-            Modifier.height(compactPanelHeight)
+          if (isCompactPanel) {
+            Modifier
+              .heightIn(max = PlayerSideSectionDefaults.CompactMaximumHeight)
+              .wrapContentHeight()
           } else {
             Modifier.fillMaxSize()
           },
@@ -157,13 +153,14 @@ internal fun PlayerSideSection(
       shape = shape,
       colors = SurfaceDefaults.colors(containerColor = containerColor),
     ) {
-      Box(modifier = Modifier.fillMaxSize()) {
+      Box(modifier = sectionSizeModifier) {
         navigationState.sectionLayers.forEach { section ->
           key(section) {
             val isPanelSection = section == navigationState.panelSection
             AnimatedPlayerSection(
-              modifier = Modifier
-                .fillMaxSize()
+              // A retained parent stays composed beneath its child, so without matchParentSize a
+              // wrapping panel would stay as tall as the deepest section ever opened.
+              modifier = (if (isPanelSection) sectionSizeModifier else Modifier.matchParentSize())
                 .graphicsLayer { alpha = if (isPanelSection) 1f else 0f }
                 .then(hiddenSectionSemantics(isPanelSection)),
               isEntering = isPanelSection && navigationState.isPanelEntering,
@@ -204,9 +201,7 @@ internal fun PlayerSideSection(
                 onAudioSelected = onAudioSelected,
                 onCommentLikeToggle = onCommentLikeToggle,
                 onBack = dismissTopSection,
-                modifier = Modifier
-                  .fillMaxSize()
-                  .padding(contentPadding),
+                modifier = sectionSizeModifier.padding(contentPadding),
               )
             }
           }
@@ -218,29 +213,6 @@ internal fun PlayerSideSection(
 
 private fun PlayerSection.isSettingSection(): Boolean =
   this == PlayerSection.Settings || this is PlayerSection.SettingOptions
-
-private fun compactSettingPanelHeight(section: PlayerSection, uiState: PlayerUiState) = when (section) {
-  PlayerSection.Settings -> uiState.settings.items.size to PlayerSideSectionDefaults.CompactRootItemHeight
-
-  is PlayerSection.SettingOptions ->
-    (uiState.settings.item(section.category)?.options?.size ?: 0) to
-      PlayerSideSectionDefaults.CompactOptionItemHeight
-
-  else -> 0 to 0.dp
-}.let { (itemCount, itemHeight) ->
-  val listHeight = itemHeight * itemCount +
-    PlayerSideSectionDefaults.CompactItemSpacing * (itemCount - 1).coerceAtLeast(0)
-  (
-    PlayerSideSectionDefaults.ContentPadding.calculateTopPadding() +
-      PlayerSideSectionDefaults.CompactHeaderHeight +
-      PlayerSideSectionDefaults.CompactHeaderSpacing +
-      listHeight +
-      PlayerSideSectionDefaults.ContentPadding.calculateBottomPadding()
-    ).coerceIn(
-    PlayerSideSectionDefaults.CompactMinimumHeight,
-    PlayerSideSectionDefaults.CompactMaximumHeight,
-  )
-}
 
 @Composable
 @Suppress("LongParameterList", "CyclomaticComplexMethod")

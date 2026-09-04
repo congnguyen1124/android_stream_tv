@@ -1,64 +1,67 @@
 # StreamTV
 
-**Một bộ UI Android TV hoàn chỉnh, chạy được, không phải một tập màn hình mẫu.**
+**A complete, running Android TV UI kit — not a folder of sample screens.**
 
-StreamTV là ứng dụng Android TV viết bằng Jetpack Compose for TV, tổ chức theo Clean Architecture
-trong **một app module**. Toàn bộ nội dung hiển thị trong ứng dụng dùng tiếng Anh.
+StreamTV is an Android TV application built with Jetpack Compose for TV, organised along Clean
+Architecture inside **a single app module**. Everything the app displays is written in English.
 
-Dự án bao gồm bảy màn hình đầy đủ — Home, Search, Calendar, Setting, Profile và hai player — cùng
-một bộ component TV dùng lại được: hero banner tự phát trailer, portrait carousel, `ContentRow` loop
-vô hạn, EPG dạng lưới, bàn phím ảo, và một player có controller tự ẩn với ba side section. Mọi
-hành vi focus trong dự án đều **cố ý và có thể tái tạo**, không phải kết quả tình cờ của thuật toán
-focus search.
+The project ships seven full screens — Home, Search, Calendar, Setting, Profile and two players —
+together with a set of reusable TV components: a hero banner that plays its own trailer, a portrait
+carousel, an infinitely looping `ContentRow`, a two-dimensional EPG grid, an on-screen keyboard, and
+a player whose controller auto-hides over three side sections. Every focus behaviour in the project
+is **deliberate and reproducible**, never an accident of the focus-search algorithm.
 
-> Toàn bộ ảnh và GIF dưới đây được chụp tự động từ emulator bằng [`tools/capture_media.py`](tools/capture_media.py).
-> Các demo player dùng cùng một nội dung — stream Big Buck Bunny — để dễ so sánh giữa hai orientation.
+> Every image and GIF below is captured automatically from an emulator by
+> [`tools/capture_media.py`](tools/capture_media.py). All player demos play the same content — the
+> Big Buck Bunny stream — so the two orientations can be compared directly.
 
 ---
 
-## Mục lục
+## Contents
 
 | | |
 |---|---|
-| [1. Home](#1-home--nội-dung-trước-giao-diện-sau) | Hero banner, trailer, các rail nội dung |
-| [2. Focus là con trỏ trên TV](#2-focus-là-con-trỏ-trên-tv) | TopBar, ContentRow, quy tắc D-pad |
-| [3. Search, Calendar, Setting, Profile](#3-search-calendar-setting-và-profile) | Bốn destination còn lại |
-| [4. Player ngang](#4-player-ngang) | Controller, focus restore, ba side section |
-| [5. Player dọc](#5-player-dọc) | Stage 9:16, interaction panel |
-| [6. Hai player, một ViewModel](#6-hai-player-một-viewmodel) | Bảng so sánh |
-| [7. Tự chụp lại bộ ảnh này](#7-tự-chụp-lại-bộ-ảnh-này) | `tools/capture_media.py` |
-| [Tham chiếu kỹ thuật](#tham-chiếu-kỹ-thuật) | Kiến trúc, navigation, DI, build |
+| [1. Home](#1-home--content-before-interface) | Hero banner, trailer, content rails |
+| [2. Focus is the cursor on television](#2-focus-is-the-cursor-on-television) | Top bar, ContentRow, the D-pad contract |
+| [3. Search, Calendar, Setting, Profile](#3-search-calendar-setting-and-profile) | The four remaining destinations |
+| [4. The landscape player](#4-the-landscape-player) | Controller, focus restore, three side sections |
+| [5. The portrait player](#5-the-portrait-player) | The 9:16 stage, the interaction panel |
+| [6. Two players, one ViewModel](#6-two-players-one-viewmodel) | Comparison table |
+| [7. Reproducing these captures](#7-reproducing-these-captures) | `tools/capture_media.py` |
+| [Technical reference](#technical-reference) | Architecture, navigation, DI, build |
 
 ---
 
-## 1. Home — nội dung trước, giao diện sau
+## 1. Home — content before interface
 
-Người xem ngồi cách màn hình vài mét và chỉ có bốn phím mũi tên. Home vì thế nhường phần lớn
-viewport đầu tiên cho artwork: một tiêu đề ngắn, một mô tả gọn, và **một** hành động chính nằm trên
-scrim tối nhiều lớp bảo vệ khả năng đọc mà không che ảnh.
+Viewers sit several metres from the screen with four directional buttons in hand. Home therefore
+gives most of the first viewport to artwork: a short title, a concise description, and **one**
+primary action, over a layered dark scrim that protects legibility without covering the image.
 
 ![Home overview](docs/images/home-overview.webp)
 
-*Hero banner cao 600dp nằm phía sau TopBar overlay. Rail đầu tiên bắt đầu ngay dưới hero để báo hiệu
-người xem có thể đi xuống tiếp.*
+*The 600dp hero banner sits behind the top-bar overlay. The first rail begins immediately below the
+hero, signalling that the viewer can continue downward.*
 
-### Hero banner tự phát trailer
+### The hero banner plays its own trailer
 
-Đây là chi tiết một ảnh tĩnh không thể diễn tả. Thumbnail giữ 5 giây, sau đó trailer của **chính
-item đang focus** fade in đè lên thumbnail, chạy loop, không controller, không âm thanh nổi bật.
+This is the detail a still cannot convey. The thumbnail holds for five seconds, then the trailer of
+**the item currently focused** fades in over it and loops — no controller, no prominent audio.
 
 ![Banner trailer hand-off](docs/images/home-banner-trailer.gif)
 
-*Từ ảnh tĩnh sang trailer: title, mô tả và CTA giữ nguyên vị trí và vẫn đọc được xuyên suốt.*
+*From artwork to trailer: the title, description and call to action hold their position and stay
+readable throughout.*
 
-Trailer chỉ chạy khi carousel đang giữ focus **và** screen đang `RESUMED`. Rời focus, đổi item, mở
-player hoặc app xuống background đều dừng và unload player. Trailer lỗi hoặc thiếu `trailerUrl` thì
-banner vẫn là ảnh tĩnh — thumbnail không bao giờ bị bỏ đi. Chi tiết: [`docs/home-banner-trailer/`](docs/home-banner-trailer/).
+The trailer runs only while the carousel holds focus **and** the screen is `RESUMED`. Losing focus,
+changing item, opening the player, or sending the app to the background all stop and unload the
+player. If the trailer fails or the item has no `trailerUrl`, the banner simply stays a still image —
+the thumbnail is never thrown away. Details: [`docs/home-banner-trailer/`](docs/home-banner-trailer/).
 
-### Các rail nội dung
+### Content rails
 
-Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content
-ngang. Bốn `viewType` khác nhau, cùng một component nền là `ContentRow`.
+Home receives a vertical list of sections; each section owns a `title`, a `viewType` and a horizontal
+list of content. Four different view types, all built on the same `ContentRow` foundation.
 
 <table>
 <tr>
@@ -66,168 +69,174 @@ ngang. Bốn `viewType` khác nhau, cùng một component nền là `ContentRow`
 <td width="50%"><img src="docs/images/home-series.webp" alt="Documentary series row"></td>
 </tr>
 <tr>
-<td><em><strong>Popular videos</strong> — rail xếp hạng, số thứ tự vẽ tràn ra ngoài card bên trái.</em></td>
-<td><em><strong>Documentary series</strong> — card kèm badge số tập, giữ finite vì chỉ có 4 item.</em></td>
+<td><em><strong>Popular videos</strong> — a ranked rail whose numerals bleed past the left edge of the card.</em></td>
+<td><em><strong>Documentary series</strong> — cards carrying an episode-count badge; finite, because there are only four items.</em></td>
 </tr>
 <tr>
 <td><img src="docs/images/home-channels.webp" alt="Live channels row"></td>
 <td><img src="docs/images/home-shorts.webp" alt="Shorts row"></td>
 </tr>
 <tr>
-<td><em><strong>Live channels</strong> — badge LIVE đỏ; các stream này không có duration nên player sẽ bỏ seek bar.</em></td>
-<td><em><strong>Fresh shorts</strong> — thumbnail dọc 2:3, mở bằng player dọc thay vì player ngang.</em></td>
+<td><em><strong>Live channels</strong> — a red LIVE badge; these streams have no duration, so the player drops its seek bar.</em></td>
+<td><em><strong>Fresh shorts</strong> — 2:3 portrait thumbnails, opened in the portrait player rather than the landscape one.</em></td>
 </tr>
 </table>
 
-Thumbnail **không bị làm tối** theo selection. Selection chỉ làm sáng title và thêm border trắng —
-làm tối ảnh khiến rail trông như bị disable khi lướt nhanh.
+Thumbnails are **never darkened** by selection. Selection only brightens the title and adds a white
+border — darkening the image makes a rail look disabled when the viewer moves quickly.
 
-### Portrait carousel
+### The portrait carousel
 
-`VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3 trên một virtual pager dài, loop khi có ít nhất 5
-item, preload 5 page quanh viewport.
+`VerticalBanner` presents `Short` content at 2:3 on a long virtual pager, looping once there are at
+least five items, preloading five pages around the viewport.
 
 ![Portrait carousel](docs/images/home-vertical-banner.webp)
 
-*Item ở giữa được scale lên, và nền của cả section đổi màu theo palette trích từ thumbnail đang
-active — mỗi lần chuyển item là một lần chuyển tông màu.*
+*The centre item is scaled up, and the whole section's background takes its colour from a palette
+extracted from the active thumbnail — every item change is also a change of tone.*
 
 ---
 
-## 2. Focus là con trỏ trên TV
+## 2. Focus is the cursor on television
 
-Trên TV không có con trỏ chuột. Focus **là** con trỏ, nên nó phải luôn nhìn thấy được và luôn có
-đúng một chủ sở hữu sau mỗi transition. StreamTV không dùng `FocusRequesterModifiers` chung: hành vi
-focus được khai báo ngay tại composable sở hữu nó.
+There is no mouse pointer on a television. Focus **is** the cursor, so it must always be visible and
+must have exactly one owner after every transition. StreamTV uses no shared
+`FocusRequesterModifiers`: focus behaviour is declared by the composable that owns it.
 
-### TopBar mở rộng khi nhận focus
+### Top-bar items expand on focus
 
 ![Top bar focus](docs/images/topbar-focus.gif)
 
-*Item TopBar bình thường chỉ có icon; khi nhận focus nó giãn ngang khoảng 180ms và lộ nhãn tiếng
-Anh. Profile giữ nguyên dạng icon tròn. Khi TopBar giữ focus, một lớp `surface` bán trong suốt phủ
-lên toàn bộ nội dung phía dưới để quyền điều hướng hiện đang thuộc về ai là điều rõ ràng.*
+*A top-bar item normally shows only its icon; on focus it expands horizontally over about 180ms and
+reveals its English label. Profile stays an icon-only circle. While the top bar holds focus, a
+translucent `surface` layer covers the content beneath it, so it is obvious who currently owns
+navigation.*
 
-Ba quy tắc quan trọng:
+Three rules matter most:
 
-- **Destination không cướp focus.** Chọn một destination khác vẫn để focus ở TopBar. Destination chỉ
-  giành focus khi TopBar không giữ — tức là lúc khởi động nguội và lúc quay về từ player.
-  Xem [`docs/adr/2026-09-02-shell-focus-ownership.md`](docs/adr/2026-09-02-shell-focus-ownership.md).
-- **Vào lại TopBar là khôi phục destination đang chọn**, không phải nhảy về item đầu.
-- **TopBar có overlay riêng** — gradient dọc từ `surface` xuống trong suốt — do màn đang hiện bật/tắt.
-  Home chỉ bật khi focus rời section đầu tiên, vì Banner full-bleed đã có scrim riêng.
+- **Destinations do not steal focus.** Selecting a different destination leaves focus on the top bar.
+  A destination claims focus only when the top bar is not holding it — on cold launch, and on return
+  from a player. See [`docs/adr/2026-09-02-shell-focus-ownership.md`](docs/adr/2026-09-02-shell-focus-ownership.md).
+- **Re-entering the top bar restores the selected destination**, rather than jumping to the first item.
+- **The top bar has its own overlay** — a vertical gradient from `surface` to transparent — switched on
+  and off by the current destination. Home enables it only once focus leaves the first section,
+  because the full-bleed banner already carries its own scrim.
 
-### ContentRow: một focus target, danh sách trượt bên dưới
+### ContentRow: one focus target, with the list sliding beneath it
 
 ![Row navigation](docs/images/home-row-navigation.gif)
 
-*Xuống rail, rồi sang phải trong rail. Selector đứng yên tại leading content edge; chính danh sách
-mới là thứ trượt bên dưới nó.*
+*Down into a rail, then right along it. The selector stays put at the leading content edge; it is the
+list that slides underneath.*
 
-Đây là điểm khác biệt lớn nhất so với một `LazyRow` thông thường:
+This is the largest departure from an ordinary `LazyRow`:
 
-- Toàn bộ row chỉ có **một** focus target — `SelectedItem` trong suốt có border, cố định tại leading
-  content edge. Card bên dưới **không** được gắn `focusable`.
-- Border selector rộng hơn content 2dp mỗi cạnh, tạo khoảng thở mà không đổi kích thước card.
-- Row luôn đo thêm item ngoài hai biên, nên chuyển động không bao giờ lộ khoảng trống.
-- Khi có **hơn 5 item**, provider nối thêm một cycle đầy đủ của collection, và sau animation qua cuối
-  thì state rebase về cycle đầu — loop vô hạn mà không nhảy hình. Collection **tối đa 5 item** giữ
-  finite: Right ở item cuối không reset về item `0`.
-- Ở item `0`, không có item giả phía trái và D-pad Left trả quyền xử lý về `FocusRequester.Default`
-  để focus thoát ra ngoài row được.
+- The whole row has exactly **one** focus target — a transparent bordered `SelectedItem` pinned to the
+  leading content edge. The cards beneath it are **not** `focusable`.
+- The selector's border is 2dp wider than the content on each side, giving it room to breathe without
+  changing the card's size.
+- The row always measures extra items beyond both edges, so movement never exposes a gap.
+- With **more than five items**, the provider appends a full extra cycle of the collection, and after
+  the animation past the end the state rebases onto the first cycle — an infinite loop with no visual
+  jump. A collection of **five items or fewer** stays finite: Right on the last item does not reset to
+  item `0`.
+- At item `0` there is no phantom item to the left, and D-pad Left hands handling back to
+  `FocusRequester.Default` so focus can leave the row.
 
 ---
 
-## 3. Search, Calendar, Setting và Profile
+## 3. Search, Calendar, Setting and Profile
 
-Bốn destination còn lại của shell, mỗi màn giải một bài toán TV khác nhau.
+The shell's four remaining destinations, each solving a different television problem.
 
-### Search — bàn phím ảo và kết quả trên cùng một màn
+### Search — the keyboard and the results on one screen
 
 ![Search](docs/images/search.webp)
 
-*Ô nhập, lịch sử tìm kiếm và grid bàn phím a–z cùng nằm trong viewport đầu tiên. Không có màn hình
-nhập liệu riêng — người xem không phải rời kết quả để gõ. Bên dưới là "Recommended for you" tách
-theo loại content.*
+*The input field, the search history and the a–z keyboard grid all sit in the first viewport. There is
+no separate entry screen — the viewer never has to leave the results in order to type. Below,
+"Recommended for you" is split by content type.*
 
-### Calendar — EPG dạng lưới hai chiều
+### Calendar — a two-dimensional EPG grid
 
 ![Calendar](docs/images/calendar.webp)
 
-*Trục dọc là giờ, trục ngang là kênh. Ô chương trình cao theo đúng thời lượng, nên một chương trình
-2 tiếng thực sự cao gấp đôi một chương trình 1 tiếng. Khoảng trống trong lịch phát là ô trống thật,
-không phải placeholder. Focus là border trắng bao quanh ô.*
+*Time runs down, channels run across. A programme cell is as tall as its actual duration, so a
+two-hour programme really is twice the height of a one-hour one. A gap in the schedule is a genuine
+empty cell, not a placeholder. Focus is a white border around the cell.*
 
-### Setting — hai pane, danh sách bên trái dẫn nội dung bên phải
+### Setting — two panes, the left list driving the right
 
 ![Setting](docs/images/setting.webp)
 
-*Danh sách bên trái nhóm theo Account / About / Privacy. Item được chọn dùng nền trắng chữ đen thay
-vì phóng to — trong một cột dày đặc, phóng to sẽ làm các item va vào nhau.*
+*The left list is grouped into Account / About / Privacy. The selected item inverts to a white
+surface with dark text instead of scaling — in a dense column, scaling would make items collide.*
 
-### Profile — đăng nhập bằng thiết bị khác
+### Profile — signing in from another device
 
 ![Profile](docs/images/profile.webp)
 
-*Gõ mật khẩu bằng D-pad là trải nghiệm tệ, nên màn này ưu tiên QR code và mã đăng nhập có hạn dùng.
-QR được render tại chỗ. Nút "Sign in with phone number" vẫn còn đó làm phương án dự phòng.*
+*Typing a password on a D-pad is a poor experience, so this screen leads with a QR code and a
+time-limited sign-in code. The QR is rendered in place. "Sign in with phone number" remains as a
+fallback.*
 
 ---
 
-## 4. Player ngang
+## 4. The landscape player
 
-`PlayerScreen` dành cho nội dung quay ngang: video, tập phim và kênh live. Video lấp đầy panel và
-**mọi chi tiết giao diện đều là tạm thời**.
+`PlayerScreen` handles content shot landscape: videos, series episodes and live channels. The video
+fills the panel and **every piece of chrome is transient**.
 
 ![Player surface](docs/images/player-surface.webp)
 
-*Trạng thái mặc định: không có gì ngoài hình. Một full-screen input target vô hình giữ D-pad và
-chờ phím đầu tiên.*
+*The default state: nothing but the picture. An invisible full-screen input target holds the D-pad and
+waits for the first key.*
 
-### Controller
+### The controller
 
-Nhấn bất kỳ hướng nào để hiện controller. Nó chiếm hai mép trên/dưới và **để trống dải giữa**.
+Press any direction to reveal the controller. It occupies the top and bottom edges and **leaves the
+middle band clear**.
 
 ![Player controller](docs/images/player-controller.webp)
 
-*Scrim dọc làm tối hai mép và hoàn toàn trong suốt ở giữa, nên chữ vẫn đọc được trên mọi khung hình
-mà không làm mờ đúng phần người xem đang nhìn.*
+*A vertical scrim darkens both edges and stays fully transparent across the middle, so text remains
+legible over any frame without dimming the part the viewer is actually watching.*
 
-Control row chia làm ba cụm:
+The control row is divided into three clusters:
 
-| Cụm | Canh | Nội dung |
+| Cluster | Alignment | Contents |
 |---|---|---|
-| Leading | Mép trái | Pill `Description` |
-| Transport | **Canh giữa panel** | Rewind, play/pause, forward |
-| Trailing | Mép phải | Like, save, comment trên một pill chung; settings trên vòng tròn riêng |
+| Leading | Leading edge | The `Description` pill |
+| Transport | **Centred on the panel** | Rewind, play/pause, forward |
+| Trailing | Trailing edge | Like, save and comment on one shared pill; settings on its own circle |
 
-Cụm transport canh giữa **panel**, không phải canh giữa khoảng trống giữa hai cụm kia — nhờ vậy vị
-trí của nó không nhảy khi stream không có settings và nút settings biến mất.
+The transport cluster is centred on the **panel**, not on the space between the other two — which is
+why its position does not shift when a stream has no settings and that control disappears.
 
-Nút được focus **không phóng to** mà **đảo màu**: nền trắng đục, glyph tối, kèm caption tên nút ngay
-bên dưới. Một nút nằm trên pill chung nếu phóng to sẽ tràn ra khỏi pill.
+A focused control **does not scale**; it **inverts**: an opaque white fill, a dark glyph, and a
+caption naming it directly beneath. A control sitting on the shared pill would grow out of it.
 
-Với stream live, seek bar được thay bằng một nhãn thời gian đã phát, badge `LIVE` đứng trước tiêu đề,
-và rewind/forward biến mất.
+On a live stream the seek bar is replaced by a single elapsed-time label, a `LIVE` badge precedes the
+title, and rewind and forward are absent.
 
-### Xuống từ seek bar là quay về đúng nút vừa dùng
+### Down from the seek bar returns to the control you last used
 
 ![Focus restore](docs/images/player-focus-restore.gif)
 
-*Play/pause → sang phải tới **Save** → lên seek bar (thumb to ra, Save thôi tô trắng) → xuống lại
-**Save**, không phải về play/pause.*
+*Play/pause → right to **Save** → up to the seek bar (the thumb grows, Save stops being filled) → down
+again to **Save**, not back to play/pause.*
 
-Chi tiết đáng nói: hành vi này **không** dùng `Modifier.focusRestorer` hay `saveFocusedChild()`. Cả
-hai đều móc vào hook focus-search enter/exit, mà ở đây control row được rời và vào lại bằng
-`FocusRequester` request trực tiếp — request đó đi vòng qua hook, nên restore luôn tìm thấy rỗng và
-rơi về mặc định. StreamTV thay bằng việc nhớ control cuối cùng trong state.
+Worth calling out: this behaviour does **not** use `Modifier.focusRestorer` or `saveFocusedChild()`.
+Both hook into focus-search enter and exit, and here the control row is left and re-entered by direct
+`FocusRequester` requests — which bypass those hooks, so the restore always finds nothing saved and
+falls back. StreamTV remembers the last-used control in state instead.
 
-Down từ control row **không làm gì cả**. Để nó rơi xuống là trao focus cho video surface, mà surface
-thì lập tức ẩn cái controller người xem đang dùng.
+Down from the control row **does nothing at all**. Letting it fall through hands focus to the video
+surface, which immediately hides the controller the viewer is still using.
 
-### Ba side section
+### Three side sections
 
-Cả ba mở ra ở mép phải trong một panel bo góc, tối, bán trong suốt.
+All three open on the trailing edge inside a rounded, dark, translucent panel.
 
 <table>
 <tr>
@@ -235,89 +244,89 @@ Cả ba mở ra ở mép phải trong một panel bo góc, tối, bán trong su�
 <td width="50%"><img src="docs/images/player-comments-section.webp" alt="Comments section"></td>
 </tr>
 <tr>
-<td><em><strong>Metadata</strong> — mở từ pill <code>Description</code>.</em></td>
-<td><em><strong>Comments</strong> — có viewport cuộn bằng D-pad và scrollbar hiện theo focus; Up/Down cuộn tới biên rồi mới nhả phím cho focus đi tiếp.</em></td>
+<td><em><strong>Metadata</strong> — opened from the <code>Description</code> pill.</em></td>
+<td><em><strong>Comments</strong> — a D-pad scroll viewport with a focus-aware scrollbar; Up and Down scroll to the boundary, then release the key so focus can move on.</em></td>
 </tr>
 </table>
 
 ![Quality settings](docs/images/player-settings-section.webp)
 
-***Settings → Quality*** — *danh sách rendition đọc trực tiếp từ manifest HLS. Settings không hiển thị
-category rỗng: stream này không có phụ đề hay audio thay thế nên panel gốc chỉ có đúng một dòng
-Quality.*
+***Settings → Quality*** — *the rendition list read straight from the HLS manifest. Settings never shows
+an empty category: this stream carries no subtitles and no alternative audio, so the root panel holds
+a single Quality row.*
 
-Back từ một section trả focus về **đúng control đã mở nó** — Metadata về `Description`, Comments về
-comment, Settings về settings. Back khi controller đang hiện chỉ ẩn controller; Back tiếp theo mới
-thoát player.
+Back from a section returns focus to **the control that opened it** — Metadata to `Description`,
+Comments to comment, Settings to settings. Back while the controller is showing only hides the
+controller; the next Back leaves the player.
 
 ---
 
-## 5. Player dọc
+## 5. The portrait player
 
-Panel TV nằm ngang, còn short thì quay dọc. Thay vì letterbox thành hai dải hẹp hay crop mất đầu và
-chân khung hình, `VerticalPlayerScreen` dựng một stage 9:16 ở giữa lệch trái và **trả phần chiều
-rộng dôi ra cho chính nội dung**.
+A television panel is landscape; a short is not. Rather than letterboxing it into two narrow bars or
+cropping away the top and bottom of the frame, `VerticalPlayerScreen` builds a 9:16 stage centred and
+nudged toward the leading edge, and **gives the freed width back to the content itself**.
 
 ![Vertical player](docs/images/vertical-player.webp)
 
-*Ba vùng: nền ambient gradient ngang, stage 9:16 bo góc (video crop để lấp đầy, không có dải đen bên
-trong stage), và interaction panel bên phải. Stage có border focus trắng inset — nó là focus target
-thật, không phải mặt phẳng thụ động.*
+*Three regions: a horizontal ambient gradient, a rounded 9:16 stage (the video crops to fill it, so no
+bars appear inside the stage), and the interaction panel on the trailing edge. The stage carries an
+inset white focus border — it is a real focus target, not a passive surface.*
 
-Màn này **không có** transport cluster, không seek bar, không pill `Description` và không caption
-dưới nút. Bản thân stage là nút play/pause, và title block là cửa vào metadata.
+This screen has **no** transport cluster, no seek bar, no `Description` pill and no caption under its
+controls. The stage itself is the play/pause control, and the title block is the way into metadata.
 
 ![Vertical panel navigation](docs/images/vertical-player-panel.gif)
 
-*Right từ stage vào thẳng **action đầu tiên** (không phải title block — title block ở một bước Up từ
-đó); container title được tint để cả panel đọc như một vùng. Left từ action đầu quay về stage, còn
-Left từ action sau chỉ dịch trong hàng.*
+*Right from the stage lands on the **first action** — not the title block, which is one step Up from
+there; the title container is tinted so the panel reads as a single region. Left from the first action
+returns to the stage, while Left from a later action only moves within the row.*
 
 ![Vertical metadata](docs/images/vertical-player-metadata.webp)
 
-*Cùng một section tree với player ngang, nhưng ở đây panel vẽ **trong suốt** trên nền ambient thay vì
-trong một panel bo góc. Khác biệt framing này nằm ở ranh giới screen, còn nội dung section thì dùng
-chung.*
+*The same section tree as the landscape player, but drawn **transparent** over the ambient background
+rather than inside a rounded panel. That framing difference lives at the screen boundary; the section
+content itself is shared.*
 
 ---
 
-## 6. Hai player, một ViewModel
+## 6. Two players, one ViewModel
 
-Cả hai màn dùng chung `PlayerViewModel`, chung retained section tree trong `component/section`, và
-chung `StreamTvPlayerManager` từ thư viện `stream_player` (dự án riêng, xem
-[`docs/player-integration/`](docs/player-integration/)). Khác biệt nằm ở tầng trình bày:
+Both screens share one `PlayerViewModel`, one retained section tree under `component/section`, and one
+`StreamTvPlayerManager` from the `stream_player` library (a separate project — see
+[`docs/player-integration/`](docs/player-integration/)). The differences are all presentational:
 
-| | Player ngang | Player dọc |
+| | Landscape player | Portrait player |
 |---|---|---|
-| Khung hình | Letterbox, đầy panel | Crop vào stage 9:16 canh giữa |
-| Nền | Chính video | Gradient ambient ngang |
-| Vòng đời chrome | Tạm thời, tự ẩn sau 5s | Thường trực |
-| Transport | Rewind, play/pause, forward | Không; stage là nút điều khiển |
-| Seek bar | Focus được, có thumb và nhãn giờ | Vạch tiến độ không tương tác |
-| Cửa vào metadata | Pill `Description` | Title block |
-| Caption dưới nút | Có | Không |
-| Panel section | Bo góc, tối, bán trong suốt | Trong suốt trên nền ambient |
-| Đóng section | Back | Back hoặc Left |
-| Focus sau khi đóng section | Về control đã mở nó | Về stage |
+| Video fit | Letterboxed, fills the panel | Cropped into a centred 9:16 stage |
+| Background | The video itself | Horizontal ambient gradient |
+| Chrome lifetime | Transient, auto-hides after 5s | Permanent |
+| Transport | Rewind, play/pause, forward | None; the stage is the control |
+| Seek bar | Focusable, with thumb and time labels | Non-interactive progress line |
+| Metadata entry | The `Description` pill | The title block |
+| Caption under controls | Yes | No |
+| Section panel | Rounded, dark, translucent | Transparent over the ambient background |
+| Section dismissal | Back | Back or Left |
+| Focus after closing a section | The control that opened it | The stage |
 
-Hai điểm chung quan trọng nhất:
+The two things they share matter most:
 
-- **Đúng một group sở hữu D-pad tại mỗi thời điểm**, và group là *một giá trị derived duy nhất*, không
-  phải một tập cờ độc lập. Thứ tự ưu tiên từ cao xuống thấp: `Error`, `Parked`, `Section`,
-  `Controller`, `Surface`.
-- **Focus được phát ra ở đúng một nơi.** Một subtree không được tự request focus cho mình trong lúc
-  owner cũng đang quyết định — panel từng làm vậy đã đua với owner và thua, để lại màn hình không có
-  gì focus được.
+- **Exactly one group owns the D-pad at any moment**, and that group is *a single derived value*, not a
+  set of independent flags. Precedence, highest first: `Error`, `Parked`, `Section`, `Controller`,
+  `Surface`.
+- **Focus is handed out in exactly one place.** A subtree must not request focus for itself while the
+  owner is also deciding — a panel that did raced the owner and lost, leaving the screen with nothing
+  focusable.
 
-Đặc tả đầy đủ, gồm cả bảng focus graph và các kịch bản nghiệm thu:
-[`spec/player.md`](spec/player.md) và [`spec/vertical-player.md`](spec/vertical-player.md).
+Full specifications, including the focus-graph tables and acceptance scenarios:
+[`spec/player.md`](spec/player.md) and [`spec/vertical-player.md`](spec/vertical-player.md).
 
 ---
 
-## 7. Tự chụp lại bộ ảnh này
+## 7. Reproducing these captures
 
-Mọi ảnh và GIF ở trên đều tái tạo được. Chúng không phải screenshot chụp tay rồi để trôi theo thời
-gian.
+Every image and GIF above is reproducible. None of them is a hand-taken screenshot left to drift out
+of date.
 
 ```bash
 python3 tools/capture_media.py list
@@ -326,37 +335,37 @@ python3 tools/capture_media.py gif player-focus-restore
 python3 tools/capture_media.py all
 ```
 
-Yêu cầu: `adb` trên PATH với **đúng một** device đang kết nối, và `ffmpeg` để convert GIF.
+Requires `adb` on PATH with **exactly one** attached device, and `ffmpeg` for GIF conversion.
 
-Mỗi capture khai báo `setup` (đường phím để tới nơi, không quay) tách khỏi `steps` (chính phần biểu
-diễn), và mỗi lần chạy đều force-stop rồi mở lại app, nên không capture nào thừa hưởng focus của
-capture trước. Ảnh tĩnh xuất ra WebP, GIF qua palette hai lượt của ffmpeg. Đầu ra ghi vào
+Each capture separates `setup` (the key path needed to get there, not recorded) from `steps` (the
+demonstration itself), and every run force-stops and relaunches the app, so no capture inherits
+another's focus. Stills are written as WebP, GIFs through a two-pass ffmpeg palette. Output lands in
 [`docs/images/`](docs/images/).
 
-[`updateReadme.md`](updateReadme.md) là tài liệu vận hành đi kèm: sửa file nào thì phải chụp lại
-capture nào, chỗ nào cần GIF chỗ nào chỉ cần ảnh tĩnh, và mỗi demo dùng item nội dung nào.
+[`updateReadme.md`](updateReadme.md) is the companion runbook: which captures to re-run for a given
+source change, when a GIF is warranted over a still, and which dummy item each demo depends on.
 
 ---
 
-# Tham chiếu kỹ thuật
+# Technical reference
 
-## Chức năng hiện tại
+## Current functionality
 
-- TopBar điều hướng giữa Search, Home, Calendar, Setting và Profile bằng D-pad. Khi navigation nhận focus, app phủ một lớp `surface` bán trong suốt lên toàn bộ screen và giữ TopBar nổi phía trên.
-- Home nhận một danh sách section dọc; mỗi section sở hữu `title`, `viewType` và danh sách content ngang.
-- `Banner` full-width cao 600dp nằm phía sau TopBar overlay, dùng hero scrim nhiều lớp, CTA, edge pages, indicator và lifecycle-aware auto-scroll khi không focus.
-- `VerticalBanner` hiển thị `Short` theo tỷ lệ 2:3, loop trên virtual pager dài khi có ít nhất 5 item, preload 5 page quanh viewport, scale item và đổi nền theo palette trích từ thumbnail active.
-- Focus đầu tiên thuộc về Banner; nhấn Up quay lại TopBar. Trái/phải chuyển item ngay trong carousel.
-- `Videos`, `ListSeries`, `Channels` và `Shorts` dùng `ContentRow`: horizontal lazy layout với selector cố định tại leading content edge và luôn đo thêm item ngoài hai biên để chuyển động không lộ khoảng trống.
-- Ảnh online được tải bằng Coil 3; dummy `videoUrl` và `trailerUrl` dùng HLS test stream (`trailerUrl` lấy từ cùng pool VOD nhưng xoay lệch một bậc nên không trùng `videoUrl` của chính item đó) và `logoUrl` đang để trống.
-- Dependency injection dùng Hilt; graph được kiểm tra và tạo code tại compile time bằng KSP.
+- The top bar navigates between Search, Home, Calendar, Setting and Profile with the D-pad. While navigation holds focus, the app lays a translucent `surface` over the whole screen and keeps the top bar above it.
+- Home receives a vertical list of sections; each section owns a `title`, a `viewType` and a horizontal content list.
+- `Banner` is a full-width 600dp hero behind the top-bar overlay, with a layered hero scrim, a call to action, edge pages, an indicator, and lifecycle-aware auto-scroll while unfocused.
+- `VerticalBanner` presents `Short` content at 2:3, looping on a long virtual pager once there are at least five items, preloading five pages around the viewport, scaling the active item and recolouring its background from a palette extracted from the active thumbnail.
+- Initial focus belongs to the banner; Up returns to the top bar. Left and right move between items within the carousel.
+- `Videos`, `ListSeries`, `Channels` and `Shorts` all use `ContentRow`: a horizontal lazy layout with a selector fixed at the leading content edge that always measures extra items beyond both edges, so movement never exposes a gap.
+- Online images are loaded with Coil 3; the dummy `videoUrl` and `trailerUrl` values are HLS test streams (`trailerUrl` is drawn from the same VOD pool but rotated one step, so it never matches an item's own `videoUrl`), and `logoUrl` is currently left empty.
+- Dependency injection uses Hilt; the graph is verified and generated at compile time by KSP.
 
-## Cấu trúc Home feature
+## Home feature structure
 
 ```text
 feature/home/
 ├── data/
-│   ├── model/                  # DTO đa hình và viewType từ nguồn dữ liệu
+│   ├── model/                  # Polymorphic DTOs and the source's viewType
 │   ├── source/                 # HomeDummyDataSource
 │   ├── mapper/                 # DTO -> domain
 │   └── repository/             # DummyHomeRepository adapter
@@ -364,29 +373,29 @@ feature/home/
 │   ├── model/                  # Content, Video, Series, Channel, Short, HomeSection
 │   └── repository/             # Suspend HomeRepository contract
 └── presentation/
-    ├── component/              # HomeContent, Banner, BannerTrailer, VerticalBanner, ContentRow section, card
+    ├── component/              # HomeContent, Banner, BannerTrailer, VerticalBanner, ContentRow section, cards
     ├── mapper/                 # Domain -> UI model
-    ├── model/                  # UI item và UI viewType
-    ├── HomeRoute.kt            # HomeScreen: bind ViewModel, cấp trailer slot cho banner
+    ├── model/                  # UI items and UI view types
+    ├── HomeRoute.kt            # HomeScreen: binds the ViewModel, gives the banner its trailer slot
     ├── HomeUiState.kt
     ├── HomeViewModel.kt
-    ├── HomeBannerTrailerUiState.kt   # UiState + pure fold quyết định khi nào hiện video
-    └── HomeBannerTrailerViewModel.kt # sở hữu một player cho trailer của banner
+    ├── HomeBannerTrailerUiState.kt   # UiState plus the pure fold deciding when video is shown
+    └── HomeBannerTrailerViewModel.kt # owns one player for the banner's trailer
 ```
 
-App composition root nằm tại `app/di/HomeModule.kt`. Presentation không tự khởi tạo data source hoặc repository.
+The app composition root is `app/di/HomeModule.kt`. Presentation never constructs a data source or a repository itself.
 
 ## Navigation
 
-Navigation chia làm hai graph. `MainScreen` là shell duyệt nội dung: sở hữu `StreamTvTopBar` và một
-`MainNavHost` lồng bên trong. Hai màn player là anh em của `MainScreen` ở graph ngoài, nên chiếm trọn
-màn hình mà không ai phải ẩn TopBar.
+Navigation is split into two graphs. `MainScreen` is the content-browsing shell: it owns
+`StreamTvTopBar` and a nested `MainNavHost`. The two player screens are siblings of `MainScreen` in
+the outer graph, so they take the whole screen without anyone having to hide the top bar.
 
 ```
-StreamTvNavHost (ngoài)
+StreamTvNavHost (outer)
 ├── MainRoute ─────────► MainScreen
 │                        ├── StreamTvTopBar
-│                        └── MainNavHost (trong)
+│                        └── MainNavHost (inner)
 │                            ├── HomeRoute
 │                            ├── SearchRoute
 │                            ├── SettingRoute
@@ -395,29 +404,31 @@ StreamTvNavHost (ngoài)
 └── VerticalPlayerRoute
 ```
 
-- Một destination có TopBar khi và chỉ khi nó được đăng ký trong `MainNavHost`. Không còn predicate
-  `isPlayerRoute` so khớp prefix route để quyết định ẩn bar.
-- Back không cần code thêm: NavHost trong xử lý trước, hết stack thì rơi xuống NavHost ngoài.
-- `MainNavHost` không thấy controller ngoài, nên mở player đi qua `onOpenPlayer` /
-  `onOpenVerticalPlayer`. Chọn player nào vẫn do `HomeContentUiItem.playerTarget()` quyết định.
-- Mỗi feature duyệt nội dung chỉ còn **một** composable `XxxScreen`, đặt trong `XxxRoute.kt`. Home
-  giữ phần UI stateless tách riêng là `HomeContent` vì nó lớn và là thứ Compose test chạy vào.
+- A destination has a top bar if and only if it is registered in `MainNavHost`. There is no longer an
+  `isPlayerRoute` predicate matching route prefixes to decide whether to hide the bar.
+- Back needs no extra code: the inner NavHost handles it first, and once its stack is empty the event
+  falls through to the outer NavHost.
+- `MainNavHost` cannot see the outer controller, so opening a player goes through `onOpenPlayer` /
+  `onOpenVerticalPlayer`. Which player opens is still decided by `HomeContentUiItem.playerTarget()`.
+- Each browsing feature has exactly **one** `XxxScreen` composable, declared in `XxxRoute.kt`. Home
+  keeps its stateless UI separate as `HomeContent` because it is large and is what the Compose tests
+  exercise.
 
-Chi tiết quyết định, phương án thay thế và hệ quả: [`docs/adr/2026-09-01-nested-main-navigation.md`](docs/adr/2026-09-01-nested-main-navigation.md).
+The decision, the alternatives and the consequences: [`docs/adr/2026-09-01-nested-main-navigation.md`](docs/adr/2026-09-01-nested-main-navigation.md).
 
-## Dependency injection với Hilt
+## Dependency injection with Hilt
 
-- `StreamTvApplication` dùng `@HiltAndroidApp` để tạo application-level container.
-- `MainActivity` dùng `@AndroidEntryPoint` để kết nối Android entry point với Hilt graph.
-- `HomeModule` được cài vào `SingletonComponent`; module cung cấp `HomeDummyDataSource`, `HomeRepository` và `HomeUiMapper`.
-- `PlayerModule` cung cấp `StreamTvPlayerFactory`, `PlayerDummyDataSource` và
-  `PlayerDetailsRepository`; UI không khởi tạo data source hoặc ExoPlayer trực tiếp.
-- Toàn bộ `HomeViewModel`, `SearchViewModel`, `SettingViewModel`, `ProfileViewModel` dùng `@HiltViewModel` và constructor injection.
-- Mọi feature Route lấy ViewModel bằng `hiltViewModel()`; không còn factory hoặc dependency container thủ công trong production code.
+- `StreamTvApplication` is annotated `@HiltAndroidApp` to create the application-level container.
+- `MainActivity` is annotated `@AndroidEntryPoint` to connect the Android entry point to the Hilt graph.
+- `HomeModule` is installed into `SingletonComponent` and provides `HomeDummyDataSource`, `HomeRepository` and `HomeUiMapper`.
+- `PlayerModule` provides `StreamTvPlayerFactory`, `PlayerDummyDataSource` and `PlayerDetailsRepository`;
+  the UI never constructs a data source or an ExoPlayer directly.
+- `HomeViewModel`, `SearchViewModel`, `SettingViewModel` and `ProfileViewModel` all use `@HiltViewModel` with constructor injection.
+- Every feature route obtains its ViewModel with `hiltViewModel()`; there is no manual factory or dependency container left in production code.
 
-Domain giữ nguyên thuần Kotlin. Hilt wiring chỉ nằm tại app composition root và presentation entry point, nhờ đó có thể thay dummy repository bằng remote repository mà không sửa ViewModel hoặc UI.
+The domain layer stays plain Kotlin. Hilt wiring lives only at the app composition root and the presentation entry points, which is what makes it possible to swap a dummy repository for a remote one without touching a ViewModel or any UI.
 
-## Luồng dữ liệu
+## Data flow
 
 ```text
 HomeDummyDataSource
@@ -430,20 +441,20 @@ HomeDummyDataSource
     -> HomeContent
 ```
 
-`HomeViewModel` gọi suspend repository trực tiếp trong `viewModelScope`, hủy request cũ khi reload và không nuốt `CancellationException`. `PlayerViewModel` gọi `PlayerDetailsRepository` trực tiếp (không có use case trung gian), rồi `combine` playback state với content/action state thành immutable `PlayerUiState` bằng `stateIn(SharingStarted.Eagerly)`.
+`HomeViewModel` calls the suspend repository directly inside `viewModelScope`, cancels the previous request on reload, and does not swallow `CancellationException`. `PlayerViewModel` calls `PlayerDetailsRepository` directly — there is no intermediate use case — then `combine`s playback state with content and action state into an immutable `PlayerUiState` via `stateIn(SharingStarted.Eagerly)`.
 
-`Content` là sealed hierarchy gồm:
+`Content` is a sealed hierarchy of:
 
-- `Video`: một video đơn lẻ, thumbnail 16:9.
-- `Series`: content có thêm `episodes: List<Video>`.
-- `Channel`: content phát live.
-- `Short`: video dọc, thumbnail 2:3.
+- `Video`: a single video, 16:9 thumbnail.
+- `Series`: content that additionally carries `episodes: List<Video>`.
+- `Channel`: content broadcast live.
+- `Short`: portrait video, 2:3 thumbnail.
 
-Mọi content có `id`, `videoUrl`, `trailerUrl`, `thumbnailUrl`, `vastUrl`, `title`, `description`, `ageRestriction`, `logoUrl`. `id` được thêm để cung cấp stable key cho Compose; hậu tố `Url` của `logoUrl` làm rõ kiểu dữ liệu.
+Every content item has `id`, `videoUrl`, `trailerUrl`, `thumbnailUrl`, `vastUrl`, `title`, `description`, `ageRestriction` and `logoUrl`. `id` exists to give Compose a stable key; the `Url` suffix on `logoUrl` makes its type unambiguous.
 
-Quan hệ hợp lệ được kiểm tra tại constructor của `HomeSection` và `HomeSectionUiItem`:
+Valid pairings are checked in the constructors of `HomeSection` and `HomeSectionUiItem`:
 
-| `viewType` | Loại item bắt buộc |
+| `viewType` | Required item type |
 |---|---|
 | `Banner` | `Video` |
 | `VerticalBanner` | `Short` |
@@ -452,13 +463,13 @@ Quan hệ hợp lệ được kiểm tra tại constructor của `HomeSection` v
 | `Channels` | `Channel` |
 | `Shorts` | `Short` |
 
-Section sai kiểu bị từ chối ngay tại boundary thay vì bị lọc âm thầm trong Compose.
+A mistyped section is rejected at the boundary rather than silently filtered out inside Compose.
 
-## Ảnh dummy
+## Dummy imagery
 
-Dummy thumbnail dùng ảnh từ Pexels cho các chủ đề sport, animal, Chinese culture và Japanese culture.
+Dummy thumbnails use Pexels photographs covering sport, animals, Chinese culture and Japanese culture.
 
-Dummy sections cố ý bao gồm cả hai boundary của `ContentRow`: Videos có 8 item, Channels có 6 item và Shorts có 8 item để chạy loop; Documentary Series có 4 item để giữ finite.
+The dummy sections deliberately cover both `ContentRow` boundaries: Videos has 8 items, Channels has 6 and Shorts has 8, all of which loop; Documentary Series has 4, which keeps it finite.
 
 - [Basketball](https://www.pexels.com/photo/men-playing-basketball-9839903/)
 - [Football](https://www.pexels.com/photo/soccer-player-on-field-during-match-36958062/)
@@ -470,20 +481,20 @@ Dummy sections cố ý bao gồm cả hai boundary của `ContentRow`: Videos c�
 - [Tokyo street](https://www.pexels.com/photo/people-walking-in-city-in-japan-12343886/)
 - [Japanese ceremony](https://www.pexels.com/photo/traditional-japanese-ceremony-with-participants-31370378/)
 
-## Focus trên Android TV
+## Focus on Android TV
 
-StreamTV không dùng `FocusRequesterModifiers` của dự án tham chiếu. Hành vi focus được khai báo tại composable sở hữu nó:
+StreamTV does not use the reference project's `FocusRequesterModifiers`. Focus behaviour is declared by the composable that owns it:
 
-- `HomeBannerSection` gắn `contentFocusRequester` và khai báo `up = topBarFocusRequester`.
-- Banner và VerticalBanner tự xử lý D-pad trái/phải bằng `onPreviewKeyEvent`.
-- Auto-scroll dừng khi carousel nhận focus.
-- Trailer chỉ chạy khi carousel đang giữ focus và screen đang RESUMED. Một `LaunchedEffect` key theo `(item, isBannerFocused, isScreenResumed)` lo cả delay 5 giây lẫn điểm dừng duy nhất trong `finally`, nên mọi đường ra — mất focus, đổi item, dispose, navigate — đều dừng player.
-- Item TopBar khai báo hướng Down về content focus requester.
-- `HomeContent` theo dõi section nào đang giữ focus qua `onFocusChanged` và bật overlay TopBar khi index lớn hơn 0. `MainScreen` tự hạ overlay mỗi lần đổi destination.
+- `HomeBannerSection` attaches `contentFocusRequester` and declares `up = topBarFocusRequester`.
+- Banner and VerticalBanner handle D-pad left and right themselves via `onPreviewKeyEvent`.
+- Auto-scroll stops when the carousel receives focus.
+- The trailer runs only while the carousel holds focus and the screen is RESUMED. A single `LaunchedEffect` keyed on `(item, isBannerFocused, isScreenResumed)` owns both the five-second delay and the one stop call in its `finally`, so every exit — losing focus, changing item, disposal, navigation — stops the player.
+- Top-bar items declare Down toward the content focus requester.
+- `HomeContent` tracks which section holds focus through `onFocusChanged` and enables the top-bar overlay once the index is greater than zero. `MainScreen` lowers the overlay itself on every destination change.
 
 ### ContentRow
 
-Base component nằm tại `core/designsystem/component/contentrow` và cung cấp DSL gần với `LazyRow`:
+The base component lives in `core/designsystem/component/contentrow` and offers a DSL close to `LazyRow`:
 
 ```kotlin
 val state = rememberContentRowState()
@@ -498,71 +509,75 @@ ContentRow(state = state) {
 }
 ```
 
-- `ContentRow` được xây trên `LazyLayout`; chỉ item trong vùng nhìn thấy và vùng đệm sát viewport được compose/measure.
-- Toàn bộ row chỉ có một focus target là `SelectedItem` trong suốt có border, cố định tại leading content edge. Card bên dưới không được gắn `focusable`.
-- Border selector rộng hơn content 2dp ở mỗi cạnh, tạo khoảng thở mà không thay đổi kích thước card.
-- D-pad Left/Right dịch chuyển danh sách bên dưới selector; Center/Enter gọi callback của real selected index.
-- Khi di chuyển sang phải, item trước trượt ra ngoài leading edge nhưng vẫn để lại một phần nhỏ ở mép màn hình trong lúc row đang ở các index tiếp theo.
-- Ở item `0`, không có item giả phía trái và D-pad Left trả quyền xử lý về `FocusRequester.Default`.
-- Khi có hơn 5 item, provider nối thêm một cycle đầy đủ của collection. Vì vậy ở gần cuối row vẫn luôn thấy các item `0, 1, 2...` phía sau; sau animation qua cuối, state rebase về cycle đầu mà không tạo khoảng trống hoặc nhảy hình.
-- Collection có tối đa 5 item giữ finite: D-pad Right tại item cuối không reset về item `0`.
-- `ContentRowState.scrollToItem(index)` wrap index đối với row loop và clamp index đối với row finite.
+- `ContentRow` is built on `LazyLayout`; only items inside the viewport and its adjacent buffer are composed and measured.
+- The whole row has one focus target — a transparent bordered `SelectedItem` fixed at the leading content edge. The cards beneath are not `focusable`.
+- The selector's border is 2dp wider than the content on each side, giving room to breathe without changing card size.
+- D-pad Left and Right move the list beneath the selector; Center and Enter invoke the callback for the real selected index.
+- Moving right slides the previous item past the leading edge but still leaves a sliver of it at the screen edge while the row sits on later indices.
+- At item `0` there is no phantom item to the left, and D-pad Left hands handling back to `FocusRequester.Default`.
+- With more than five items, the provider appends a full extra cycle of the collection. Items `0, 1, 2...` are therefore always visible beyond the end of the row; after the animation past the end, the state rebases onto the first cycle without a gap or a visual jump.
+- A collection of five items or fewer stays finite: D-pad Right on the last item does not reset to item `0`.
+- `ContentRowState.scrollToItem(index)` wraps the index for looping rows and clamps it for finite ones.
 
 ## Player
 
-Player là destination full-screen ở graph ngoài và có hai cách trình bày dùng chung một
+The player is a full-screen destination in the outer graph with two presentations sharing one
 `PlayerViewModel`:
 
-- `PlayerScreen` phát nội dung ngang bằng surface 16:9. Controller là overlay trong `Box`, tự ẩn sau
-  5 giây khi video đang chạy và chỉ có title, Like, Save, Comment, Settings cùng duration/progress; không có
-  related/episodes và không dùng `LazyColumn` cho content.
-- `VerticalPlayerScreen` giữ stage 9:16 ở giữa lệch trái, nền ambient tối và interaction section ở
-  bên phải. D-pad Right đi từ player sang action đầu tiên; D-pad Left quay về player.
-- Cả hai orientation dùng chung retained section tree trong `component/section`: Metadata,
-  Comments → Replies → Reply detail và Settings → Quality/Subtitles/Audio. Parent vẫn được compose
-  phía dưới child để giữ list state và item đã chọn.
-- Khi section bắt đầu enter hoặc child bắt đầu exit, focus được chuyển vào một pending target luôn
-  tồn tại. Sau animation, section mới nhận focus; điều này ngăn Compose tự nhảy focus về player hoặc
-  một control khác trong lúc node đang biến mất.
-- Player ngang nhớ chính xác control đã mở root section: Back từ Metadata về `Description`, từ Comments về
-  Comment và từ Settings về Settings. Back khi controller đang hiện chỉ ẩn controller; Back tiếp theo
-  mới thoát player.
-- Player dọc dùng Left hoặc Back để pop từng level. Child trở về đúng row đã mở nó; root trở về portrait
-  player, sau đó Right mới đưa focus sang interaction section.
-- Track snapshot từ `stream_player` được map một lần tại `presentation/mapper`. Chọn option dispatch
-  trực tiếp `selectVideoTrack`, `selectTextTrack` hoặc `selectAudioTrack` qua `PlayerViewModel`.
-- Settings không hiển thị category rỗng; Subtitles có option Off và Quality có Auto khi manifest có
-  nhiều rendition.
-- Metadata và comment dummy lấy từ `PlayerDummyDataSource`, qua
-  `DummyPlayerDetailsRepository -> domain model -> PlayerDetailsUiMapper -> PlayerUiState`; toàn bộ copy
-  hiển thị là tiếng Anh.
+- `PlayerScreen` plays landscape content on a 16:9 surface. The controller is an overlay inside a `Box`
+  that auto-hides after five seconds while playback advances, and carries only the title, Like, Save,
+  Comment, Settings and the duration/progress; there is no related or episodes list and no `LazyColumn`
+  for content.
+- `VerticalPlayerScreen` keeps a 9:16 stage centred and nudged left, a dark ambient background, and the
+  interaction section on the trailing edge. D-pad Right moves from the player to the first action;
+  D-pad Left returns to the player.
+- Both orientations share the retained section tree in `component/section`: Metadata,
+  Comments → Replies → Reply detail, and Settings → Quality/Subtitles/Audio. A parent stays composed
+  beneath its child so it keeps its list state and selected item.
+- When a section begins entering or a child begins exiting, focus is moved to a pending target that
+  always exists. After the animation the new section takes focus; this stops Compose from jumping focus
+  back to the player or to some other control while a node is disappearing.
+- The landscape player remembers exactly which control opened a root section: Back from Metadata
+  returns to `Description`, from Comments to Comment, and from Settings to Settings. Back while the
+  controller is visible only hides the controller; the next Back leaves the player.
+- The portrait player uses Left or Back to pop one level at a time. A child returns to the row that
+  opened it; a root returns to the portrait player, after which Right moves focus into the interaction
+  section.
+- The track snapshot from `stream_player` is mapped once in `presentation/mapper`. Selecting an option
+  dispatches `selectVideoTrack`, `selectTextTrack` or `selectAudioTrack` straight through
+  `PlayerViewModel`.
+- Settings never shows an empty category; Subtitles carries an Off option, and Quality carries Auto
+  whenever the manifest offers several renditions.
+- Dummy metadata and comments come from `PlayerDummyDataSource` through
+  `DummyPlayerDetailsRepository -> domain model -> PlayerDetailsUiMapper -> PlayerUiState`; all
+  displayed copy is English.
 
-## Thêm một ContentRow section
+## Adding a ContentRow section
 
-1. Map view type về một `HomeContentRowStyle` trong `HomeScreen.kt`.
-2. Truyền typed items qua `requireItemsOfType()`; mapper và model đã bảo vệ đúng loại item.
-3. Render card trong DSL của `ContentRow`, cung cấp stable `key` và `contentType`.
-4. Không gắn `focusable` vào card; focus, loop và D-pad đã được encapsulate trong base component.
+1. Map the view type to a `HomeContentRowStyle` in `HomeScreen.kt`.
+2. Pass typed items through `requireItemsOfType()`; the mapper and the model already guarantee the item type.
+3. Render the card inside the `ContentRow` DSL, supplying a stable `key` and a `contentType`.
+4. Do not make the card `focusable`; focus, looping and D-pad handling are all encapsulated in the base component.
 
-## Đặc tả từng màn
+## Per-screen specifications
 
-`spec/` là product contract không phụ thuộc framework — đọc trước khi implement hoặc port sang nền
-tảng khác.
+`spec/` is the framework-neutral product contract — read it before implementing, or before porting to
+another platform.
 
-| Màn | Đặc tả |
+| Screen | Specification |
 |---|---|
-| Nền tảng chung, top bar, D-pad contract | [`spec/README.md`](spec/README.md) |
+| Shared foundations, top bar, D-pad contract | [`spec/README.md`](spec/README.md) |
 | Home | [`spec/home.md`](spec/home.md) |
-| Player ngang | [`spec/player.md`](spec/player.md) |
-| Player dọc | [`spec/vertical-player.md`](spec/vertical-player.md) |
+| Landscape player | [`spec/player.md`](spec/player.md) |
+| Portrait player | [`spec/vertical-player.md`](spec/vertical-player.md) |
 | Search | [`spec/search.md`](spec/search.md) |
 | Calendar | [`spec/calendar.md`](spec/calendar.md) |
 | Setting | [`spec/setting.md`](spec/setting.md) |
 | Profile | [`spec/profile.md`](spec/profile.md) |
 
-## Build và test
+## Build and test
 
-Yêu cầu JDK 17 trở lên và Android SDK 37.
+Requires JDK 17 or newer and Android SDK 37.
 
 ```bash
 ./gradlew :app:assembleDebug
@@ -571,4 +586,4 @@ Yêu cầu JDK 17 trở lên và Android SDK 37.
 ./gradlew :app:lintDebug
 ```
 
-APK debug được tạo tại `app/build/outputs/apk/debug/app-debug.apk`.
+The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.

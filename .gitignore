@@ -17,3 +17,7 @@ local.properties
 # Claude Code
 CLAUDE.md
 .claude/
+
+# Python bytecode from tools/
+__pycache__/
+*.pyc

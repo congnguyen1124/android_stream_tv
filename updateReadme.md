@@ -40,6 +40,15 @@ file**, không cần đổi gì trong README nếu giữ nguyên tên.
 **Không chạy `all` khi chỉ sửa một màn.** Chạy `all` mất ~12 phút và tạo diff rác trên những ảnh
 không liên quan (video đang phát ở frame khác nhau). Chỉ chạy `all` khi đổi theme/token dùng chung.
 
+### Banner launcher KHÔNG phải capture
+
+README nhúng [`banner_logo.webp`](app/src/main/res/drawable-xxxhdpi/banner_logo.webp) ngay ở đầu
+file, nhưng nó **không** nằm trong `docs/images/` và `capture_media.py` không sinh ra nó. Đó là asset
+thiết kế tay, README trỏ thẳng vào `res/` để không nhân đôi file nhị phân.
+
+Đổi banner thì sửa cả 5 bucket density (mdpi → xxxhdpi) rồi cập nhật bảng kích thước ở mục 8 của
+README. Đừng chạy capture nào cả.
+
 ---
 
 ## 2. Ảnh tĩnh hay GIF?

@@ -1,5 +1,10 @@
 # StreamTV
 
+<p align="center">
+  <img src="app/src/main/res/drawable-xxxhdpi/banner_logo.webp"
+       alt="StreamTV Android TV launcher banner" width="480">
+</p>
+
 **A complete, running Android TV UI kit — not a folder of sample screens.**
 
 StreamTV is an Android TV application built with Jetpack Compose for TV, organised along Clean
@@ -28,6 +33,7 @@ is **deliberate and reproducible**, never an accident of the focus-search algori
 | [5. The portrait player](#5-the-portrait-player) | The 9:16 stage, the interaction panel |
 | [6. Two players, one ViewModel](#6-two-players-one-viewmodel) | Comparison table |
 | [7. Reproducing these captures](#7-reproducing-these-captures) | `tools/capture_media.py` |
+| [8. The launcher banner](#8-the-launcher-banner) | How the app introduces itself before it is opened |
 | [Technical reference](#technical-reference) | Architecture, navigation, DI, build |
 
 ---
@@ -344,6 +350,38 @@ another's focus. Stills are written as WebP, GIFs through a two-pass ffmpeg pale
 
 [`updateReadme.md`](updateReadme.md) is the companion runbook: which captures to re-run for a given
 source change, when a GIF is warranted over a still, and which dummy item each demo depends on.
+
+---
+
+## 8. The launcher banner
+
+The image at the top of this file is not decoration — it is
+[`banner_logo.webp`](app/src/main/res/drawable-xxxhdpi/banner_logo.webp), the asset the Android TV
+launcher shows in its apps row. It is the **only** part of the app a viewer sees before they open it,
+and on a television that makes it the whole first impression: there is no icon grid to fall back on,
+and the Leanback launcher will not list an app that has no banner at all.
+
+One attribute on `<application>` in
+[`AndroidManifest.xml`](app/src/main/AndroidManifest.xml) wires it up:
+
+```xml
+android:banner="@drawable/banner_logo"
+```
+
+It ships across the density ladder, anchored on the 320 × 180 xhdpi asset Android TV documents as the
+reference size:
+
+| Bucket | Pixels | Size |
+|---|---|---|
+| `drawable-mdpi` | 160 × 90 | 12 KB |
+| `drawable-hdpi` | 240 × 135 | 24 KB |
+| `drawable-xhdpi` | **320 × 180** | 40 KB |
+| `drawable-xxhdpi` | 480 × 270 | 96 KB |
+| `drawable-xxxhdpi` | 640 × 360 | 148 KB |
+
+The artwork is laid out for the slot rather than scaled into it: the wordmark sits on the horizontal
+centre line and nothing important goes near the edges, because the launcher crops and rounds the
+corners differently across TV OS versions. WebP throughout — the whole ladder costs about 320 KB.
 
 ---
 

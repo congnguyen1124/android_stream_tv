@@ -51,14 +51,25 @@ Unlike the landscape player, this screen has **no transport cluster, no seek bar
 pill and no captions under focused controls**. The title is the metadata entry point here, and the
 stage itself is the play/pause control.
 
+## Section stack
+
+Identical to the landscape player's, including the transition phases, the parked anchor and the rule
+that every level stays composed. The section tree is the same tree — Settings → Quality, Audio,
+Subtitles — and behaves identically on both screens.
+
+Two differences, both stated below in full: sections here are dismissible with Left as well as Back,
+and closing one returns focus to the stage rather than to the control that opened it.
+
 ## Focus ownership
 
 Identical groups and precedence to the landscape player. The differences:
 
 - There is no `Controller` group. The stage and the interaction panel are both part of the base level
   and are focusable together, so nothing needs revealing and nothing auto-hides.
-- The stage must stop being focusable while a section is open or entering, and become focusable again
-  as the section returns to the base level.
+- The **whole base level** — the stage *and* the interaction panel — must stop being focusable while
+  a section is open or animating, and become focusable again as the section returns to the base
+  level. Excluding only the stage leaves the panel's own buttons reachable behind an open section,
+  so a viewer walking left out of the section lands on a control the section is covering.
 
 ## Focus graph
 
@@ -96,6 +107,13 @@ the panel never goes away, and the stage is where a viewer expects to land when 
 
 Side sections on this screen are additionally dismissible with Left, matching the direction they
 entered from. On the landscape player they are not.
+
+## Scope
+
+A portrait feed — swiping up and down between videos without leaving the player — is **not** part of
+this specification. This screen plays one item. Adding a feed later changes what the stage shows and
+adds page-change handling; it does not change the section stack, the focus graph, or anything else
+stated here.
 
 ## Visual differences from landscape
 

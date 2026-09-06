@@ -91,7 +91,7 @@ The controller occupies the top and bottom edges and leaves the middle of the pi
 
 | Cluster | Alignment | Contents |
 |---|---|---|
-| Leading | Leading edge | `Description` pill |
+| Leading | Leading edge | `Description` pill — opens the metadata section |
 | Transport | **Centred on the panel** | Rewind, play/pause, forward |
 | Trailing | Trailing edge | Like, save, comment on one shared pill; settings on its own circle |
 
@@ -120,6 +120,26 @@ extremes rather than centring on the thumb. It appears only while scrubbing is a
 about one and a half seconds after the last seek, restoring the title — holding it up for as long as
 the bar merely has focus would hide the title for no reason.
 
+## Section stack
+
+Side sections form a **tree, not a flat list**, and the screen holds them as a stack.
+
+- Opening a section pushes it. Opening a child — Settings → Quality — pushes on top of its parent.
+- Dismissing pops the top section and reveals the level underneath.
+- **Every level stays composed.** A parent must not be rebuilt when a child opens over it, so
+  returning to it restores its scroll position and the row the viewer was on. Rebuilding it instead
+  drops the viewer at the top of a list they had already walked down.
+- Only the **settled** top section is focusable. A section sliding in has not earned focus yet, and
+  one sliding out has already given it up.
+
+The stack carries each section's transition phase — entering, settled, exiting — because every
+visibility and focus decision on the screen depends on which phase the top section is in. Held as
+separate flags beside the list, those drift out of step, and the failure is two subtrees each
+believing focus is theirs.
+
+Choosing an option inside a child section dismisses that section and reveals its parent, so the
+viewer sees the row they just changed rather than being returned to the video.
+
 ## Focus ownership
 
 Exactly one group owns the D-pad at any moment. The group is a single derived value, not a set of
@@ -146,6 +166,18 @@ nothing focusable.
 - Focus must be parked on an off-screen anchor for the length of a section transition. Without it the
   focused control disappears mid-animation and focus falls back to whatever is spatially nearest,
   which is the video surface, which then swallows the next key press.
+- **Something must unpark it.** Parking is half a handshake: the section that settles has to claim
+  focus. This cannot be done by an entry-focus attribute that fires when a section first appears,
+  because a section appears while it is still animating in — before it is allowed to hold focus.
+- **Every section must contain at least one focusable element**, even a section that is only prose.
+  A section with nothing focusable leaves focus parked on the anchor, the anchor consumes every key
+  including Back, and the viewer is trapped in the section. A prose section's own scroll region is
+  the focus target, which is also the only way to read a long description with a remote.
+- A section exiting **to the base level** hands focus straight back to the chrome; a section exiting
+  **onto a parent section** must park, because the parent cannot take focus until the animation
+  frees it.
+- **Back has exactly one owner.** A remote may deliver Back as both a system navigation event and a
+  key event; handling both dismisses two sections on one press.
 - The surface must stop being focusable the moment the controller appears. It must **not** also be
   parked at that moment: parking and the controller's own entry request are two claims on the same
   focus, and the anchor wins, leaving the controller visible and unfocused.
@@ -203,6 +235,8 @@ and always falls back.
 | Select on like / save | `Controller` | Toggle that state, controller stays open |
 | Select on comment | `Controller` | Open the comments section |
 | Select on settings | `Controller` | Open the settings section |
+| Select on a settings category | `Section` | Open that category's own section over the list |
+| Left | `Section` | Nothing — inside a section Left is a list interaction |
 | Back | `Controller` | Hide the controller |
 | Back | `Surface` | Leave the player |
 | Back | `Section` | Close the section, reopening the controller on the control that opened it |

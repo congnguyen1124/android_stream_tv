@@ -10,13 +10,15 @@
 StreamTV is an Android TV application built with Jetpack Compose for TV, organised along Clean
 Architecture inside **a single app module**. Everything the app displays is written in English.
 
-The project ships five primary destinations — Home, Search, Calendar, Setting and Profile — together
-with a set of reusable TV components: a hero banner, a portrait carousel, an infinitely looping
-`ContentRow`, a two-dimensional EPG grid and an on-screen keyboard. Every focus behaviour in the
-project is **deliberate and reproducible**, never an accident of the focus-search algorithm.
+The project ships seven full screens — Home, Search, Calendar, Setting, Profile and two players —
+together with a set of reusable TV components: a hero banner that plays its own trailer, a portrait
+carousel, an infinitely looping `ContentRow`, a two-dimensional EPG grid, an on-screen keyboard, and
+a player whose controller auto-hides over three side sections. Every focus behaviour in the project
+is **deliberate and reproducible**, never an accident of the focus-search algorithm.
 
 > Every image and GIF below is captured automatically from an emulator by
-> [`tools/capture_media.py`](tools/capture_media.py).
+> [`tools/capture_media.py`](tools/capture_media.py). All player demos play the same content — the
+> Big Buck Bunny stream — so the two orientations can be compared directly.
 
 ---
 
@@ -24,12 +26,14 @@ project is **deliberate and reproducible**, never an accident of the focus-searc
 
 | | |
 |---|---|
-| [1. Home](#1-home--content-before-interface) | Hero banner, content rails, portrait carousel |
+| [1. Home](#1-home--content-before-interface) | Hero banner, trailer, content rails |
 | [2. Focus is the cursor on television](#2-focus-is-the-cursor-on-television) | Top bar, ContentRow, the D-pad contract |
 | [3. Search, Calendar, Setting, Profile](#3-search-calendar-setting-and-profile) | The four remaining destinations |
-| [4. Cross-platform playback](#4-cross-platform-playback) | Platform support |
-| [5. Reproducing these captures](#5-reproducing-these-captures) | `tools/capture_media.py` |
-| [6. The launcher banner](#6-the-launcher-banner) | How the app introduces itself before it is opened |
+| [4. The landscape player](#4-the-landscape-player) | Controller, focus restore, three side sections |
+| [5. The portrait player](#5-the-portrait-player) | The 9:16 stage, the interaction panel |
+| [6. Landscape and portrait playback](#6-landscape-and-portrait-playback) | Product comparison |
+| [7. Reproducing these captures](#7-reproducing-these-captures) | `tools/capture_media.py` |
+| [8. The launcher banner](#8-the-launcher-banner) | How the app introduces itself before it is opened |
 | [Technical reference](#technical-reference) | Architecture, navigation, DI, build |
 
 ---
@@ -44,6 +48,20 @@ primary action, over a layered dark scrim that protects legibility without cover
 
 *The 600dp hero banner sits behind the top-bar overlay. The first rail begins immediately below the
 hero, signalling that the viewer can continue downward.*
+
+### The hero banner plays its own trailer
+
+This is the detail a still cannot convey. The thumbnail holds for five seconds, then the trailer of
+**the item currently focused** fades in over it and loops — no controller, no prominent audio.
+
+![Banner trailer hand-off](docs/images/home-banner-trailer.gif)
+
+*From artwork to trailer: the title, description and call to action hold their position and stay
+readable throughout.*
+
+The trailer remains visible only while the carousel holds focus and the screen is active. Moving
+focus, changing items, leaving the screen or encountering an unavailable trailer returns the banner
+to its artwork.
 
 ### Content rails
 
@@ -64,8 +82,8 @@ list of content. Four different view types, all built on the same `ContentRow` f
 <td><img src="docs/images/home-shorts.webp" alt="Shorts row"></td>
 </tr>
 <tr>
-<td><em><strong>Live channels</strong> — a red LIVE badge distinguishes real-time content from the rest of the catalogue.</em></td>
-<td><em><strong>Fresh shorts</strong> — 2:3 portrait thumbnails that preserve their intended viewing orientation when selected.</em></td>
+<td><em><strong>Live channels</strong> — a red LIVE badge; these streams have no duration, so the player drops its seek bar.</em></td>
+<td><em><strong>Fresh shorts</strong> — 2:3 portrait thumbnails, opened in the portrait player rather than the landscape one.</em></td>
 </tr>
 </table>
 
@@ -103,7 +121,7 @@ Three rules matter most:
 
 - **Destinations do not steal focus.** Selecting a different destination leaves focus on the top bar.
   A destination claims focus only when the top bar is not holding it — on cold launch, and on return
-  from a full-screen viewing experience. See [`docs/adr/2026-09-02-shell-focus-ownership.md`](docs/adr/2026-09-02-shell-focus-ownership.md).
+  from a player. See [`docs/adr/2026-09-02-shell-focus-ownership.md`](docs/adr/2026-09-02-shell-focus-ownership.md).
 - **Re-entering the top bar restores the selected destination**, rather than jumping to the first item.
 - **The top bar has its own overlay** — a vertical gradient from `surface` to transparent — switched on
   and off by the current destination. Home enables it only once focus leaves the first section,
@@ -169,19 +187,141 @@ fallback.*
 
 ---
 
-## 4. Cross-platform playback
+## 4. The landscape player
 
-The app includes special logic that supports reliable content playback across its target platforms.
+The landscape experience handles videos, series episodes and live channels. The video fills the
+panel and **every piece of chrome is transient**.
+
+![Player surface](docs/images/player-surface.webp)
+
+*The default state: nothing but the picture. An invisible full-screen input target holds the D-pad and
+waits for the first key.*
+
+### The controller
+
+Press any direction to reveal the controller. It occupies the top and bottom edges and **leaves the
+middle band clear**.
+
+![Player controller](docs/images/player-controller.webp)
+
+*A vertical scrim darkens both edges and stays fully transparent across the middle, so text remains
+legible over any frame without dimming the part the viewer is actually watching.*
+
+The control row is divided into three clusters:
+
+| Cluster | Alignment | Contents |
+|---|---|---|
+| Leading | Leading edge | The `Description` pill |
+| Transport | **Centred on the panel** | Rewind, play/pause, forward |
+| Trailing | Trailing edge | Like, save and comment on one shared pill; settings on its own circle |
+
+The transport cluster is centred on the **panel**, not on the space between the other two — which is
+why its position does not shift when a stream has no settings and that control disappears.
+
+A focused control **does not scale**; it **inverts**: an opaque white fill, a dark glyph, and a
+caption naming it directly beneath. A control sitting on the shared pill would grow out of it.
+
+On a live stream the seek bar is replaced by a single elapsed-time label, a `LIVE` badge precedes the
+title, and rewind and forward are absent.
+
+### Down from the seek bar returns to the control you last used
+
+![Focus restore](docs/images/player-focus-restore.gif)
+
+*Play/pause → right to **Save** → up to the seek bar (the thumb grows, Save stops being filled) → down
+again to **Save**, not back to play/pause.*
+
+Down from the control row **does nothing at all**, preventing focus from leaving the controls while
+the viewer is still using them.
+
+### Three side sections
+
+All three open on the trailing edge inside a rounded, dark, translucent panel.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/player-metadata-section.webp" alt="Metadata section"></td>
+<td width="50%"><img src="docs/images/player-comments-section.webp" alt="Comments section"></td>
+</tr>
+<tr>
+<td><em><strong>Metadata</strong> — opened from the <code>Description</code> pill.</em></td>
+<td><em><strong>Comments</strong> — a D-pad scroll viewport with a focus-aware scrollbar; Up and Down scroll to the boundary, then release the key so focus can move on.</em></td>
+</tr>
+</table>
+
+![Quality settings](docs/images/player-settings-section.webp)
+
+***Settings → Quality*** — *the rendition list read straight from the HLS manifest. Settings never shows
+an empty category: this stream carries no subtitles and no alternative audio, so the root panel holds
+a single Quality row.*
+
+Back from a section returns focus to **the control that opened it** — Metadata to `Description`,
+Comments to comment, Settings to settings. Back while the controller is showing only hides the
+controller; the next Back leaves the player.
 
 ---
 
-## 5. Reproducing these captures
+## 5. The portrait player
+
+A television panel is landscape; a short is not. Rather than letterboxing it into two narrow bars or
+cropping away the top and bottom of the frame, the portrait experience uses a 9:16 stage centred and
+nudged toward the leading edge, and **gives the freed width back to the content itself**.
+
+![Vertical player](docs/images/vertical-player.webp)
+
+*Three regions: a horizontal ambient gradient, a rounded 9:16 stage (the video crops to fill it, so no
+bars appear inside the stage), and the interaction panel on the trailing edge. The stage carries an
+inset white focus border — it is a real focus target, not a passive surface.*
+
+This screen has **no** transport cluster, no seek bar, no `Description` pill and no caption under its
+controls. The stage itself is the play/pause control, and the title block is the way into metadata.
+
+![Vertical panel navigation](docs/images/vertical-player-panel.gif)
+
+*Right from the stage lands on the **first action** — not the title block, which is one step Up from
+there; the title container is tinted so the panel reads as a single region. Left from the first action
+returns to the stage, while Left from a later action only moves within the row.*
+
+![Vertical metadata](docs/images/vertical-player-metadata.webp)
+
+*The same section tree as the landscape player, but drawn **transparent** over the ambient background
+rather than inside a rounded panel. That framing difference lives at the screen boundary; the section
+content itself is shared.*
+
+---
+
+## 6. Landscape and portrait playback
+
+The app includes special logic that supports reliable content playback across its target platforms.
+The two presentations differ only in the product experience shown here:
+
+| | Landscape player | Portrait player |
+|---|---|---|
+| Video fit | Letterboxed, fills the panel | Cropped into a centred 9:16 stage |
+| Background | The video itself | Horizontal ambient gradient |
+| Chrome lifetime | Transient, auto-hides after 5s | Permanent |
+| Transport | Rewind, play/pause, forward | None; the stage is the control |
+| Seek bar | Focusable, with thumb and time labels | Non-interactive progress line |
+| Metadata entry | The `Description` pill | The title block |
+| Caption under controls | Yes | No |
+| Section panel | Rounded, dark, translucent | Transparent over the ambient background |
+| Section dismissal | Back | Back or Left |
+| Focus after closing a section | The control that opened it | The stage |
+
+Both presentations keep the same remote-first interaction language while adapting the layout to the
+content orientation.
+
+---
+
+## 7. Reproducing these captures
 
 Every image and GIF above is reproducible. None of them is a hand-taken screenshot left to drift out
 of date.
 
 ```bash
 python3 tools/capture_media.py list
+python3 tools/capture_media.py shot player-controller
+python3 tools/capture_media.py gif player-focus-restore
 python3 tools/capture_media.py all
 ```
 
@@ -197,7 +337,7 @@ source change, when a GIF is warranted over a still, and which dummy item each d
 
 ---
 
-## 6. The launcher banner
+## 8. The launcher banner
 
 The image at the top of this file is not decoration — it is
 [`banner_logo.webp`](app/src/main/res/drawable-xxxhdpi/banner_logo.webp), the asset the Android TV
